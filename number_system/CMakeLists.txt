@@ -6,3 +6,4 @@ set(SRC_SOURCES "src/")
 
 # Buat executable
 add_executable(prime ${SRC_SOURCES}prime.cxx)
+add_executable(fibonacci ${SRC_SOURCES}fibonacci.cxx)

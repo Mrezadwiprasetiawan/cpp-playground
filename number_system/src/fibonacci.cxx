@@ -1,15 +1,8 @@
-#include "numbers.hxx"
-#include <cctype>
-#include <cstdlib>
 #include <iostream>
-#include <stdexcept>
-#include <string>
 
-#define USING_OSTREAM                                                          \
-  using std::cout;                                                             \
-  using std::endl;
+#include "numbers.hxx"
 
-std::string argname[] = {"-h", "-help", "-l", "-limit", "-s", "-size"};
+std::string argname[] = {"-h", "-help", "-l", "-limit", "-i", "-index"};
 
 uint64_t to_number(char *number) {
   using std::runtime_error;
@@ -27,29 +20,28 @@ uint64_t to_number(char *number) {
 }
 
 void printHelp() {
-  USING_OSTREAM;
-  cout << "Print prime number sequences" << endl;
+  using std::cout;
+  using std::endl;
+  cout << "Print fibonacci number sequences" << endl;
   cout << "\t-h -help\tprint this help" << endl;
-  cout << "\t-l -limit <number>\tprint prime numbers up to limit using sieve "
-          "of eratosthenes"
+  cout << "\t-l -limit <value>\tprint fibonacci numbers as much as value "
+          "provided"
        << endl;
-  cout << "\t-s -size <number>\tprint first n prime numbers using optimized "
-          "trial division"
-       << endl;
+  cout << "\t-i -index <i>\tprint fibonacci numbers on index i" << endl;
 }
 
 void do_l(uint64_t limit) {
-  USING_OSTREAM;
-  Prime<uint64_t> prime;
-  for (uint64_t prime : prime.prime_soe(limit))
-    cout << prime << endl;
+  using std::cout;
+  using std::endl;
+  Fibonacci fbnc;
+  for (std::string value : fbnc.get_all(limit)) cout << value << endl;
 }
 
-void do_s(size_t size) {
-  USING_OSTREAM;
-  Prime<uint64_t> prime;
-  for (uint64_t prime : prime.from_size(size))
-    cout << prime << endl;
+void do_i(size_t index) {
+  using std::cout;
+  using std::endl;
+  Fibonacci fbnc;
+  cout << fbnc.get_index(index) << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -73,7 +65,7 @@ int main(int argc, char *argv[]) {
       arg_l = i;
     } else if (arg == argname[4] || arg == argname[5]) {
       if (arg_s != -1) {
-        std::cerr << "Error: Multiple -s options specified" << std::endl;
+        std::cerr << "Error: Multiple -i options specified" << std::endl;
         return 1;
       }
       arg_s = i;
@@ -81,7 +73,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (arg_l != -1 && arg_s != -1) {
-    std::cerr << "Error: Cannot specify both -l and -s options" << std::endl;
+    std::cerr << "Error: Cannot specify both -l and -i options" << std::endl;
     printHelp();
     return 1;
   }
@@ -95,10 +87,10 @@ int main(int argc, char *argv[]) {
       do_l(to_number(argv[arg_l + 1]));
     } else if (arg_s != -1) {
       if (arg_s + 1 >= argc) {
-        std::cerr << "Error: Missing argument for -s option" << std::endl;
+        std::cerr << "Error: Missing argument for -i option" << std::endl;
         return 1;
       }
-      do_s(to_number(argv[arg_s + 1]));
+      do_i(to_number(argv[arg_s + 1]));
     } else {
       printHelp();
       return 1;
