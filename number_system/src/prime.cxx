@@ -41,7 +41,7 @@ void printHelp() {
 void do_l(uint64_t limit) {
   USING_OSTREAM;
   Prime<uint64_t> prime;
-  for (uint64_t prime : prime.prime_soe(limit))
+  for (uint64_t prime : prime.from_range_limit(limit))
     cout << prime << endl;
 }
 

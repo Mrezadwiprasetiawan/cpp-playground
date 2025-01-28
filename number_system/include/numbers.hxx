@@ -65,7 +65,7 @@ class Prime {
   }
 
  public:
-  std::vector<T> prime_soe(T limit) {
+  std::vector<T> from_range_limit(T limit) {
     if (limit == lastT) return this->lastResults;
 
     std::vector<T> primes;
