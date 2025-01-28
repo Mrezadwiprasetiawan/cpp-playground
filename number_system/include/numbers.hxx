@@ -34,7 +34,7 @@ enable_if_integral<T, T> power_int(T base, T exponent) {
 // Setiap bit dalam uint64_t merepresentasikan bilangan ganjil >2
 // Bit 0: 3, Bit 1: 5, Bit 2: 7, dst...
 template <typename T>
-std::vector<uint64_t> create_sieve(T limit) {
+enable_if_arithmetic<T, std::vector<uint64_t>> create_sieve(T limit) {
   if (limit < 3) return {};
 
   // Hitung jumlah bilangan ganjil yang perlu direpresentasikan
@@ -58,13 +58,6 @@ std::vector<uint64_t> create_sieve(T limit) {
 }
 
 template <typename T>
-bool check_prime(const T *sieve, size_t index) {
-  const size_t bucket = index / 64;
-  const size_t bit = index % 64;
-  return (sieve[bucket] & (1ULL << bit)) != 0;
-}
-
-template <typename T>
 std::vector<T> prime_soe(T limit) {
   std::vector<T> primes;
   if (limit < 2) return primes;
@@ -76,7 +69,7 @@ std::vector<T> prime_soe(T limit) {
   const size_t num_odds = ((limit - 3) >> 1) + 1;
 
   for (size_t i = 0; i < num_odds; ++i)
-    if (check_prime(sieve.data(), i)) primes.push_back(3 + 2 * i);
+    if ((sieve[i / 64] & (1ULL << i % 64)) != 0) primes.push_back(3 + 2 * i);
 
   return primes;
 }
