@@ -2,8 +2,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <vector>
+#include <algorithm>
 
 // Template type traits dengan pengecekan ketat
 template <typename T, typename Ret = T>
@@ -38,8 +40,6 @@ class Prime {
   enum class calc_type_t { NONE, SOE, SIZE };
 
  private:
-  // Setiap bit dalam uint64_t merepresentasikan bilangan ganjil >2
-  // Bit 0: 3, Bit 1: 5, Bit 2: 7, dst...
   std::vector<T> lastResults;
   T lastT = 0;
   calc_type_t lastType = calc_type_t::NONE;
@@ -47,18 +47,15 @@ class Prime {
   std::vector<uint64_t> create_sieve(T limit) {
     if (limit < 3) return {};
 
-    // Hitung jumlah bilangan ganjil yang perlu direpresentasikan
     const size_t num_odds = ((limit - 3) >> 1) + 1;
     const size_t array_size = (num_odds + 63) / 64;
 
     std::vector<uint64_t> sieve(array_size, uint64_t(~0));
 
-    // 0 = komposit, 1 = prima (inisialisasi semua sebagai prima)
     for (T p = 3; p * p <= limit; p += 2) {
       const size_t i = (p - 3) >> 1;
       if (!(sieve[i / 64] & (1ULL << (i % 64)))) continue;
 
-      // Mark kelipatan p mulai dari p^2
       for (T j = p * p; j <= limit; j += 2 * p) {
         const size_t idx = (j - 3) >> 1;
         sieve[idx / 64] &= ~(1ULL << (idx % 64));
@@ -68,7 +65,6 @@ class Prime {
   }
 
  public:
-  // sieve of eratosthenes
   std::vector<T> prime_soe(T limit) {
     if (limit == lastT) return this->lastResults;
 
@@ -87,7 +83,6 @@ class Prime {
     return primes;
   }
 
-  // Fungsi pencarian prima dengan trial division yang dioptimasi
   std::vector<T> from_size(size_t size) {
     if (size == lastT) return this->lastResults;
     std::vector<T> primes;
@@ -120,11 +115,8 @@ class Fibonacci {
   std::vector<std::vector<uint64_t>> values;
   size_t lastLimit = 0;
   std::vector<std::string> values_str;
-
-  // Prekomputasi nilai 2^64 dalam string
   const std::string TWO_POW_64 = "18446744073709551616";
 
-  // Helper untuk perkalian string angka (optimized schoolbook)
   std::string multiplyStrings(const std::string &a, const std::string &b) {
     if (a == "0" || b == "0") return "0";
 
@@ -151,12 +143,10 @@ class Fibonacci {
     return result.empty() ? "0" : result;
   }
 
-  // Helper untuk mengalikan dengan 2^64 (optimized)
   std::string multiplyBy2To64(const std::string &numStr) {
     return multiplyStrings(numStr, TWO_POW_64);
   }
 
-  // Helper untuk penambahan uint64 ke string (optimized)
   std::string addUint64ToString(const std::string &numStr, uint64_t add) {
     std::string result;
     int carry = 0;
@@ -180,63 +170,92 @@ class Fibonacci {
     }
 
     std::reverse(result.begin(), result.end());
-
-    // Hapus leading zero
     size_t start = result.find_first_not_of('0');
     return (start != std::string::npos) ? result.substr(start) : "0";
   }
-  
-  // Fungsi untuk menambahkan dua uint64_t dengan carry
-  std::pair<uint64_t, uint64_t> add64(uint64_t a, uint64_t b) {
-    uint64_t sum = a + b;
-    uint64_t carry = sum < a ? 1 : 0;
-    return {carry, sum};
-  }
 
-  // Fungsi untuk menambahkan dua vektor uint64_t
-  std::vector<uint64_t> add64_ext(std::vector<uint64_t> a,
-                                  std::vector<uint64_t> b) {
+  std::vector<uint64_t> add64_ext(const std::vector<uint64_t>& a, const std::vector<uint64_t>& b) {
     std::vector<uint64_t> res;
-    bool same = a.size() == b.size();
-    size_t min = a.size() < b.size() ? a.size() : b.size();
+    size_t max_size = std::max(a.size(), b.size());
+    std::vector<uint64_t> a_copy = a;
+    std::vector<uint64_t> b_copy = b;
+    a_copy.resize(max_size, 0);
+    b_copy.resize(max_size, 0);
+
     uint64_t carry = 0;
-    for (size_t i = 0; i < min; ++i) {
-      std::pair<uint64_t, uint64_t> currentRes = add64(a[i], b[i]);
-      carry = currentRes.first ? currentRes.first : 0;
-      res.push_back(carry + currentRes.second);
+
+    for (size_t i = 0; i < max_size; ++i) {
+      uint64_t sum_limb = a_copy[i] + b_copy[i];
+      uint64_t carry1 = sum_limb < a_copy[i] ? 1 : 0;
+
+      sum_limb += carry;
+      uint64_t carry2 = sum_limb < carry ? 1 : 0;
+
+      res.push_back(sum_limb);
+      carry = carry1 + carry2;
     }
-    if (!same) {
-      bool gtA = a.size() > b.size() ? a.size() : b.size();
-      for (size_t i = gtA ? b.size() : a.size(); i < gtA ? a.size() : b.size();
-           ++i)
-        res.push_back(gtA ? a[i] : b[i]);
+
+    if (carry) {
+      res.push_back(carry);
     }
-    return res;
+
+    while (!res.empty() && res.back() == 0) {
+      res.pop_back();
+    }
+
+    return res.empty() ? std::vector<uint64_t>{0} : res;
   }
 
-  // Fungsi untuk decode vektor<uint64_t> ke string basis 10
   std::vector<std::string> decode() {
     std::vector<std::string> res;
     for (const auto &fbnc : values) {
       std::string current = "0";
-
-      // Iterasi dari MSB ke LSB (reverse iterator)
       for (auto it = fbnc.rbegin(); it != fbnc.rend(); ++it) {
         current = multiplyBy2To64(current);
         current = addUint64ToString(current, *it);
       }
-
       res.push_back(current);
     }
     return res;
   }
 
-  public:
-  std::vector<std::string> get_all(size_t limit){
-    if(limit==lastLimit) return values_str;
-    return decode();
+  void generate(size_t limit) {
+    if (limit <= lastLimit) return;
+
+    if (values.empty()) {
+      values.push_back({0}); // F0
+      values.push_back({1}); // F1
+    }
+
+    size_t currentSize = values.size();
+    if (limit <= currentSize) {
+      lastLimit = limit;
+      values_str = decode();
+      return;
+    }
+
+    values.resize(limit);
+
+    for (size_t i = currentSize; i < limit; ++i) {
+      if (i < 2) continue;
+      values[i] = add64_ext(values[i-1], values[i-2]);
+    }
+
+    lastLimit = limit;
+    values_str = decode();
   }
-  std::string get_index(size_t index){
-    return get_all(index+1)[index];
+
+ public:
+  std::vector<std::string> get_all(size_t limit) {
+    if (limit == lastLimit) return values_str;
+    generate(limit);
+    return values_str;
+  }
+
+  std::string get_index(size_t index) {
+    if (index >= lastLimit) {
+      generate(index + 1);
+    }
+    return get_all(index + 1)[index];
   }
 };
