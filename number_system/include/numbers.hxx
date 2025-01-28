@@ -36,13 +36,10 @@ enable_if_integral<T, T> power_int(T base, T exponent) {
 
 template <typename T, typename classRet = enable_if_arithmetic<T>>
 class Prime {
- public:
-  enum class calc_type_t { NONE, SOE, SIZE };
 
  private:
   std::vector<T> lastResults;
   T lastT = 0;
-  calc_type_t lastType = calc_type_t::NONE;
 
   std::vector<uint64_t> create_sieve(T limit) {
     if (limit < 3) return {};
