@@ -256,9 +256,6 @@ class Fibonacci {
   }
 
   std::string get_index(size_t index) {
-    if (index >= lastLimit) {
-      generate(index + 1);
-    }
     return get_all(index + 1)[index];
   }
 };
