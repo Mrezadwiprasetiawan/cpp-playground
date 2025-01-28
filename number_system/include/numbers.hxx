@@ -220,7 +220,10 @@ class Fibonacci {
   }
 
   void generate(size_t limit) {
-    if (limit <= lastLimit) return;
+    if (limit < lastLimit) {
+      values.resize(limit);
+      return;
+    }
 
     if (values.empty()) {
       values.push_back({0}); // F0
