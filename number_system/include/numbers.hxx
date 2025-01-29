@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <vector>
 #include <algorithm>
+#include "big_int.hxx"
 
 // Template type traits dengan pengecekan ketat
 template <typename T, typename Ret = T>
