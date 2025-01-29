@@ -16,11 +16,10 @@ Big_Integer Big_Integer::add(const Big_Integer &other) {
     std::vector<uint64_t> max =
         values.size() > other.values.size() ? *(&values) : *(&other.values);
     for (size_t i = min; i < max.size(); ++i) {
-      uint64_t sum = values[i] + other.values[i];
-      uint64_t carry_tmp = sum < values[i] ? 1 : 0;
+      uint64_t sum = max[i];
       if (carry) sum += carry;
       res.push_back(sum);
-      carry = carry_tmp;
+      carry = sum < max[i] ? 1 : 0;
     }
   }
   return Big_Integer(res);
