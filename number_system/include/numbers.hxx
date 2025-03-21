@@ -25,7 +25,7 @@ enable_if_integral<T, T> power_int(T base, T exponent) {
 
   T result = 1;
   while (exponent > 0) {
-    if (exponent % 2 == 1) {
+    if (exponent & 1) {
       result *= base;
       if (exponent == 1) break;
     }
@@ -52,11 +52,11 @@ class Prime {
 
     for (T p = 3; p * p <= limit; p += 2) {
       const size_t i = (p - 3) >> 1;
-      if (!(sieve[i / 64] & (1ULL << (i % 64)))) continue;
+      if (!(sieve[i >> 6] & (1ULL << (i & 63)))) continue;
 
       for (T j = p * p; j <= limit; j += 2 * p) {
         const size_t idx = (j - 3) >> 1;
-        sieve[idx / 64] &= ~(1ULL << (idx % 64));
+        sieve[idx >> 6] &= ~(1ULL << (idx & 63));
       }
     }
     return sieve;
@@ -76,7 +76,7 @@ class Prime {
     const size_t num_odds = ((limit - 3) >> 1) + 1;
 
     for (size_t i = 0; i < num_odds; ++i)
-      if ((sieve[i / 64] & (1ULL << i % 64)) != 0) primes.push_back(3 + 2 * i);
+      if (sieve[i >> 6] & (1ULL << (i & 63))) primes.push_back(3 + 2 * i);
 
     return primes;
   }
