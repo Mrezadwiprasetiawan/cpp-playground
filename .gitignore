@@ -1,2 +1,11 @@
 build/
 bin/*
+
+#cmake cache
+.cache
+
+#for vim to detect included header
+compile_commands.json
+
+#swap file from vim
+**/*.sw*
