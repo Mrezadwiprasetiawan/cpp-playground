@@ -20,7 +20,7 @@ std::string big_int::to_string() const {
 big_int big_int::shift_left(uint64_t k) {
   std::vector<uint64_t> res_values(this->values);
   if (!k) return big_int(res_values, this->negative);
-  res_values.resize((k << 6) + 1, 0);
+  res_values.resize((k >> 6) + 1, 0);
   uint64_t carry = 0;
   for (size_t i = 0; i < res_values.size(); ++i) {
     res_values[i] = res_values[i] + carry;
