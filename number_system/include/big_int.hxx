@@ -1,33 +1,56 @@
 #ifndef BIG_INT_HXX
 #define BIG_INT_HXX
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <vector>
 
-#define __BIGINT_OP_DEF(op_literal) \
-  Big_Integer op_literal(const Big_Integer &other)
-#define __BIGINT_OP_LOGIC_DEF(op_literal) \
-  bool op_literal(const Big_Integer &other)
-#define __BIGINT_OPERATOR_DEF(op, alter_id) \
-  Big_Integer operator op(const Big_Integer &other) { return alter_id(other); }
-#define __BIGINT_OPERATOR_LOGIC_DEF(op, alter_id) \
-  bool operator op(Big_Integer &other) { return alter_id(other); }
+#define __BIGINT_OP_DEF(op_literal) big_int op_literal(const big_int &other)
+#define __BIGINT_OP_LOGIC_DEF(op_literal) bool op_literal(const big_int &other)
+#define __BIGINT_OPERATOR_DEF(op, alter) \
+  big_int operator op(const big_int &other) { return alter(other); }
+#define __BIGINT_OPERATOR_LOGIC_DEF(op, alter) \
+  bool operator op(big_int &other) { return alter(other); }
 
-class Big_Integer {
+#define __BIGINT_OPERATOR_SHIFT_DEF(type)                      \
+  big_int shift_left(type other);                              \
+  big_int operator<<(type other) { return shift_left(other); } \
+  big_int shift_right(type other);                             \
+  big_int operator>>(type other) { return shift_right(other); }
+
+class big_int {
  private:
   std::vector<uint64_t> values;
   std::string values_str;
-  Big_Integer(std::vector<uint64_t> values) : values(values) {}
+  bool negative = false;
+
+  // For positive only
+  big_int(std::vector<uint64_t> values) : values(values) {}
+
+  void set_negative(bool negative) { this->negative = negative; }
 
  public:
-  Big_Integer(size_t digitSize) {
-    values.reserve(digitSize / 64 + digitSize % 64 == 0 ? 1 : 0);
+  big_int(std::vector<uint64_t> values, bool negative)
+      : values(values), negative(negative) {}
+
+  big_int(uint64_t value) {
+    // debug
+    std::cout << value << " AND " << (1ULL << 63) << std::endl;
+    if (value < (1ULL << 63))
+      values = {value};
+    else {
+      values = {~value + 1};
+      this->negative = true;
+    }
   }
 
-  Big_Integer(std::string value);
-  std::string to_string(Big_Integer &other);
+  big_int(std::string value);
 
-  static const Big_Integer ONE;
+  // c/cpp aneh banget, perlu const di belakang untuk menandakan fungsi tidak
+  // merubah big_int
+  std::string to_string() const;
+
+  static const big_int ONE;
   __BIGINT_OP_DEF(add);
   __BIGINT_OP_DEF(min);
   __BIGINT_OP_DEF(mul);
@@ -50,15 +73,15 @@ class Big_Integer {
   __BIGINT_OP_LOGIC_DEF(andand);
   __BIGINT_OP_LOGIC_DEF(oror);
 
-  __BIGINT_OPERATOR_DEF(+, add)
+  __BIGINT_OPERATOR_DEF(+, add);
   __BIGINT_OPERATOR_DEF(-, min);
-  __BIGINT_OPERATOR_DEF(*, mul)
-  __BIGINT_OPERATOR_DEF(/, div)
+  __BIGINT_OPERATOR_DEF(*, mul);
+  __BIGINT_OPERATOR_DEF(/, div);
 
   // special case
-  Big_Integer operator++(int) { return add(ONE); }
-  Big_Integer operator--(int) { return min(ONE); }
-  Big_Integer operator!() { return values_str.empty() || values_str == "0"; }
+  big_int operator++(int) { return add(ONE); }
+  big_int operator--(int) { return min(ONE); }
+  big_int operator!() { return values_str.empty() || values_str == "0"; }
 
   __BIGINT_OPERATOR_LOGIC_DEF(&, _and)
   __BIGINT_OPERATOR_LOGIC_DEF(|, _or)
@@ -72,6 +95,18 @@ class Big_Integer {
   __BIGINT_OPERATOR_LOGIC_DEF(!=, noteq);
   __BIGINT_OPERATOR_LOGIC_DEF(&&, andand);
   __BIGINT_OPERATOR_LOGIC_DEF(||, oror);
+
+  // uint64_t udah cukup, terlanjut bikin makronya males ngapus
+  __BIGINT_OPERATOR_SHIFT_DEF(uint64_t);
 };
+
+inline big_int operator""_big(unsigned long long i) { return big_int(i); }
+inline big_int operator""_big(const char *str, size_t size) {
+  return big_int(std::string(str));
+};
+
+inline std::ostream &operator<<(const std::ostream &a, const big_int &other) {
+  return a << other.to_string();
+}
 
 #endif  // BIG_INT_HXX
