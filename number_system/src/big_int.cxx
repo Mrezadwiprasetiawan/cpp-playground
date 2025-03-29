@@ -116,7 +116,7 @@ big_int big_int::mul(const big_int& other) {
     uint64_t factor = other.values[i];
     for (uint8_t j = 1; j < uint8_t(1 << 6); ++j) {
       if (factor & 1) res = res + (*(this) << j);
-      factor = factor << 1;
+      factor = factor >> 1;
     }
   }
   return res;
