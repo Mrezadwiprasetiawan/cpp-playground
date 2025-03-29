@@ -20,31 +20,23 @@ std::string big_int::to_string() const {
 big_int big_int::shift_left(uint64_t k) {
   std::vector<uint64_t> res_values(this->values);
   if (!k) return big_int(res_values, this->negative);
+
+  // resize k/64+1 karena elementnya uint64_t
   res_values.resize((k >> 6) + 1, 0);
   uint64_t carry = 0;
   for (size_t i = 0; i < res_values.size(); ++i) {
     res_values[i] = res_values[i] + carry;
-    if (res_values[i] < carry) carry = 1;
-    carry += res_values[i] >> ((1 << 6) - k)&((1<<((1<<6)-k+1))-1);
+    if (res_values[i] < carry)
+      carry = 1;
+    else
+      carry = 0;
+    carry += res_values[i] >> (64 - k) & ((1 << (63 - k)) - 1);
     res_values[i] = res_values[i] << k;
   }
   return big_int(res_values, this->negative);
 }
 
 big_int big_int::add(const big_int& other) {
-  // debug
-  using namespace std;
-
-  if (this->values.size() == 1 && other.values.size() == 1) {
-    uint64_t a = this->negative ? ~this->values[0] + 1 : this->values[0];
-    uint64_t b = other.negative ? ~other.values[0] + 1 : other.values[0];
-    uint64_t c = a + b;
-    cout << a << endl;
-    cout << b << endl;
-    cout << c << endl;
-    if (c < a) return big_int({~c + 1}, negative);
-    return c;
-  }
   std::vector<uint64_t> this_copy = this->values, other_copy = other.values,
                         result;
 
@@ -84,7 +76,7 @@ big_int big_int::add(const big_int& other) {
     carry = (result[i] < this_copy[i] || (carry && result[i] == this_copy[i]));
   }
 
-  // if carry outside(to make sure if false skip)but both not equal
+  // if carry outside(to make sure if false skip) but both not equal
   // negative=false, if not add the carry
   if (carry) {
     if (negative)
