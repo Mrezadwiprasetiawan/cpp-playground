@@ -20,6 +20,7 @@
   big_int shift_right(type other) const;                             \
   big_int operator>>(type other) const { return shift_right(other); }
 
+//most 64bit on the highest index
 class big_int {
  private:
   std::vector<uint64_t> values;
@@ -81,7 +82,7 @@ class big_int {
   // special case
   big_int operator++(int) { return add(ONE); }
   big_int operator--(int) { return min(ONE); }
-  big_int operator!() { return values_str.empty() || values_str == "0"; }
+  bool operator!() { return values_str.empty() || values_str == "0"; }
 
   __BIGINT_OPERATOR_DECL(&, _and)
   __BIGINT_OPERATOR_DECL(|, _or)
@@ -96,7 +97,7 @@ class big_int {
   __BIGINT_OPERATOR_LOGIC_DECL(&&, andand);
   __BIGINT_OPERATOR_LOGIC_DECL(||, oror);
 
-  // uint64_t udah cukup, terlanjui bikin makronya males ngapus
+  // uint64_t udah cukup, terlanjur bikin makronya males ngapus
   __BIGINT_OPERATOR_SHIFT_DECL(uint64_t);
 };
 

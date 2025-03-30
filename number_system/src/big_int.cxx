@@ -2,18 +2,31 @@
 
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
+std::string bin64_to_b10_string(uint64_t value, uint64_t& rem){
+  std::string s;
+  if (value == 0) return "0";
+
+  while (value > 0) {
+    s.push_back('0' + (value % 10));
+    value /= 10;
+  }
+
+  rem = value;
+  std::reverse(s.begin(), s.end());
+  return s;
+}
+
 std::string big_int::to_string() const {
   std::stringstream ss;
-  if (this->negative) ss << "negative";
-  for (size_t i = this->values.size() - 1; i > 0; ++i) {
-    ss << i << " ";
+  if (this->negative) ss << "-";
+  uint64_t rem=0;
+  for(auto u64=this->values.rbegin(); u64!=this->values.rend();++u64) {
+    uint64_t a=*u64+rem;
+    ss << bin64_to_b10_string(*u64, rem);
   }
-  if (this->values.size() == 1) ss << " ";
-  ss << this->values[0];
   return ss.str();
 }
 
