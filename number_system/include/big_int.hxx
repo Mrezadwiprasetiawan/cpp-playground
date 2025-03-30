@@ -14,7 +14,7 @@
 #define __BIGINT_OPERATOR_LOGIC_DECL(op, alter) \
   bool operator op(const big_int &other) const { return alter(other); }
 
-#define __BIGINT_OPERATOR_SHIFT_DECL(type)                            \
+#define __BIGINT_OPERATOR_SHIFT_DECL(type)                           \
   big_int shift_left(type other) const;                              \
   big_int operator<<(type other) const { return shift_left(other); } \
   big_int shift_right(type other) const;                             \
@@ -36,8 +36,6 @@ class big_int {
       : values(values), negative(negative) {}
 
   big_int(uint64_t value) {
-    // debug
-    std::cout << value << " AND " << (1ULL << 63) << std::endl;
     if (value < (1ULL << 63))
       values = {value};
     else {
