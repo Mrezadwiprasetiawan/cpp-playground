@@ -5,16 +5,16 @@
 #include <string>
 #include <vector>
 
-#define __BIGINT_OP_DEF(op_literal) \
+#define __BIGINT_OP_DECL(op_literal) \
   big_int op_literal(const big_int &other) const
-#define __BIGINT_OP_LOGIC_DEF(op_literal) \
+#define __BIGINT_OP_LOGIC_DECL(op_literal) \
   bool op_literal(const big_int &other) const
-#define __BIGINT_OPERATOR_DEF(op, alter) \
+#define __BIGINT_OPERATOR_DECL(op, alter) \
   big_int operator op(const big_int &other) const { return alter(other); }
-#define __BIGINT_OPERATOR_LOGIC_DEF(op, alter) \
+#define __BIGINT_OPERATOR_LOGIC_DECL(op, alter) \
   bool operator op(const big_int &other) const { return alter(other); }
 
-#define __BIGINT_OPERATOR_SHIFT_DEF(type)                            \
+#define __BIGINT_OPERATOR_SHIFT_DECL(type)                            \
   big_int shift_left(type other) const;                              \
   big_int operator<<(type other) const { return shift_left(other); } \
   big_int shift_right(type other) const;                             \
@@ -53,53 +53,53 @@ class big_int {
   std::string to_string() const;
 
   static const big_int ONE;
-  __BIGINT_OP_DEF(add);
-  __BIGINT_OP_DEF(min);
-  __BIGINT_OP_DEF(mul);
-  __BIGINT_OP_DEF(div);
+  __BIGINT_OP_DECL(add);
+  __BIGINT_OP_DECL(min);
+  __BIGINT_OP_DECL(mul);
+  __BIGINT_OP_DECL(div);
 
-  __BIGINT_OP_LOGIC_DEF(inc);
-  __BIGINT_OP_LOGIC_DEF(dec);
+  __BIGINT_OP_LOGIC_DECL(inc);
+  __BIGINT_OP_LOGIC_DECL(dec);
 
-  __BIGINT_OP_LOGIC_DEF(_not);
-  __BIGINT_OP_LOGIC_DEF(_and);
-  __BIGINT_OP_LOGIC_DEF(_or);
-  __BIGINT_OP_LOGIC_DEF(_xor);
+  __BIGINT_OP_DECL(_not);
+  __BIGINT_OP_DECL(_and);
+  __BIGINT_OP_DECL(_or);
+  __BIGINT_OP_DECL(_xor);
 
-  __BIGINT_OP_LOGIC_DEF(gt);
-  __BIGINT_OP_LOGIC_DEF(gteq);
-  __BIGINT_OP_LOGIC_DEF(lt);
-  __BIGINT_OP_LOGIC_DEF(lteq);
-  __BIGINT_OP_LOGIC_DEF(equal);
-  __BIGINT_OP_LOGIC_DEF(noteq);
-  __BIGINT_OP_LOGIC_DEF(andand);
-  __BIGINT_OP_LOGIC_DEF(oror);
+  __BIGINT_OP_LOGIC_DECL(gt);
+  __BIGINT_OP_LOGIC_DECL(gteq);
+  __BIGINT_OP_LOGIC_DECL(lt);
+  __BIGINT_OP_LOGIC_DECL(lteq);
+  __BIGINT_OP_LOGIC_DECL(equal);
+  __BIGINT_OP_LOGIC_DECL(noteq);
+  __BIGINT_OP_LOGIC_DECL(andand);
+  __BIGINT_OP_LOGIC_DECL(oror);
 
-  __BIGINT_OPERATOR_DEF(+, add);
-  __BIGINT_OPERATOR_DEF(-, min);
-  __BIGINT_OPERATOR_DEF(*, mul);
-  __BIGINT_OPERATOR_DEF(/, div);
+  __BIGINT_OPERATOR_DECL(+, add);
+  __BIGINT_OPERATOR_DECL(-, min);
+  __BIGINT_OPERATOR_DECL(*, mul);
+  __BIGINT_OPERATOR_DECL(/, div);
 
   // special case
   big_int operator++(int) { return add(ONE); }
   big_int operator--(int) { return min(ONE); }
   big_int operator!() { return values_str.empty() || values_str == "0"; }
 
-  __BIGINT_OPERATOR_LOGIC_DEF(&, _and)
-  __BIGINT_OPERATOR_LOGIC_DEF(|, _or)
-  __BIGINT_OPERATOR_LOGIC_DEF(^, _xor)
+  __BIGINT_OPERATOR_DECL(&, _and)
+  __BIGINT_OPERATOR_DECL(|, _or)
+  __BIGINT_OPERATOR_DECL(^, _xor)
 
-  __BIGINT_OPERATOR_LOGIC_DEF(>, gt);
-  __BIGINT_OPERATOR_LOGIC_DEF(>=, gteq);
-  __BIGINT_OPERATOR_LOGIC_DEF(<, lt);
-  __BIGINT_OPERATOR_LOGIC_DEF(<=, lteq);
-  __BIGINT_OPERATOR_LOGIC_DEF(==, equal);
-  __BIGINT_OPERATOR_LOGIC_DEF(!=, noteq);
-  __BIGINT_OPERATOR_LOGIC_DEF(&&, andand);
-  __BIGINT_OPERATOR_LOGIC_DEF(||, oror);
+  __BIGINT_OPERATOR_LOGIC_DECL(>, gt);
+  __BIGINT_OPERATOR_LOGIC_DECL(>=, gteq);
+  __BIGINT_OPERATOR_LOGIC_DECL(<, lt);
+  __BIGINT_OPERATOR_LOGIC_DECL(<=, lteq);
+  __BIGINT_OPERATOR_LOGIC_DECL(==, equal);
+  __BIGINT_OPERATOR_LOGIC_DECL(!=, noteq);
+  __BIGINT_OPERATOR_LOGIC_DECL(&&, andand);
+  __BIGINT_OPERATOR_LOGIC_DECL(||, oror);
 
-  // uint64_t udah cukup, terlanjut bikin makronya males ngapus
-  __BIGINT_OPERATOR_SHIFT_DEF(uint64_t);
+  // uint64_t udah cukup, terlanjui bikin makronya males ngapus
+  __BIGINT_OPERATOR_SHIFT_DECL(uint64_t);
 };
 
 inline big_int operator""_big(unsigned long long i) { return big_int(i); }
