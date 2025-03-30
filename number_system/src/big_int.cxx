@@ -17,7 +17,7 @@ std::string big_int::to_string() const {
   return ss.str();
 }
 
-big_int big_int::shift_left(uint64_t k) {
+big_int big_int::shift_left(uint64_t k) const {
   std::vector<uint64_t> res_values(this->values);
   if (!k) return big_int(res_values, this->negative);
 
@@ -36,7 +36,7 @@ big_int big_int::shift_left(uint64_t k) {
   return big_int(res_values, this->negative);
 }
 
-big_int big_int::add(const big_int& other) {
+big_int big_int::add(const big_int& other) const {
   std::vector<uint64_t> this_copy = this->values, other_copy = other.values,
                         result;
 
@@ -90,12 +90,12 @@ big_int big_int::add(const big_int& other) {
   return big_int(result, negative);
 }
 
-big_int big_int::min(const big_int& other) {
+big_int big_int::min(const big_int& other) const {
   big_int big_new(other.values, !other.negative);
   return this->add(big_new);
 }
 
-big_int big_int::mul(const big_int& other) {
+big_int big_int::mul(const big_int& other) const {
   size_t res_bit = (this->values.size() << 6) + (other.values.size() << 6);
   if (res_bit < this->values.size())
     throw std::runtime_error("overflow reached");
@@ -107,7 +107,7 @@ big_int big_int::mul(const big_int& other) {
   for (size_t i = 0; i < other.values.size(); ++i) {
     uint64_t factor = other.values[i];
     for (uint8_t j = 1; j < uint8_t(1 << 6); ++j) {
-      if (factor & 1) res = res + (*(this) << j);
+      if (factor & 1) res = res + (*this << j);
       factor = factor >> 1;
     }
   }
