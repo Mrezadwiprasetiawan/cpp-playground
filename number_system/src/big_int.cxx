@@ -76,7 +76,7 @@ big_int big_int::add(const big_int& other) const {
     carry = (result[i] < this_copy[i] || (carry && result[i] == this_copy[i]));
   }
 
-  // if carry outside(to make sure if false skip) but both not equal
+  // if carry (outside to make sure if false skip) but both not equal
   // negative=false, if not add the carry
   if (carry) {
     if (negative)
