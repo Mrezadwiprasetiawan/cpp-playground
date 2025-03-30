@@ -5,4 +5,4 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_SOURCES "src/")
 
 # Buat executable
-add_executable(assert_test ${SRC_SOURCES}assert.cxx)
+add_executable(op_overload_test ${SRC_SOURCES}op_overload.cxx) 
