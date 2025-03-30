@@ -5,18 +5,20 @@
 #include <string>
 #include <vector>
 
-#define __BIGINT_OP_DEF(op_literal) big_int op_literal(const big_int &other)
-#define __BIGINT_OP_LOGIC_DEF(op_literal) bool op_literal(const big_int &other)
+#define __BIGINT_OP_DEF(op_literal) \
+  big_int op_literal(const big_int &other) const
+#define __BIGINT_OP_LOGIC_DEF(op_literal) \
+  bool op_literal(const big_int &other) const
 #define __BIGINT_OPERATOR_DEF(op, alter) \
-  big_int operator op(const big_int &other) { return alter(other); }
+  big_int operator op(const big_int &other) const { return alter(other); }
 #define __BIGINT_OPERATOR_LOGIC_DEF(op, alter) \
-  bool operator op(big_int &other) { return alter(other); }
+  bool operator op(const big_int &other) const { return alter(other); }
 
-#define __BIGINT_OPERATOR_SHIFT_DEF(type)                      \
-  big_int shift_left(type other);                              \
-  big_int operator<<(type other) { return shift_left(other); } \
-  big_int shift_right(type other);                             \
-  big_int operator>>(type other) { return shift_right(other); }
+#define __BIGINT_OPERATOR_SHIFT_DEF(type)                            \
+  big_int shift_left(type other) const;                              \
+  big_int operator<<(type other) const { return shift_left(other); } \
+  big_int shift_right(type other) const;                             \
+  big_int operator>>(type other) const { return shift_right(other); }
 
 class big_int {
  private:
