@@ -35,7 +35,7 @@ enable_if_integral<T, T> power_int(T base, T exponent) {
   return result;
 }
 
-template <typename T, typename classRet = enable_if_arithmetic<T>>
+template <typename T, enable_if_arithmetic<T> = 0>
 class Prime {
 
  private:
