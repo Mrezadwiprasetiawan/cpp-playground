@@ -5,27 +5,58 @@
 #include <sstream>
 #include <stdexcept>
 
-std::string bin64_to_b10_string(uint64_t value, uint64_t& rem){
-  std::string s;
-  if (value == 0) return "0";
+std::string uint64_to_string(uint64_t val) {
+  std::string res;
+  while (val) {
+    res.insert(res.begin(), val % 10 + '0');
+    val /= 10;
+  }
+  return res;
+}
 
-  while (value > 0) {
-    s.push_back('0' + (value % 10));
-    value /= 10;
+const std::string big_int::two_pow_64 = "18446744073709551616";
+std::string mul_2_64_add_other(std::string val, uint64_t other) {
+  if (val.empty() || val == "0") {
+    return "0";
   }
 
-  rem = value;
-  std::reverse(s.begin(), s.end());
-  return s;
+  std::string res(val.size() + big_int::two_pow_64.size(), '0');
+  // multiply
+  for (size_t i = 0; i < val.size(); ++i) {
+    size_t rev_i = val.size() - 1 - i;
+    for (size_t j = 0; j < big_int::two_pow_64.size(); ++j) {
+      size_t rev_j = big_int::two_pow_64.size() - 1 - j;
+      int mul = (val[rev_i] - '0') * (big_int::two_pow_64[rev_j] - '0');
+      char p1 = mul % 10 + '0';
+      char p2 = mul / 10 + '0';
+      res[rev_i + rev_j] += p1;
+      res[rev_i + rev_j + 1] += p2;
+    }
+  }
+
+  // add the other
+  std::string b = uint64_to_string(other);
+
+  for (size_t i = 0; i < b.size(); ++i) {
+    size_t rev_i = b.size() - 1 - i;
+    for (size_t j = 0; j < res.size(); ++j) {
+      size_t rev_j = res.size() - 1 - j;
+      int add = (b[rev_i] - '0') + (res[rev_j] - '0');
+      char p1 = add % 10 + '0';
+      char p2 = add / 10 + '0';
+      res[rev_j] = p1;
+      if (p2 != '0') res[rev_j - 1] += p2;
+    }
+  }
+
+  return res;
 }
 
 std::string big_int::to_string() const {
   std::stringstream ss;
   if (this->negative) ss << "-";
-  uint64_t rem=0;
-  for(auto u64=this->values.rbegin(); u64!=this->values.rend();++u64) {
-    uint64_t a=*u64+rem;
-    ss << bin64_to_b10_string(*u64, rem);
+  uint64_t rem = 0;
+  for (auto u64 = this->values.rbegin(); u64 != this->values.rend(); ++u64) {
   }
   return ss.str();
 }
