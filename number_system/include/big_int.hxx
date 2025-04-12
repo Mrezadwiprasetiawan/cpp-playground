@@ -20,7 +20,7 @@
   big_int shift_right(type other) const;                             \
   big_int operator>>(type other) const { return shift_right(other); }
 
-//most 64bit on the highest index
+// most 64bit on the highest index
 class big_int {
  private:
   std::vector<uint64_t> values;
@@ -33,6 +33,7 @@ class big_int {
   void set_negative(bool negative) { this->negative = negative; }
 
  public:
+  static const std::string two_pow_64;
   big_int(std::vector<uint64_t> values, bool negative)
       : values(values), negative(negative) {}
 
