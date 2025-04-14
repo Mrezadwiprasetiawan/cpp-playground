@@ -8,7 +8,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "big_int.hxx"
+// temporary not used
+// #include "big_int.hxx"
 
 // Template type traits dengan pengecekan ketat
 template <typename T, typename Ret = T>
@@ -61,10 +62,9 @@ class Prime {
     const size_t array_size = (num_odds + 63) / 64;
     std::vector<uint64_t> sieve(array_size, uint64_t(~0));
 
-    if (max_thread < 1) max_thread = 1;
-
     std::vector<std::thread> threads;
-    for (int i = 0; i < max_thread; ++i)
+    main_sieve(sieve, limit, 0);
+    for (int i = 1; i < max_thread; ++i)
       threads.emplace_back(
           [this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
 
@@ -73,7 +73,7 @@ class Prime {
   }
 
   T estimate_limit_from_size(size_t size) {
-    if (size < 6) return (1<<4)-1;
+    if (size < 6) return (1 << 4) - 1;
     double n = static_cast<double>(size);
     return static_cast<T>(n * (std::log(n) + std::log(std::log(n)))) + 10;
   }
