@@ -63,10 +63,11 @@ class Prime {
     std::vector<uint64_t> sieve(array_size, uint64_t(~0));
 
     std::vector<std::thread> threads;
-    main_sieve(sieve, limit, 0);
     for (int i = 1; i < max_thread; ++i)
       threads.emplace_back(
           [this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
+
+    main_sieve(sieve, limit, 0);
 
     for (auto &t : threads) t.join();
     return sieve;
