@@ -1,11 +1,13 @@
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <vector>
-#include <algorithm>
+
 #include "big_int.hxx"
 
 // Template type traits dengan pengecekan ketat
@@ -37,32 +39,63 @@ enable_if_integral<T, T> power_int(T base, T exponent) {
 
 template <typename T, enable_if_arithmetic<T> = 0>
 class Prime {
-
  private:
   std::vector<T> lastResults;
   T lastT = 0;
+  inline static int max_thread = std::thread::hardware_concurrency();
 
-  std::vector<uint64_t> create_sieve(T limit) {
-    if (limit < 3) return {};
-
-    const size_t num_odds = ((limit - 3) >> 1) + 1;
-    const size_t array_size = (num_odds + 63) / 64;
-
-    std::vector<uint64_t> sieve(array_size, uint64_t(~0));
-
-    for (T p = 3; p * p <= limit; p += 2) {
+  void main_sieve(std::vector<uint64_t> &sieve, T limit, int offset) {
+    for (T p = 3 + offset * 2; p * p <= limit; p += 2 * max_thread) {
       const size_t i = (p - 3) >> 1;
       if (!(sieve[i >> 6] & (1ULL << (i & 63)))) continue;
-
       for (T j = p * p; j <= limit; j += 2 * p) {
         const size_t idx = (j - 3) >> 1;
         sieve[idx >> 6] &= ~(1ULL << (idx & 63));
       }
     }
+  }
+
+  std::vector<uint64_t> create_sieve(T limit) {
+    if (limit < 3) return {};
+    const size_t num_odds = ((limit - 3) >> 1) + 1;
+    const size_t array_size = (num_odds + 63) / 64;
+    std::vector<uint64_t> sieve(array_size, uint64_t(~0));
+
+    if (max_thread < 1) max_thread = 1;
+
+    std::vector<std::thread> threads;
+    for (int i = 0; i < max_thread; ++i)
+      threads.emplace_back(
+          [this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
+
+    for (auto &t : threads) t.join();
     return sieve;
   }
 
+  T estimate_limit_from_size(size_t size) {
+    if (size < 6) return (1<<4)-1;
+    double n = static_cast<double>(size);
+    return static_cast<T>(n * (std::log(n) + std::log(std::log(n)))) + 10;
+  }
+
  public:
+  std::vector<T> from_size(size_t size) {
+    if (size == 0) return {};
+
+    std::vector<T> primes;
+    primes.push_back(2);
+    if (size == 1) return primes;
+
+    T limit = estimate_limit_from_size(size);
+    auto sieve = create_sieve(limit);
+    const size_t num_odds = ((limit - 3) >> 1) + 1;
+
+    for (size_t i = 0; i < num_odds && primes.size() < size; ++i)
+      if (sieve[i >> 6] & (1ULL << (i & 63))) primes.push_back(3 + 2 * i);
+
+    return primes;
+  }
+
   std::vector<T> from_range_limit(T limit) {
     if (limit == lastT) return this->lastResults;
 
@@ -77,32 +110,6 @@ class Prime {
 
     for (size_t i = 0; i < num_odds; ++i)
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.push_back(3 + 2 * i);
-
-    return primes;
-  }
-
-  std::vector<T> from_size(size_t size) {
-    if (size == lastT) return this->lastResults;
-    std::vector<T> primes;
-    if (size == 0) return primes;
-
-    primes.reserve(size);
-    primes.push_back(2);
-
-    for (T candidate = 3; primes.size() < size; candidate += 2) {
-      bool is_prime = true;
-      const T sqrt_candidate = static_cast<T>(std::sqrt(candidate)) + 1;
-
-      for (const auto &prime : primes) {
-        if (prime > sqrt_candidate) break;
-        if (candidate % prime == 0) {
-          is_prime = false;
-          break;
-        }
-      }
-
-      if (is_prime) primes.push_back(candidate);
-    }
 
     return primes;
   }
@@ -172,7 +179,8 @@ class Fibonacci {
     return (start != std::string::npos) ? result.substr(start) : "0";
   }
 
-  std::vector<uint64_t> add64_ext(const std::vector<uint64_t>& a, const std::vector<uint64_t>& b) {
+  std::vector<uint64_t> add64_ext(const std::vector<uint64_t> &a,
+                                  const std::vector<uint64_t> &b) {
     std::vector<uint64_t> res;
     size_t max_size = std::max(a.size(), b.size());
     std::vector<uint64_t> a_copy = a;
@@ -224,8 +232,8 @@ class Fibonacci {
     }
 
     if (values.empty()) {
-      values.push_back({0}); // F0
-      values.push_back({1}); // F1
+      values.push_back({0});  // F0
+      values.push_back({1});  // F1
     }
 
     size_t currentSize = values.size();
@@ -239,7 +247,7 @@ class Fibonacci {
 
     for (size_t i = currentSize; i < limit; ++i) {
       if (i < 2) continue;
-      values[i] = add64_ext(values[i-1], values[i-2]);
+      values[i] = add64_ext(values[i - 1], values[i - 2]);
     }
 
     lastLimit = limit;
@@ -253,7 +261,5 @@ class Fibonacci {
     return values_str;
   }
 
-  std::string get_index(size_t index) {
-    return get_all(index + 1)[index];
-  }
+  std::string get_index(size_t index) { return get_all(index + 1)[index]; }
 };
