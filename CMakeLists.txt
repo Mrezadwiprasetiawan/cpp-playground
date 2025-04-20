@@ -13,3 +13,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Add subprojects
 add_subdirectory(basic)
 add_subdirectory(number_system)
+add_subdirectory(3D)

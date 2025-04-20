@@ -2,7 +2,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -15,28 +14,9 @@
 template <typename T, typename Ret = T>
 using enable_if_integral = typename std::enable_if<
     std::is_integral<T>::value && !std::is_same<T, bool>::value, Ret>::type;
-
 template <typename T, typename Ret = T>
 using enable_if_arithmetic = typename std::enable_if<
     std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, Ret>::type;
-
-// Fungsi eksponensial untuk integer
-template <typename T>
-enable_if_integral<T, T> power_int(T base, T exponent) {
-  if (exponent < 0)
-    throw std::invalid_argument("Exponent must be non-negative");
-
-  T result = 1;
-  while (exponent > 0) {
-    if (exponent & 1) {
-      result *= base;
-      if (exponent == 1) break;
-    }
-    base *= base;
-    exponent /= 2;
-  }
-  return result;
-}
 
 template <typename T, enable_if_arithmetic<T> = 0>
 class Prime {
@@ -59,16 +39,13 @@ class Prime {
   std::vector<uint64_t> create_sieve(T limit) {
     if (limit < 3) return {};
     const size_t num_odds = ((limit - 3) >> 1) + 1;
-    const size_t array_size = (num_odds + 63) / 64;
+    const size_t array_size = (num_odds + 63) >> 6;
     std::vector<uint64_t> sieve(array_size, uint64_t(~0));
-
     std::vector<std::thread> threads;
     for (int i = 1; i < max_thread; ++i)
       threads.emplace_back(
           [this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
-
     main_sieve(sieve, limit, 0);
-
     for (auto &t : threads) t.join();
     return sieve;
   }
@@ -82,35 +59,30 @@ class Prime {
  public:
   std::vector<T> from_size(size_t size) {
     if (size == 0) return {};
-
     std::vector<T> primes;
     primes.push_back(2);
     if (size == 1) return primes;
-
     T limit = estimate_limit_from_size(size);
     auto sieve = create_sieve(limit);
     const size_t num_odds = ((limit - 3) >> 1) + 1;
 
     for (size_t i = 0; i < num_odds && primes.size() < size; ++i)
-      if (sieve[i >> 6] & (1ULL << (i & 63))) primes.push_back(3 + 2 * i);
+      if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
 
     return primes;
   }
 
   std::vector<T> from_range_limit(T limit) {
     if (limit == lastT) return this->lastResults;
-
     std::vector<T> primes;
     if (limit < 2) return primes;
     primes.push_back(2);
-
     if (limit < 3) return primes;
-
     auto sieve = create_sieve(limit);
     const size_t num_odds = ((limit - 3) >> 1) + 1;
 
     for (size_t i = 0; i < num_odds; ++i)
-      if (sieve[i >> 6] & (1ULL << (i & 63))) primes.push_back(3 + 2 * i);
+      if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
 
     return primes;
   }
@@ -125,27 +97,21 @@ class Fibonacci {
 
   std::string multiplyStrings(const std::string &a, const std::string &b) {
     if (a == "0" || b == "0") return "0";
-
     int m = a.size(), n = b.size();
     std::vector<int> res(m + n, 0);
-
     for (int i = m - 1; i >= 0; i--) {
       for (int j = n - 1; j >= 0; j--) {
         int mul = (a[i] - '0') * (b[j] - '0');
         int p1 = i + j, p2 = i + j + 1;
         int sum = mul + res[p2];
-
         res[p2] = sum % 10;
         res[p1] += sum / 10;
       }
     }
 
     std::string result;
-    for (int num : res) {
-      if (!(result.empty() && num == 0)) {
-        result.push_back(num + '0');
-      }
-    }
+    for (int num : res)
+      if (!(result.empty() && num == 0)) result.push_back(num + '0');
     return result.empty() ? "0" : result;
   }
 
@@ -158,19 +124,13 @@ class Fibonacci {
     int carry = 0;
     int i = numStr.size() - 1;
     uint64_t add_val = add;
-
     while (i >= 0 || add_val > 0 || carry > 0) {
       int sum = carry;
-
-      if (i >= 0) {
-        sum += numStr[i--] - '0';
-      }
-
+      if (i >= 0) sum += numStr[i--] - '0';
       if (add_val > 0) {
         sum += add_val % 10;
         add_val /= 10;
       }
-
       carry = sum / 10;
       result.push_back(sum % 10 + '0');
     }
@@ -188,28 +148,17 @@ class Fibonacci {
     std::vector<uint64_t> b_copy = b;
     a_copy.resize(max_size, 0);
     b_copy.resize(max_size, 0);
-
     uint64_t carry = 0;
-
     for (size_t i = 0; i < max_size; ++i) {
       uint64_t sum_limb = a_copy[i] + b_copy[i];
       uint64_t carry1 = sum_limb < a_copy[i] ? 1 : 0;
-
       sum_limb += carry;
       uint64_t carry2 = sum_limb < carry ? 1 : 0;
-
       res.push_back(sum_limb);
       carry = carry1 + carry2;
     }
-
-    if (carry) {
-      res.push_back(carry);
-    }
-
-    while (!res.empty() && res.back() == 0) {
-      res.pop_back();
-    }
-
+    if (carry) res.push_back(carry);
+    while (!res.empty() && res.back() == 0) res.pop_back();
     return res.empty() ? std::vector<uint64_t>{0} : res;
   }
 
@@ -231,26 +180,21 @@ class Fibonacci {
       values.resize(limit);
       return;
     }
-
     if (values.empty()) {
       values.push_back({0});  // F0
       values.push_back({1});  // F1
     }
-
     size_t currentSize = values.size();
     if (limit <= currentSize) {
       lastLimit = limit;
       values_str = decode();
       return;
     }
-
     values.resize(limit);
-
     for (size_t i = currentSize; i < limit; ++i) {
       if (i < 2) continue;
       values[i] = add64_ext(values[i - 1], values[i - 2]);
     }
-
     lastLimit = limit;
     values_str = decode();
   }
