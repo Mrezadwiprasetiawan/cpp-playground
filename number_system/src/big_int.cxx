@@ -2,11 +2,11 @@
 
 #include <cstdint>
 #include <cstring>
-#include <sstream>
 #include <stdexcept>
 
 std::string uint64_to_string(uint64_t val) {
   std::string res;
+  if (!val) return "0";
   while (val) {
     res.insert(res.begin(), val % 10 + '0');
     val /= 10;
@@ -15,50 +15,65 @@ std::string uint64_to_string(uint64_t val) {
 }
 
 const std::string big_int::two_pow_64 = "18446744073709551616";
-std::string mul_2_64_add_other(std::string val, uint64_t other) {
-  if (val.empty() || val == "0") {
-    return "0";
-  }
 
-  std::string res(val.size() + big_int::two_pow_64.size(), '0');
+void mul_2_64_add_other(std::string& val, uint64_t other) {
+  using namespace std;
+  if (val.empty() || val == "0"){
+    val = "0";
+    return;
+  }
+  std::string res;
   // multiply
+  std::vector<int> tmpres(val.size() + big_int::two_pow_64.size(), 0);
   for (size_t i = 0; i < val.size(); ++i) {
     size_t rev_i = val.size() - 1 - i;
     for (size_t j = 0; j < big_int::two_pow_64.size(); ++j) {
       size_t rev_j = big_int::two_pow_64.size() - 1 - j;
       int mul = (val[rev_i] - '0') * (big_int::two_pow_64[rev_j] - '0');
-      char p1 = mul % 10 + '0';
-      char p2 = mul / 10 + '0';
-      res[rev_i + rev_j] += p1;
-      res[rev_i + rev_j + 1] += p2;
+      size_t p1 = rev_i + rev_j, p2 = p1 + 1;
+      int sum = tmpres[p2] + mul;
+      tmpres[p2] = sum % 10;
+      tmpres[p1] += sum / 10;
     }
   }
 
   // add the other
   std::string b = uint64_to_string(other);
+  int carry = 0;
 
   for (size_t i = 0; i < b.size(); ++i) {
-    size_t rev_i = b.size() - 1 - i;
-    for (size_t j = 0; j < res.size(); ++j) {
-      size_t rev_j = res.size() - 1 - j;
-      int add = (b[rev_i] - '0') + (res[rev_j] - '0');
-      char p1 = add % 10 + '0';
-      char p2 = add / 10 + '0';
-      res[rev_j] = p1;
-      if (p2 != '0') res[rev_j - 1] += p2;
-    }
+    size_t rev_i = tmpres.size() - 1 - i;
+    size_t rev_i_b = b.size() - 1 - i;
+    int sum = b[rev_i_b] - '0' + tmpres[rev_i];
+    if (carry) sum += carry;
+    carry = sum / 10;
+    tmpres[rev_i] = sum % 10;
   }
 
-  return res;
+  for (int i = 0; carry && i < tmpres.size(); ++i) {
+    int sum = tmpres[tmpres.size() - i - 1] + carry;
+    tmpres[tmpres.size() - i - 1] = sum % 10;
+    carry = sum / 10;
+  }
+
+  if (carry) tmpres.insert(tmpres.begin(), 1, carry);
+
+  while (!tmpres[0]) tmpres.erase(tmpres.begin());
+  res.resize(tmpres.size());
+  for (size_t i = 0; i < tmpres.size(); ++i) res[i] = tmpres[i] + '0';
+
+  val = res;
 }
 
+// TODO : implement this method
 std::string big_int::to_string() const {
-  std::stringstream ss;
-  if (this->negative) ss << "-";
+  std::string s;
+  s.push_back('-');
   uint64_t rem = 0;
-  for (auto u64 = this->values.rbegin(); u64 != this->values.rend(); ++u64) {
-  }
-  return ss.str();
+  for (auto u64 = this->values.rbegin(); u64 != this->values.rend(); ++u64)
+    mul_2_64_add_other(s, *u64);
+
+  return s;
 }
 
 big_int big_int::shift_left(uint64_t k) const {
@@ -151,7 +166,7 @@ big_int big_int::mul(const big_int& other) const {
   for (size_t i = 0; i < other.values.size(); ++i) {
     uint64_t factor = other.values[i];
     for (uint8_t j = 1; j < uint8_t(1 << 6); ++j) {
-      if (factor & 1) res = res + (*this << j);
+      if (factor & (1ULL << j)) res = res + (*this << j);
       factor = factor >> 1;
     }
   }
