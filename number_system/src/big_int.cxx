@@ -65,13 +65,13 @@ void mul_2_64_add_other(std::string& val, uint64_t other) {
   val = res;
 }
 
-// TODO : implement this method
 std::string big_int::to_string() const {
   std::string s;
-  s.push_back('-');
   uint64_t rem = 0;
   for (auto u64 = this->values.rbegin(); u64 != this->values.rend(); ++u64)
     mul_2_64_add_other(s, *u64);
+
+  if(this->negative) s.insert(s.begin(),'-');
 
   return s;
 }
