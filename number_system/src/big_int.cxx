@@ -19,7 +19,7 @@ const std::string big_int::two_pow_64 = "18446744073709551616";
 void mul_2_64_add_other(std::string& val, uint64_t other) {
   using namespace std;
   if (val.empty() || val == "0"){
-    val = "0";
+    val = uint64_to_string(other);
     return;
   }
   std::string res;
@@ -45,7 +45,7 @@ void mul_2_64_add_other(std::string& val, uint64_t other) {
     size_t rev_i = tmpres.size() - 1 - i;
     size_t rev_i_b = b.size() - 1 - i;
     int sum = b[rev_i_b] - '0' + tmpres[rev_i];
-    if (carry) sum += carry;
+    sum += carry;
     carry = sum / 10;
     tmpres[rev_i] = sum % 10;
   }
