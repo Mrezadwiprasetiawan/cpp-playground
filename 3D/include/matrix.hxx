@@ -38,7 +38,7 @@ namespace l3d {
     }                                                                    \
                                                                          \
     /* ===== Fungsional ===== */                                         \
-    Mat##size dot_product(const Mat##size &other);                       \
+    T dot_product(const Mat##size &other);                       \
     Mat##size operator*(T scalar);                                       \
     Mat##size operator*(const Mat##size &other);                         \
     Mat##size operator+(const Mat##size &other);                         \
