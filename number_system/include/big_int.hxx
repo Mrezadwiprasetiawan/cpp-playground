@@ -5,6 +5,10 @@
 #include <string>
 #include <vector>
 
+std::string uint64_t_to_string(uint64_t val);
+void mul_2_64_add_other(std::string &val, uint64_t other);
+void div_mod_2_64(const std::string &val, std::string remainder);
+
 #define __BIGINT_OPERATOR_DECL(op, alter)    \
   big_int alter(const big_int &other) const; \
   big_int operator op(const big_int &other) const { return alter(other); }
@@ -28,9 +32,8 @@ class big_int {
   // For positive only
   big_int(std::vector<uint64_t> values) : values(values) {}
 
-  void set_negative(bool negative) { this->negative = negative; }
-
  public:
+  // done
   static const std::string two_pow_64;
   big_int(std::vector<uint64_t> values, bool negative)
       : values(values), negative(negative) {}
@@ -44,7 +47,7 @@ class big_int {
     }
   }
 
-  big_int(std::string value);
+  big_int(const std::string &value);
 
   // c/cpp aneh banget, perlu const di belakang untuk menandakan fungsi tidak
   // merubah big_int
@@ -76,7 +79,7 @@ class big_int {
   __BIGINT_OPERATOR_LOGIC_DECL(||, oror);
 
   // uint64_t udah cukup, terlanjur bikin makronya males ngapus
-  __BIGINT_OPERATOR_SHIFT_DECL(uint64_t);
+  __BIGINT_OPERATOR_SHIFT_DECL(size_t);
 #undef __BIGINT_OPERATOR_DECL
 #undef __BIGINT_OPERATOR_LOGIC_DECL
 #undef __BIGINT_OPERATOR_SHIFT_DECL

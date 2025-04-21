@@ -1,8 +1,10 @@
 #include "big_int.hxx"
 
+#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 
 std::string uint64_to_string(uint64_t val) {
   std::string res;
@@ -18,7 +20,7 @@ const std::string big_int::two_pow_64 = "18446744073709551616";
 
 void mul_2_64_add_other(std::string& val, uint64_t other) {
   using namespace std;
-  if (val.empty() || val == "0"){
+  if (val.empty() || val == "0") {
     val = uint64_to_string(other);
     return;
   }
@@ -65,33 +67,51 @@ void mul_2_64_add_other(std::string& val, uint64_t other) {
   val = res;
 }
 
+void div_mod_2_64(std::string& val, std::string remainder) {}
+
 std::string big_int::to_string() const {
   std::string s;
   uint64_t rem = 0;
   for (auto u64 = this->values.rbegin(); u64 != this->values.rend(); ++u64)
     mul_2_64_add_other(s, *u64);
 
-  if(this->negative) s.insert(s.begin(),'-');
+  if (this->negative) s.insert(s.begin(), '-');
 
   return s;
 }
 
-big_int big_int::shift_left(uint64_t k) const {
+big_int big_int::shift_left(size_t k) const {
   std::vector<uint64_t> res_values(this->values);
   if (!k) return big_int(res_values, this->negative);
-
-  // resize k/64+1 karena elementnya uint64_t
-  res_values.resize((k >> 6) + 1, 0);
+  assert((k >> 6) + res_values.size() > res_values.size());
+  if (k >> 6) res_values.insert(res_values.end(), k >> 6, 0);
   uint64_t carry = 0;
-  for (size_t i = 0; i < res_values.size(); ++i) {
-    res_values[i] = res_values[i] + carry;
-    if (res_values[i] < carry)
-      carry = 1;
-    else
-      carry = 0;
-    carry += res_values[i] >> (64 - k) & ((1 << (63 - k)) - 1);
-    res_values[i] = res_values[i] << k;
+  uint64_t bits = (k & 63ULL);
+  if (bits) {
+    for (auto it = res_values.rbegin(); it != res_values.rend(); ++it) {
+      uint64_t tmp = *it << bits | carry;
+      carry = *it >> (64ULL - bits);
+      *it = tmp;
+    }
   }
+  return big_int(res_values, this->negative);
+}
+
+big_int big_int::shift_right(size_t k) const {
+  std::vector<uint64_t> res_values(this->values);
+  if (!k) return big_int(res_values, this->negative);
+  if (k >> 6 >= res_values.size()) return big_int({0}, this->negative);
+  if (k >> 6) res_values.resize(res_values.size() - (k >> 6));
+  uint64_t carry = 0;
+  uint64_t bits = (k & 63ULL);
+  if (bits) {
+    for (auto it = res_values.begin(); it != res_values.end(); ++it) {
+      uint64_t tmp = *it >> bits | carry;
+      carry = *it << (64ULL - bits);
+      *it = tmp;
+    }
+  }
+  while (res_values.size() > 1 && !res_values.back()) res_values.pop_back();
   return big_int(res_values, this->negative);
 }
 
