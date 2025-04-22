@@ -1,5 +1,4 @@
-#ifndef BIG_INT_HXX
-#define BIG_INT_HXX
+#pragma once
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -7,7 +6,7 @@
 
 std::string uint64_t_to_string(uint64_t val);
 void mul_2_64_add_other(std::string &val, uint64_t other);
-void div_mod_2_64(const std::string &val, std::string remainder);
+void div_mod_2_64(const std::string &val, std::string *remainder);
 
 #define __BIGINT_OPERATOR_DECL(op, alter)    \
   big_int alter(const big_int &other) const; \
@@ -93,5 +92,3 @@ inline big_int operator""_big(const char *str, size_t size) {
 inline std::ostream &operator<<(const std::ostream &a, const big_int &other) {
   return a << other.to_string();
 }
-
-#endif  // BIG_INT_HXX

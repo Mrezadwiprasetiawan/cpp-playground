@@ -1,6 +1,4 @@
-#ifndef __OP_OVERLOAD_HXX__
-#define __OP_OVERLOAD_HXX__
-
+#pragma once
 #include <iostream>
 
 class Suara {
@@ -40,5 +38,3 @@ inline std::ostream& operator<<(std::ostream& a, const Suara& b) {
 inline Suara operator<<(const Animal& a, const Animal& b) {
   return Suara(a.suara + " " + b.suara);
 }
-
-#endif

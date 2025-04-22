@@ -67,7 +67,23 @@ void mul_2_64_add_other(std::string& val, uint64_t other) {
   val = res;
 }
 
-void div_mod_2_64(std::string& val, std::string remainder) {}
+void div_mod_2_64(std::string& val, std::string* remainder) {
+  if (val.size() < big_int::two_pow_64.size()) {
+    if (remainder) *remainder = val;
+    return;
+  }
+  std::vector<int> sub_res(val.size(), 0);
+  size_t offset = val.size() - big_int::two_pow_64.size();
+  uint64_t div_res = 0;
+  bool greater_equal = true;
+  bool carry = 0;
+  while (greater_equal) {
+    for (size_t i = 0; i < val.size(); ++i) {
+      size_t rev_val_i = val.size() - 1 - i;
+      size_t rev_2_64_i = rev_val_i - offset;
+    }
+  }
+}
 
 std::string big_int::to_string() const {
   std::string s;
