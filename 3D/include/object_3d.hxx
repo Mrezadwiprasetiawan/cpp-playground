@@ -1,5 +1,4 @@
-#ifndef _OBJECT_3D_HXX_
-#define _OBJECT_3D_HXX_
+#pragma once
 
 #include <cassert>
 #include <vertex.hxx>
@@ -40,7 +39,6 @@ class Object3D {
   void translate_local(V x, V y, V z);
   void translate_global(V x, V y, V z);
 
-
   // ===== Getter and Setter =====
   // getter
   std::vector<Face<F>> get_face_index() const { return face_indices; }
@@ -65,5 +63,3 @@ class Object3D {
   }
 };
 }  // namespace l3d
-
-#endif

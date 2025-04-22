@@ -1,22 +1,27 @@
-#ifndef _CUSTOM_TRAIT_HXX_
-#define _CUSTOM_TRAIT_HXX_
+#pragma once
 
 #include <cstdint>
 
 // TYPE
 template <bool b, typename T>
 struct is_type {
-  bool val = b;
+  static const bool val = b;
 };
 
 template <typename T>
 struct is_type<true, T> {
-  bool val = true;
+  static const bool val = true;
   using type = T;
 };
 
 template <bool b, typename T>
 using is_type_t = typename is_type<b, T>::type;
+
+template <typename A, typename B>
+bool is_same = false;
+
+template <typename A>
+bool is_same<A, A> = true;
 
 // floating point
 template <typename T>
@@ -64,5 +69,3 @@ using ifel_t = typename ifel<b, T, F>::type;
 
 template <typename Trait, typename F>
 using ifel_trait_t = ifel_t<Trait::val, typename Trait::type, F>;
-
-#endif

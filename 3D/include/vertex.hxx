@@ -1,6 +1,4 @@
-#ifndef _VERTEX_HXX_
-#define _VERTEX_HXX_
-
+#pragma once
 #include <cstddef>
 #include <cstdio>
 #include <custom_trait.hxx>
@@ -43,4 +41,3 @@ struct Face {
 };
 
 }  // namespace l3d
-#endif
