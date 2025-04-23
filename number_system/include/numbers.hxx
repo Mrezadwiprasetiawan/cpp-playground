@@ -24,7 +24,8 @@ template <typename T, enable_if_arithmetic<T> = 0>
 class Prime {
  private:
   std::vector<T> lastResults;
-  T lastT = 0;
+  T lastLimit = 0;
+  T lastSize = 0;
   inline static int max_thread = std::thread::hardware_concurrency();
 
   void main_sieve(std::vector<uint64_t> &sieve, T limit, int offset) {
@@ -60,6 +61,10 @@ class Prime {
 
  public:
   std::vector<T> from_size(size_t size) {
+    if(size <= lastSize){
+      this->lastResults.resize(size);
+      return this->lastResults;
+    }
     if (size == 0) return {};
     std::vector<T> primes;
     primes.push_back(2);
@@ -75,7 +80,7 @@ class Prime {
   }
 
   std::vector<T> from_range_limit(T limit) {
-    if (limit == lastT) return this->lastResults;
+    if (limit == lastLimit) return this->lastResults;
     std::vector<T> primes;
     if (limit < 2) return primes;
     primes.push_back(2);
@@ -87,6 +92,11 @@ class Prime {
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
 
     return primes;
+  }
+
+  bool is_prime(T n){
+    if(n<=1) return false;
+    return *(from_range_limit(n).end()-1) == n;
   }
 };
 

@@ -5,6 +5,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <thread>
 
 std::string uint64_to_string(uint64_t val) {
   std::string res;
@@ -13,6 +14,12 @@ std::string uint64_to_string(uint64_t val) {
     res.insert(res.begin(), val % 10 + '0');
     val /= 10;
   }
+  return res;
+}
+
+uint64_t string_to_uint64_t(const std::string& val) {
+  uint64_t res = 0;
+  for (auto c : val) res = res * 10 + c - '0';
   return res;
 }
 
@@ -70,6 +77,7 @@ void mul_2_64_add_other(std::string& val, uint64_t other) {
 void div_mod_2_64(std::string& val, std::string* remainder) {
   if (val.size() < big_int::two_pow_64.size()) {
     if (remainder) *remainder = val;
+    val = "";
     return;
   }
   std::vector<int> sub_res(val.size(), 0);
@@ -82,6 +90,18 @@ void div_mod_2_64(std::string& val, std::string* remainder) {
       size_t rev_val_i = val.size() - 1 - i;
       size_t rev_2_64_i = rev_val_i - offset;
     }
+  }
+}
+
+const uint16_t big_int::max_thread = std::thread::hardware_concurrency();
+
+big_int::big_int(const std::string& val) {
+  std::string cp = val;
+  std::string rem = "0";
+  std::vector<uint64_t> chunks;
+  while (!cp.empty()) {
+    div_mod_2_64(cp, &rem);
+    chunks.push_back(string_to_uint64_t(rem));
   }
 }
 
