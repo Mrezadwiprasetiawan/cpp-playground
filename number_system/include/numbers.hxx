@@ -61,7 +61,7 @@ class Prime {
 
  public:
   std::vector<T> from_size(size_t size) {
-    if(size <= lastSize){
+    if (size <= lastSize) {
       this->lastResults.resize(size);
       return this->lastResults;
     }
@@ -94,9 +94,15 @@ class Prime {
     return primes;
   }
 
-  bool is_prime(T n){
-    if(n<=1) return false;
-    return *(from_range_limit(n).end()-1) == n;
+  bool is_prime(T n) {
+    if (n <= 1) return false;
+    if (n == 2) return true;
+    if ((n & 1) == 0) return false;
+    T sqrt_n = static_cast<T>(std::sqrt(n));
+    auto sieve = from_range_limit(sqrt_n);
+    for (T p : sieve)
+      if (n % p == 0) return false;
+    return true;
   }
 };
 
