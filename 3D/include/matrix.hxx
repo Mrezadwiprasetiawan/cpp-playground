@@ -6,6 +6,7 @@
 #include <custom_trait.hxx>
 #include <initializer_list>
 #include <stdexcept>
+#include <vec.hxx>
 #include <vector>
 
 namespace l3d {
@@ -48,7 +49,9 @@ class Mat {
   }
 
   void set_identity() {
-    for (int i = 0; i < N; ++i) val[i * N + i] = 1.0;
+    for (int row = 0; row < N; ++row) for (int col = 0; col < N; ++col)
+      if (row == col) val[row * N + col] = 1.0;
+      else val[row * N + col] = 0;
   }
   template <typename U>
   T dot_product(const Mat<U, N> &m) {
@@ -62,8 +65,7 @@ class Mat {
   template <typename U>
   Mat operator*(U fp) const {
     T val_cp[N * N];
-    for (int i = 0; i < N * N; ++i) val_cp[i] = val[i];
-    for (int i = 0; i < N * N; ++i) val_cp[i] *= fp;
+    for (int i = 0; i < N * N; ++i) val_cp[i] = val[i] * fp;
     return Mat(val_cp);
   }
 
@@ -98,6 +100,13 @@ class Mat {
     m.to_array(val_m);
     for (int i = 0; i < N * N; ++i) val_res[i] = val[i] - val_m[i];
     return Mat(val_res);
+  }
+
+  // row
+  Vec<T, N> operator[](size_t index) {
+    T arr[N];
+    for (int i = 0; i < N; ++i) arr[i] = val[index * N + i];
+    return Vec<T, N>(arr);
   }
 
   // eliminasi gauss
@@ -197,10 +206,11 @@ class Matrix {
   Matrix() = delete;
 
  public:
-  static void set_as_model_matrix(Mat<T, 4> &m, T tx, T ty, T tz, T rx, T ry,
-                                  T rz, T sx, T sy, T sz);
+  static void set_as_model_matrix(Mat<T, 4> &m, T tx = 0, T ty = 0, T tz = 0,
+                                  T rx = 0, T ry = 0, T rz = 0, T sx = 1,
+                                  T sy = 1, T sz = 1);
   static void set_as_view_matrix(Mat<T, 4> &m, T tx, T ty, T tz, T cx, T cy,
-                                 T cz, T ux, T uy, T uz);
+                                 T cz, T ux, T uy, T uz) {}
   static void set_as_perspective_matrix(Mat<T, 4> &m, T Fov, T a, T n, T f);
   static void set_as_orthographic_matrix(Mat<T, 4> &m, T l, T r, T t, T b, T n,
                                          T f);

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cassert>
-#include <vertex.hxx>
+#include <matrix.hxx>
+#include <vec.hxx>
 
 namespace l3d {
 template <typename V, typename F>
@@ -10,6 +11,7 @@ class Object3D {
   std::vector<Face<F>> face_indices;
   std::vector<Vertex<V>> renew_vertices;
   std::vector<Vertex<V>> normals;
+  Mat<V, 4> modelMatrix;
 
   // update vertices
   void update_vertices(int line) {
@@ -30,6 +32,7 @@ class Object3D {
   Object3D(std::vector<Vertex<V>> vertices, std::vector<Face<F>> face_indices)
       : vertices(vertices), face_indices(face_indices) {
     update_vertices();
+    modelMatrix.set_identity();
   }
 
   // ===== Fungsional ======

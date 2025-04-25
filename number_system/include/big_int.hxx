@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 
-std::string uint64_t_to_string(uint64_t);
-uint64_t string_to_uint64_t(const std::string &);
-void mul_2_64_add_other(std::string &, uint64_t);
-void div_mod_2_64(const std::string &, std::string *);
+std::string uint64_t_to_string(uint64_t val);
+uint64_t string_to_uint64_t(const std::string &val);
+void mul_2_64_add_other(std::string &val, uint64_t other);
+void div_mod_2_64(const std::string &val, std::string *rem);
 
 #define __BIGINT_OPERATOR_DECL(op, alter)    \
   big_int alter(const big_int &other) const; \

@@ -46,6 +46,8 @@ void mul_2_64_add_other(std::string& val, uint64_t other) {
     }
   }
 
+  if (!other) return;
+
   // add the other
   std::string b = uint64_to_string(other);
   int carry = 0;
@@ -74,6 +76,7 @@ void mul_2_64_add_other(std::string& val, uint64_t other) {
   val = res;
 }
 
+// TODO : Implement this method
 void div_mod_2_64(std::string& val, std::string* remainder) {
   if (val.size() < big_int::two_pow_64.size()) {
     if (remainder) *remainder = val;
@@ -123,6 +126,7 @@ big_int big_int::shift_left(size_t k) const {
   if (k >> 6) res_values.insert(res_values.end(), k >> 6, 0);
   uint64_t carry = 0;
   uint64_t bits = (k & 63ULL);
+  // mencegah shifting 64 kali jika k kelipatan 64 karena 64-0 dilewatkan
   if (bits) {
     for (auto it = res_values.rbegin(); it != res_values.rend(); ++it) {
       uint64_t tmp = *it << bits | carry;
