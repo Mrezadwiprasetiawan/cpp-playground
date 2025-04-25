@@ -39,6 +39,23 @@ class Vec {
   VEC_BASE_OPERATOR(/)
 #undef VEC_BASE_OPERATOR
 
+  // karena SFINAE hanya bisa non error jika di paeameter template
+  // atau di parameter fungsi maka pengecekan diletakan di parametee template
+#define GETTER_XYZ(type, index)          \
+  template <typename U = T>              \
+  is_type_t<(N >= 3), U> type(){ \
+    return val[index];                   \
+  }
+
+  GETTER_XYZ(x, 0);
+  GETTER_XYZ(y, 1);
+  GETTER_XYZ(z, 2);
+#undef GETTER_XYZ
+  template <typename U = T>
+  is_type_t<(N >= 4), U> w() {
+    return val[3];
+  }
+
   T &operator[](std::size_t i) { return val[i]; }
   const T &operator[](std::size_t i) const { return val[i]; }
   T *data() { return val; }

@@ -102,7 +102,7 @@ class Mat {
   }
 
   // row
-  Vec<T, N> operator[](size_t index) {
+  Vec<T, N> operator[](size_t index) const {
     T arr[N];
     for (int i = 0; i < N; ++i) arr[i] = val[index * N + i];
     return Vec<T, N>(arr);
@@ -184,7 +184,7 @@ class Mat {
 
     return Mat(res);
   }
-  T *data() { return val; }
+  const T *data() const { return val; }
 };
 
 using Mat3f = Mat<float, 3>;
@@ -213,9 +213,9 @@ Mat<T, 4> VIEW_MATRIX(T ex, T ey, T ez, T cx, T cy, T cz, T ux = 0, T uy = 1,
   Vec3<T> r = normalize(cross(f, up));  // right vector
   Vec3<T> u = cross(r, f);              // real up vector
 
-  return Mat<T, 4>({r.x, u.x, -f.x, 0, r.y, u.y, -f.y, 0, r.z, u.z, -f.z, 0,
-                    -(dot(r, eye)) + tx, -(dot(u, eye)) + ty, dot(f, eye) + tz,
-                    1});
+  return Mat<T, 4>({r.x(), u.x(), -f.x(), 0, r.y(), u.y(), -f.y(), 0, r.z(),
+                    u.z(), -f.z(), 0, -(dot(r, eye)) + tx, -(dot(u, eye)) + ty,
+                    dot(f, eye) + tz, 1});
 }
 
 // Perspective Matrix
