@@ -6,21 +6,23 @@
 
 namespace l3d {
 template <typename V, typename F>
-class Object3D {
-  std::vector<Vertex<V>> vertices;
-  std::vector<Face<F>> face_indices;
-  std::vector<Vertex<V>> renew_vertices;
-  std::vector<Vertex<V>> normals;
+class Obj3D {
+  std::vector<Vec3<V>> vertices;
+  std::vector<Vec3<F>> face_indices;
+  std::vector<Vec3<V>> renew_vertices;
+  std::vector<Vec3<V>> normals;
   Mat<V, 4> modelMatrix;
 
   // update vertices
   void update_vertices(int line) {
     for (size_t i = 0; i < face_indices.size(); ++i) {
-      Face f_i = face_indices[i];
-      assert(f_i.is_reachable(vertices));
-      renew_vertices.push_back(vertices[f_i.i0]);
-      renew_vertices.push_back(vertices[f_i.i1]);
-      renew_vertices.push_back(vertices[f_i.i2]);
+      Vec3 f_i = face_indices[i];
+      assert(f_i.x > 0 && f_i.x < vertices.size());
+      assert(f_i.y > 0 && f_i.y < vertices.size());
+      assert(f_i.z > 0 && f_i.z < vertices.size());
+      renew_vertices.push_back(vertices[f_i.x]);
+      renew_vertices.push_back(vertices[f_i.y]);
+      renew_vertices.push_back(vertices[f_i.z]);
     }
   }
 
@@ -29,7 +31,7 @@ class Object3D {
    * otomatis memperbarui vertices tapi originalnya tidak dihapus agar lebih
    * mudah diambil nanti
    */
-  Object3D(std::vector<Vertex<V>> vertices, std::vector<Face<F>> face_indices)
+  Obj3D(std::vector<Vec3<V>> vertices, std::vector<Vec3<F>> face_indices)
       : vertices(vertices), face_indices(face_indices) {
     update_vertices();
     modelMatrix.set_identity();
@@ -44,22 +46,20 @@ class Object3D {
 
   // ===== Getter and Setter =====
   // getter
-  std::vector<Face<F>> get_face_index() const { return face_indices; }
-  std::vector<Vertex<V>> get_default_vertices() const { return vertices; }
-  std::vector<Vertex<V>> get_processed_vertices() const {
-    return renew_vertices;
-  }
+  std::vector<Vec3<F>> get_face_index() const { return face_indices; }
+  std::vector<Vec3<V>> get_default_vertices() const { return vertices; }
+  std::vector<Vec3<V>> get_processed_vertices() const { return renew_vertices; }
   // setter
-  void update_vertices(std::vector<Vertex<V>> vertices) {
+  void update_vertices(std::vector<Vec3<V>> vertices) {
     this->vertices = vertices;
     update_vertices();
   }
-  void update_face(std::vector<Vertex<V>> face_indices) {
+  void update_face(std::vector<Vec3<V>> face_indices) {
     this->face_indices = face_indices;
     update_vertices();
   }
-  void update_face_vertices(std::vector<Vertex<V>> vertices,
-                            std::vector<Face<F>> face_indices) {
+  void update_face_vertices(std::vector<Vec3<V>> vertices,
+                            std::vector<Vec3<F>> face_indices) {
     this->vertices = vertices;
     this->face_indices = face_indices;
     update_vertices();

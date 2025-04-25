@@ -49,17 +49,12 @@ class Mat {
   }
 
   void set_identity() {
-    for (int row = 0; row < N; ++row) for (int col = 0; col < N; ++col)
-      if (row == col) val[row * N + col] = 1.0;
-      else val[row * N + col] = 0;
-  }
-  template <typename U>
-  T dot_product(const Mat<U, N> &m) {
-    U val_m[N * N];
-    m.to_array(val_m);
-    T result = 0;
-    for (int i = 0; i < N * N; ++i) result += val[i] * val_m[i];
-    return result;
+    for (int row = 0; row < N; ++row)
+      for (int col = 0; col < N; ++col)
+        if (row == col)
+          val[row * N + col] = 1.0;
+        else
+          val[row * N + col] = 0;
   }
 
   template <typename U>
@@ -69,24 +64,23 @@ class Mat {
     return Mat(val_cp);
   }
 
-  Vec<T,N> operator*(Vec<T,N> vn){
-    Vec<T,N> res;
-    for(int row = 0; row < N; ++row)
-      for(int col =0; col < N; ++col) res[row] += val[row*N+col] * vn[col];
+  Vec<T, N> operator*(const Vec<T, N> &vn) const {
+    Vec<T, N> res;
+    for (int row = 0; row < N; ++row)
+      for (int col = 0; col < N; ++col)
+        res[row] += val[row * N + col] * vn[col];
     return res;
   }
 
   template <typename U>
   Mat operator*(const Mat<U, N> &m) const {
     T val_res[N * N]{};
-    U val_m[N * N];
-    m.to_array(val_m);
     // k ini faktor untuk ngurusin perkaliannya
     // sedangkan row dan col untuk indeks hasil akhirnya
     for (int row = 0; row < N; ++row)
       for (int col = 0; col < N; ++col)
         for (int k = 0; k < N; ++k)
-          val_res[row * N + col] += val[row * N + k] * val_m[k * N + col];
+          val_res[row * N + col] += val[row * N + k] * m.data()[k * N + col];
 
     return Mat(val_res);
   }
@@ -103,9 +97,7 @@ class Mat {
   template <typename U>
   Mat operator-(const Mat<U, N> &m) const {
     T val_res[N * N]{};
-    T val_m[N * N];
-    m.to_array(val_m);
-    for (int i = 0; i < N * N; ++i) val_res[i] = val[i] - val_m[i];
+    for (int i = 0; i < N * N; ++i) val_res[i] = val[i] - m.data()[i];
     return Mat(val_res);
   }
 
@@ -192,6 +184,7 @@ class Mat {
 
     return Mat(res);
   }
+  T *data() { return val; }
 };
 
 using Mat3f = Mat<float, 3>;
@@ -204,26 +197,49 @@ template <typename T, int N>
 Mat<T, N> operator*(const T fp, const Mat<T, N> &m) {
   return m * fp;
 }
-
 enum MATRIX_ROTATION_TYPE { EULER, EULER2, QUATERNION };
-enum MATRIX_PROJECTION_TYPE { PERSPECTIVE, ORTHOGRAPHIC };
+enum MATRIX_PROJECTION_TYPE { PERSPECTIVE, ORTHOGRAPHIC, FRUSTUM };
 
+// View matrix
 template <typename T, typename = ifel_trait_t<is_fp<T>, float>>
-class Matrix {
-  Matrix() = delete;
+Mat<T, 4> VIEW_MATRIX(T ex, T ey, T ez, T cx, T cy, T cz, T ux = 0, T uy = 1,
+                      T uz = 0, T tx = 0, T ty = 0, T tz = 0) {
+  Vec3<T> eye{ex, ey, ez};
+  Vec3<T> center{cx, cy, cz};
+  Vec3<T> up{ux, uy, uz};
 
- public:
-  static void set_as_model_matrix(Mat<T, 4> &m, T tx = 0, T ty = 0, T tz = 0,
-                                  T rx = 0, T ry = 0, T rz = 0, T sx = 1,
-                                  T sy = 1, T sz = 1);
-  static void set_as_view_matrix(Mat<T, 4> &m, T tx, T ty, T tz, T cx, T cy,
-                                 T cz, T ux, T uy, T uz) {}
-  static void set_as_perspective_matrix(Mat<T, 4> &m, T Fov, T a, T n, T f);
-  static void set_as_orthographic_matrix(Mat<T, 4> &m, T l, T r, T t, T b, T n,
-                                         T f);
-  static void set_as_matrix_rotation(Mat<T, 4> &m, MATRIX_ROTATION_TYPE mrt,
-                                     T degree, T px, T py, T pz);
-  static void set_as_matrix_translation(Mat<T, 4> &m, T tx, T ty, T tz);
-};
+  // Forward, Right, dan Up vector
+  Vec3<T> f = normalize(center - eye);  // forward vector
+  Vec3<T> r = normalize(cross(f, up));  // right vector
+  Vec3<T> u = cross(r, f);              // real up vector
+
+  return Mat<T, 4>({r.x, u.x, -f.x, 0, r.y, u.y, -f.y, 0, r.z, u.z, -f.z, 0,
+                    -(dot(r, eye)) + tx, -(dot(u, eye)) + ty, dot(f, eye) + tz,
+                    1});
+}
+
+// Perspective Matrix
+template <typename T>
+Mat<T, 4> PERSPECTIVE_MATRIX(T Fov, T a, T n, T f) {
+  T tan_half_fov = tan(Fov / 2);
+  return Mat<T, 4>({1 / (tan_half_fov * a), 0, 0, 0, 0, 1 / tan_half_fov, 0, 0,
+                    0, 0, (f + n) / (f - n), 2 * f * n / (f - n), 0, 0, -1, 0});
+}
+
+// Orthographic Matrix
+template <typename T>
+Mat<T, 4> ORTHOGRAPHIC_MATRIX(T l, T r, T t, T b, T n, T f) {
+  return Mat<T, 4>({2 / (r - l), 0, 0, -(r + l) / (r - l), 0, 2 / (t - b), 0,
+                    -(t + b) / (t - b), 0, 0, -2 / (f - n), -(f + n) / (f - n),
+                    0, 0, 0, 1});
+}
+
+// Frustum Matrix
+template <typename T>
+Mat<T, 4> FRUSTUM_MATRIX(T l, T r, T t, T b, T n, T f) {
+  return Mat<T, 4>({(2 * n) / (r - l), 0, (r + l) / (r - l), 0, 0,
+                    (2 * n) / (t - b), (t + b) / (t - b), 0, 0, 0,
+                    (f + n) / (f - n), (2 * f * n) / (f - n), 0, 0, -1, 0});
+}
 
 }  // namespace l3d

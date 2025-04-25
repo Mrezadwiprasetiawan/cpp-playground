@@ -1,29 +1,70 @@
 #pragma once
 
 #include <custom_trait.hxx>
-#include <vector>
+#include <initializer_list>
 
 namespace l3d {
 
-template <typename T, std::size_t N>
+template <typename T, int N>
 class Vec {
-  private:
-  T value[N];
-  public:
-  Vec() { for(int i = 0; i< N; ++i) value[i] = 0; }
+ private:
+  T val[N];
 
-  Vec(std::initializer_list<T> list) {
-    assert(list.size()==N);
-    auto it = list.begin();
-    for(int i=0; i< N ; ++i, ++it) value[i] = *it;
+ public:
+  Vec() {
+    for (int i = 0; i < N; ++i) val[i] = 0;
   }
 
-  Vec(T (&arr)[N]) { for (int i = 0; i < N; ++i) value[i] = arr[i]; }
+  Vec(std::initializer_list<T> list) {
+    assert(list.size() == N);
+    auto it = list.begin();
+    for (int i = 0; i < N; ++i, ++it) val[i] = *it;
+  }
 
-  T &operator[](std::size_t i) { return value[i]; }
-  const T &operator[](std::size_t i) const { return value[i]; }
-  T *data(){ return value; }
+  Vec(T (&arr)[N]) {
+    for (int i = 0; i < N; ++i) val[i] = arr[i];
+  }
+
+#define VEC_BASE_OPERATOR(op)                             \
+  template <typename U>                                   \
+  Vec<T, N> operator op(const Vec<U, N> &vn) {            \
+    Vec<T, N> res;                                        \
+    for (int i = 0; i < N; ++i) res[i] = val[i] op vn[i]; \
+    return res;                                           \
+  }
+
+  VEC_BASE_OPERATOR(+)
+  VEC_BASE_OPERATOR(-)
+  VEC_BASE_OPERATOR(*)
+  VEC_BASE_OPERATOR(/)
+#undef VEC_BASE_OPERATOR
+
+  T &operator[](std::size_t i) { return val[i]; }
+  const T &operator[](std::size_t i) const { return val[i]; }
+  T *data() { return val; }
 };
+
+template <typename T, int N, typename = ifel_trait_t<is_fp<T>, float>>
+Vec<T, N> normalize(Vec<T, N> target) {
+  T length = 0;
+  for (int i = 0; i < N; ++i) length += target[i] * target[i];
+  length = sqrt(length);
+  for (int i = 0; i < N; ++i) target[i] = target[i] / length;
+  return target;
+}
+
+template <typename T, int N, typename = ifel_trait_t<is_fp<T>, float>>
+T dot(Vec<T, N> a, Vec<T, N> b) {
+  T res = 0;
+  for (int i = 0; i < N; ++i) res += a[i] * b[i];
+  return res;
+}
+
+template <typename T, typename = ifel_trait_t<is_fp<T>, float>>
+Vec<T, 3> cross(Vec<T, 3> a, Vec<T, 3> b) {
+  return {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0]};
+}
 
 template <typename T>
 using Vec3 = Vec<T, 3>;
@@ -33,35 +74,5 @@ using Vec3f = Vec3<float>;
 using Vec3d = Vec3<double>;
 using Vec4f = Vec4<float>;
 using Vec4d = Vec4<double>;
-
-template <typename T, ifel_trait_t<is_fp<T>, float> = 0>
-struct Vertex {
-  Vec3<T> pos;
-
-  Vertex(T x = 0, T y = 0, T z = 0) : pos({x, y, z}) {}
-  Vertex(std::initializer_list<T> &v) {
-    assert(v.size() == 3);
-    auto it = v.begin();
-    for (int i = 0; i < 3; ++i, ++it) pos[i] = *it;
-  }
-  Vertex(const Vec3<T> &vec) : pos(vec) {}
-};
-
-template <typename T, ifel_trait_t<is_int<T>, int> = 0>
-struct Face {
-  Vec3<T> idx;
-
-  Face(T i0 = 0, T i1 = 1, T i2 = 2) : idx({i0, i1, i2}) {}
-  Face(const Vec3<T> &vec) : idx(vec) {}
-
-  template <typename V>
-  bool is_reachable(const std::vector<Vertex<V>> &vertices) {
-    const size_t max = vertices.size() - 1;
-    return idx[0] >= 0 && idx[0] <= max && idx[1] >= 0 && idx[1] <= max &&
-           idx[2] >= 0 && idx[2] <= max;
-  }
-
-  Vec3<T> to_vec() const { return idx; }
-};
 
 }  // namespace l3d
