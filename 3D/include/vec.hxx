@@ -1,30 +1,28 @@
 #pragma once
 
-#include <cstddef>
-#include <cstdio>
 #include <custom_trait.hxx>
 #include <vector>
 
 namespace l3d {
 
 template <typename T, std::size_t N>
-struct Vec {
-  T data[N];
-
-  Vec() { data.fill(); }
+class Vec {
+  private:
+  T value[N];
+  public:
+  Vec() { for(int i = 0; i< N; ++i) value[i] = 0; }
 
   Vec(std::initializer_list<T> list) {
-    std::size_t i = 0;
-    for (T value : list) data[i++] = value;
-    while (i < N) data[i++] = T{};
+    assert(list.size()==N);
+    auto it = list.begin();
+    for(int i=0; i< N ; ++i, ++it) value[i] = *it;
   }
 
-  Vec(T (&arr)[N]) {
-    for (int i = 0; i < N; ++i) data[i] = arr[i];
-  }
+  Vec(T (&arr)[N]) { for (int i = 0; i < N; ++i) value[i] = arr[i]; }
 
-  T &operator[](std::size_t i) { return data[i]; }
-  const T &operator[](std::size_t i) const { return data[i]; }
+  T &operator[](std::size_t i) { return value[i]; }
+  const T &operator[](std::size_t i) const { return value[i]; }
+  T *data(){ return value; }
 };
 
 template <typename T>

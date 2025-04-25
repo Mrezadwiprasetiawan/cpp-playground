@@ -69,6 +69,13 @@ class Mat {
     return Mat(val_cp);
   }
 
+  Vec<T,N> operator*(Vec<T,N> vn){
+    Vec<T,N> res;
+    for(int row = 0; row < N; ++row)
+      for(int col =0; col < N; ++col) res[row] += val[row*N+col] * vn[col];
+    return res;
+  }
+
   template <typename U>
   Mat operator*(const Mat<U, N> &m) const {
     T val_res[N * N]{};
