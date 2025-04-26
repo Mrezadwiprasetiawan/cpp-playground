@@ -51,8 +51,7 @@ class Mat {
   void set_identity() {
     for (int row = 0; row < N; ++row)
       for (int col = 0; col < N; ++col)
-        if (row == col)
-          val[row * N + col] = 1.0;
+        if (row == col) val[row * N + col] = 1.0;
         else
           val[row * N + col] = 0;
   }
@@ -197,25 +196,59 @@ template <typename T, int N>
 Mat<T, N> operator*(const T fp, const Mat<T, N> &m) {
   return m * fp;
 }
-enum MATRIX_ROTATION_TYPE { EULER, EULER2, QUATERNION };
+
+template <typename T, int N>
+Mat<T, N> normalize(const Mat<T, N> &m) {
+  T length[N];
+  for (int i = 0; i < N; ++i) {
+    for (int j = 0; j < N; ++j) length[i] += m[i][j];
+    length[i] = sqrt<T>(length[i]);
+  }
+}
+
+// untuk mengubah matriks 3×3 ke 4×4
+template <typename T>
+Mat<T, 4> Mat3_to_Mat4(const Mat<T, 4> &m) {
+  T res_arr[4 * 4];
+  for (int i = 0; i < 16; ++i) {
+    if ((i & 3) == 3 || (i >> 2) == 3) res_arr[i] = (i == 15) ? 1 : 0;
+    else
+      res_arr[i] = m.data()[(i & 3) * 4 + (i >> 2)];
+  }
+  return Mat(res_arr);
+}
+
+// operasi matriks 4×4 * 3×3
+// rubah dulu yang 3×3 ke 4×4 dengan menambahkan komponen w
+template <typename T>
+Mat<T, 4> operator*(const Mat<T, 4> &a, const Mat<T, 3> &b) {
+  return a * Nat3_to_Mat4(b);
+}
+
+// agar berlaku sebaliknya juga
+template <typename T>
+Mat<T, 4> operator*(const Mat<T, 3> &a, const Mat<T, 4> &b) {
+  return Mat3_to_Mat4(a) * b;
+}
+
+// bakal berguna nanti buat kelas kelas seperti kamera objek atau proyeksi
+enum MATRIX_ROTATION_TYPE { EULER, QUATERNION };
 enum MATRIX_PROJECTION_TYPE { PERSPECTIVE, ORTHOGRAPHIC, FRUSTUM };
+
+// buat urutan rotasi karena rotasi euler bergantung banget sama urutan
+enum EULER_ROTATION_TYPE { ZYX, ZXY, YXZ, YZX, XZY, XYZ };
 
 // View matrix
 template <typename T, typename = ifel_trait_t<is_fp<T>, float>>
-Mat<T, 4> VIEW_MATRIX(T ex, T ey, T ez, T cx, T cy, T cz, T ux = 0, T uy = 1,
-                      T uz = 0, T tx = 0, T ty = 0, T tz = 0) {
-  Vec3<T> eye{ex, ey, ez};
-  Vec3<T> center{cx, cy, cz};
-  Vec3<T> up{ux, uy, uz};
-
+Mat<T, 4> VIEW_MATRIX(Vec3<T> eye, Vec3<T> center, Vec3<T> up, Vec3<T> t) {
   // Forward, Right, dan Up vector
   Vec3<T> f = normalize(center - eye);  // forward vector
   Vec3<T> r = normalize(cross(f, up));  // right vector
   Vec3<T> u = cross(r, f);              // real up vector
 
   return Mat<T, 4>({r.x(), u.x(), -f.x(), 0, r.y(), u.y(), -f.y(), 0, r.z(),
-                    u.z(), -f.z(), 0, -(dot(r, eye)) + tx, -(dot(u, eye)) + ty,
-                    dot(f, eye) + tz, 1});
+                    u.z(), -f.z(), 0, -(dot(r, eye)) + t.x(),
+                    -(dot(u, eye)) + t.y(), dot(f, eye) + t.z(), 1});
 }
 
 // Perspective Matrix
@@ -241,5 +274,36 @@ Mat<T, 4> FRUSTUM_MATRIX(T l, T r, T t, T b, T n, T f) {
                     (2 * n) / (t - b), (t + b) / (t - b), 0, 0, 0,
                     (f + n) / (f - n), (2 * f * n) / (f - n), 0, 0, -1, 0});
 }
+
+/* untuk rotasi hanya kurang dari 2 sumbu, tinggal dipass parametee d pada
+ * sumbu yang bukan ke 0 enumnya jadi bebas untuk sumbu hanya 1 dan untuk sumbu
+ * 2 enumnya jadi punya tiga pilihan nee ene atau een dengan e adalah sumbu yang
+ * aktif
+ *
+ * kok bisa? karena kalo nilai degreenya 0 sinnya juga 0 cosnya jadi 1, jadi
+ * matriks identitas deh
+ */
+template <typename T>
+Mat<T, 4> EULER_ROTATION_MATRIX(const Vec3<T> &d,
+                                const EULER_ROTATION_TYPE &rt) {
+  // semua rotasi bergantung pada global axis
+  // Urutan terbalik karena Matrix selalu lhs terhadap objek
+  // rotasi di sumbu x
+  Mat<T, 3> Rx{1, 0, 0, 0, cos(d.x()), -sin(d.x()), 0, sin(d.x()), cos(d.x())};
+  // rotasi di sumbu y
+  Mat<T, 3> Ry{cos(d.y()), 0, -sin(d.y()), 0, 1, 0, sin(d.y()), 0, cos(d.y())};
+  // rotasi di sumbu z
+  Mat<T, 3> Rz{cos(d.z()), -sin(d.z()), 0, sin(d.z()), sin(d.z()), 0, 0, 0, 1};
+  switch (rt) {
+    case ZYX: return Mat3_to_Mat4(Rx * Ry * Rz);
+    case ZXY: return Mat3_to_Mat4(Ry * Rx * Rz);
+    case YZX: return Mat3_to_Mat4(Rx * Rz * Ry);
+    case YXZ: return Mat3_to_Mat4(Rz * Rx * Ry);
+    case XZY: return Mat3_to_Mat4(Rx * Rz * Ry);
+    case XYZ: return Mat3_to_Mat4(Rz * Ry * Rx);
+  }
+}
+
+// TODO : implement quaternion Matrix
 
 }  // namespace l3d
