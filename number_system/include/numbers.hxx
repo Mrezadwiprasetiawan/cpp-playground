@@ -70,12 +70,14 @@ class Prime {
     primes.push_back(2);
     if (size == 1) return primes;
     T limit = estimate_limit_from_size(size);
+    lastLimit = limit;
     auto sieve = create_sieve(limit);
     const size_t num_odds = ((limit - 3) >> 1) + 1;
 
     for (size_t i = 0; i < num_odds && primes.size() < size; ++i)
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
 
+    lastResults = primes;
     return primes;
   }
 
@@ -85,12 +87,14 @@ class Prime {
     if (limit < 2) return primes;
     primes.push_back(2);
     if (limit < 3) return primes;
+    lastLimit = limit;
     auto sieve = create_sieve(limit);
     const size_t num_odds = ((limit - 3) >> 1) + 1;
 
     for (size_t i = 0; i < num_odds; ++i)
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
 
+    lastResults = primes;
     return primes;
   }
 

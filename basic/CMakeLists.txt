@@ -1,3 +1,4 @@
 add_subdirectory(args_handle)
 add_subdirectory(assertion)
 add_subdirectory(operator_overloading)
+add_subdirectory(segfault_handler)

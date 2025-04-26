@@ -15,8 +15,11 @@ uint64_t to_number_with_suffix(const char *str) {
   uint64_t num = 0;
   size_t i = 0;
 
-  while (i < len && std::isdigit(str[i])) {
-    num = num * 10 + (str[i++] - '0');
+  while (i < len) {
+    if (str[i] > '0' && str[i] < '9')
+      num = num * 10 + (str[i++] - '0');
+    else
+      std::cerr << "Invalid suffix: " << str[i] << std::endl;
   }
 
   if (i == len) return num;
