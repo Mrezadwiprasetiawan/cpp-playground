@@ -192,7 +192,7 @@ class Mat {
 template <typename T>
 using Mat3 = Mat<T, 3>;
 template <typename T>
-using Mat4 = Mat<T, 3>;
+using Mat4 = Mat<T, 4>;
 
 using Mat3f = Mat<float, 3>;
 using Mat4f = Mat<float, 4>;
@@ -207,12 +207,12 @@ Mat<T, N> operator*(const T fp, const Mat<T, N> &m) {
 
 // untuk mengubah matriks 3×3 ke 4×4
 template <typename T>
-Mat<T, 4> Mat3_to_Mat4(const Mat<T, 4> &m) {
+Mat<T, 4> mat3_to_mat4(const Mat<T, 3> &m) {
   T res_arr[4 * 4];
   for (int i = 0; i < 16; ++i) {
     if ((i & 3) == 3 || (i >> 2) == 3) res_arr[i] = (i == 15) ? 1 : 0;
     else
-      res_arr[i] = m.data()[(i & 3) * 4 + (i >> 2)];
+      res_arr[i] = m.data()[(i & 3) * 3 + (i >> 2)];
   }
   return Mat<T, 4>(res_arr);
 }
@@ -221,13 +221,13 @@ Mat<T, 4> Mat3_to_Mat4(const Mat<T, 4> &m) {
 // rubah dulu yang 3×3 ke 4×4 dengan menambahkan komponen w
 template <typename T>
 Mat<T, 4> operator*(const Mat<T, 4> &a, const Mat<T, 3> &b) {
-  return a * Mat3_to_Mat4<T>(b);
+  return a * mat3_to_mat4<T>(b);
 }
 
 // agar berlaku sebaliknya juga
 template <typename T>
 Mat<T, 4> operator*(const Mat<T, 3> &a, const Mat<T, 4> &b) {
-  return Mat3_to_Mat4<T>(a) * b;
+  return mat3_to_mat4<T>(a) * b;
 }
 
 // bakal berguna nanti buat kelas kelas seperti kamera objek atau proyeksi
@@ -239,7 +239,9 @@ enum EULER_ROTATION_TYPE { ZYX, ZXY, YXZ, YZX, XZY, XYZ };
 
 // View matrix
 template <typename T, typename = ifel_trait_t<is_fp<T>, float>>
-Mat<T, 4> VIEW_MATRIX(Vec3<T> eye, Vec3<T> center, Vec3<T> up, Vec3<T> t) {
+Mat<T, 4> VIEW_MATRIX(const Vec3<T> &eye, const Vec3<T> &center,
+                      const Vec3<T> &up = {0, 1, 0},
+                      const Vec3<T> &t = {0, 0, 0}) {
   // Forward, Right, dan Up vector
   Vec3<T> f = normalize(center - eye);  // forward vector
   Vec3<T> r = normalize(cross(f, up));  // right vector
@@ -274,10 +276,8 @@ Mat<T, 4> FRUSTUM_MATRIX(T l, T r, T t, T b, T n, T f) {
                     (f + n) / (f - n), (2 * f * n) / (f - n), 0, 0, -1, 0});
 }
 
-/* untuk rotasi hanya kurang dari 2 sumbu, tinggal dipass parametee d pada
- * sumbu yang bukan ke 0 enumnya jadi bebas untuk sumbu hanya 1 dan untuk sumbu
- * 2 enumnya jadi punya tiga pilihan nee ene atau een dengan e adalah sumbu yang
- * aktif
+/* untuk rotasi hanya kurang dari 2 sumbu, tinggal dipass parameter d nilainya 0
+ * dengan nne atau nee dimama e adalah sukbu aktif
  *
  * kok bisa? karena kalo nilai degreenya 0 sinnya juga 0 cosnya jadi 1, jadi
  * matriks identitas deh
@@ -292,14 +292,14 @@ Mat<T, 4> EULER_ROTATION_MATRIX(const Vec3<T> &d,
   // rotasi di sumbu y
   Mat<T, 3> Ry{cos(d.y()), 0, -sin(d.y()), 0, 1, 0, sin(d.y()), 0, cos(d.y())};
   // rotasi di sumbu z
-  Mat<T, 3> Rz{cos(d.z()), -sin(d.z()), 0, sin(d.z()), sin(d.z()), 0, 0, 0, 1};
+  Mat<T, 3> Rz{cos(d.z()), -sin(d.z()), 0, sin(d.z()), cos(d.z()), 0, 0, 0, 1};
   switch (rt) {
-    case ZYX: return Mat3_to_Mat4(Rx * Ry * Rz);
-    case ZXY: return Mat3_to_Mat4(Ry * Rx * Rz);
-    case YZX: return Mat3_to_Mat4(Rx * Rz * Ry);
-    case YXZ: return Mat3_to_Mat4(Rz * Rx * Ry);
-    case XZY: return Mat3_to_Mat4(Rx * Rz * Ry);
-    case XYZ: return Mat3_to_Mat4(Rz * Ry * Rx);
+    case ZYX: return mat3_to_mat4(Rx * Ry * Rz);
+    case ZXY: return mat3_to_mat4(Ry * Rx * Rz);
+    case YZX: return mat3_to_mat4(Rx * Rz * Ry);
+    case YXZ: return mat3_to_mat4(Rz * Rx * Ry);
+    case XZY: return mat3_to_mat4(Rx * Rz * Ry);
+    case XYZ: return mat3_to_mat4(Rz * Ry * Rx);
   }
 }
 

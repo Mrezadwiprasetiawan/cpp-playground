@@ -1,3 +1,6 @@
+#include <custom_trait.hxx>
+#include <iomanip>
+#include <ios>
 #include <iostream>
 #include <matrix.hxx>
 #include <vec.hxx>
@@ -8,19 +11,24 @@ void print(const l3d::Vec<T, N> &vn, int n_indent) {
   std::string indent = "";
   for (int i = 0; i < n_indent; ++i) indent += "\t";
   cout << indent;
-  for (int i = 0; i < N; ++i) cout << vn[i] << "\t";
+  for (int i = 0; i < N; ++i) cout << vn[i] << " ";
   cout << endl;
 }
 template <typename T, int N>
 void print(const l3d::Mat<T, N> &m, int n_indent) {
   using namespace std;
+  bool is_float = ::is_same<T, float>;
+  ios oldState(nullptr);
+  oldState.copyfmt(cout);
+  cout << fixed << setprecision(is_float ? 6 : 15) << endl;
   std::string indent = "";
   for (int i = 0; i < n_indent; ++i) indent += "\t";
   for (int i = 0; i < N; ++i) {
     cout << indent;
-    for (int j = 0; j < N; ++j) cout << m[j][i] << "\t";
+    for (int j = 0; j < N; ++j) cout << m[j][i] << " ";
     cout << endl;
   }
+  cout.copyfmt(oldState);
   cout << endl;
 }
 
@@ -30,9 +38,7 @@ int main() {
   l3d::Vec3d v3({1.1f, 2.5f, 3.0f});
   cout << "tes Vec pake Vec3 v3" << endl;
   cout << "elemen v3\t:" << endl;
-  cout << "\t";
-  for (int i = 0; i < 3; ++i) cout << v3[i] << " ";
-  cout << endl;
+  print(v3, 1);
 
   l3d::Mat3d m3({1.1f, 1.3f, 5.7f, 9.1f, 3.2f, 8.1f, 0.1f, 5.1f, 7.7f});
 
@@ -62,8 +68,7 @@ int main() {
 
   // testing view matrix
   l3d::Vec3d eye{0, 0, 5}, lookAt{0, 0, 0};
-  l3d::Mat4f vm = l3d::VIEW_MATRIX<float>(eye[0], eye[1], eye[2], lookAt[0],
-                                          lookAt[1], lookAt[2]);
+  l3d::Mat4d vm = l3d::VIEW_MATRIX<double>(eye, lookAt);
   cout << "elemen view matrix dengan\t:" << endl;
   cout << "\teye\t:" << endl;
   print(eye, 2);
@@ -71,6 +76,12 @@ int main() {
   print(lookAt, 2);
   cout << "\telemennya\t:" << endl;
   print(vm, 2);
+  cout << "test mat3 ke mat 4 dari m3\t:" << endl;
+  print(mat3_to_mat4(m3), 1);
+  cout << "Matrix euler dengan 0,1,0\t:" << endl;
+  print(l3d::EULER_ROTATION_MATRIX<float>({0, 1, 0},
+                                          l3d::EULER_ROTATION_TYPE::XYZ),
+        1);
 
   return 0;
 }

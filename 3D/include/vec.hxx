@@ -27,7 +27,7 @@ class Vec {
 
 #define VEC_BASE_OPERATOR(op)                             \
   template <typename U>                                   \
-  Vec<T, N> operator op(const Vec<U, N> &vn) {            \
+  Vec<T, N> operator op(const Vec<U, N> &vn) const {      \
     Vec<T, N> res;                                        \
     for (int i = 0; i < N; ++i) res[i] = val[i] op vn[i]; \
     return res;                                           \
@@ -41,10 +41,10 @@ class Vec {
 
   // karena SFINAE hanya bisa non error jika di paeameter template
   // atau di parameter fungsi maka pengecekan diletakan di parametee template
-#define GETTER_XYZ(type, index)          \
-  template <typename U = T>              \
-  is_type_t<(N >= 3), U> type(){ \
-    return val[index];                   \
+#define GETTER_XYZ(type, index)         \
+  template <typename U = T>             \
+  is_type_t<(N >= 3), U> type() const { \
+    return val[index];                  \
   }
 
   GETTER_XYZ(x, 0);
@@ -71,14 +71,14 @@ Vec<T, N> normalize(Vec<T, N> target) {
 }
 
 template <typename T, int N, typename = ifel_trait_t<is_fp<T>, float>>
-T dot(Vec<T, N> a, Vec<T, N> b) {
+T dot(const Vec<T, N> &a, const Vec<T, N> &b) {
   T res = 0;
   for (int i = 0; i < N; ++i) res += a[i] * b[i];
   return res;
 }
 
 template <typename T, typename = ifel_trait_t<is_fp<T>, float>>
-Vec<T, 3> cross(Vec<T, 3> a, Vec<T, 3> b) {
+Vec<T, 3> cross(const Vec<T, 3> &a, const Vec<T, 3> &b) {
   return {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
           a[0] * b[1] - a[1] * b[0]};
 }
