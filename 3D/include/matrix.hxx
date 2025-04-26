@@ -10,6 +10,8 @@
 #include <vector>
 
 namespace l3d {
+
+// example usage Mat<double,4> Matrix 4 * 4 with double element type
 template <typename T, int N, typename = ifel_trait_t<is_fp<T>, float>>
 class Mat {
   T val[N * N];
@@ -186,6 +188,12 @@ class Mat {
   const T *data() const { return val; }
 };
 
+// usage Mat3<double> or Mat3<float>
+template <typename T>
+using Mat3 = Mat<T, 3>;
+template <typename T>
+using Mat4 = Mat<T, 3>;
+
 using Mat3f = Mat<float, 3>;
 using Mat4f = Mat<float, 4>;
 using Mat3d = Mat<double, 3>;
@@ -197,15 +205,6 @@ Mat<T, N> operator*(const T fp, const Mat<T, N> &m) {
   return m * fp;
 }
 
-template <typename T, int N>
-Mat<T, N> normalize(const Mat<T, N> &m) {
-  T length[N];
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) length[i] += m[i][j];
-    length[i] = sqrt<T>(length[i]);
-  }
-}
-
 // untuk mengubah matriks 3×3 ke 4×4
 template <typename T>
 Mat<T, 4> Mat3_to_Mat4(const Mat<T, 4> &m) {
@@ -215,20 +214,20 @@ Mat<T, 4> Mat3_to_Mat4(const Mat<T, 4> &m) {
     else
       res_arr[i] = m.data()[(i & 3) * 4 + (i >> 2)];
   }
-  return Mat(res_arr);
+  return Mat<T, 4>(res_arr);
 }
 
 // operasi matriks 4×4 * 3×3
 // rubah dulu yang 3×3 ke 4×4 dengan menambahkan komponen w
 template <typename T>
 Mat<T, 4> operator*(const Mat<T, 4> &a, const Mat<T, 3> &b) {
-  return a * Nat3_to_Mat4(b);
+  return a * Mat3_to_Mat4<T>(b);
 }
 
 // agar berlaku sebaliknya juga
 template <typename T>
 Mat<T, 4> operator*(const Mat<T, 3> &a, const Mat<T, 4> &b) {
-  return Mat3_to_Mat4(a) * b;
+  return Mat3_to_Mat4<T>(a) * b;
 }
 
 // bakal berguna nanti buat kelas kelas seperti kamera objek atau proyeksi
