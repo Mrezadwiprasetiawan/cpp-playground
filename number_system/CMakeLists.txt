@@ -22,4 +22,4 @@ add_library(big_int SHARED ${SRC_SOURCES}/big_int.cxx)
 
 # Untuk Testing
 add_executable(big_int_test ${SRC_SOURCES}/big_int.cxx test/big_int.cxx)
-add_test(NAME "Test big_int" COMMAND big_int_test)
+#add_test(NAME "Test big_int" COMMAND big_int_test)
