@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <custom_trait.hxx>
 #include <initializer_list>
 

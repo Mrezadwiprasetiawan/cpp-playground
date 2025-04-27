@@ -276,23 +276,17 @@ Mat<T, 4> FRUSTUM_MATRIX(T l, T r, T t, T b, T n, T f) {
                     (f + n) / (f - n), (2 * f * n) / (f - n), 0, 0, -1, 0});
 }
 
-/* untuk rotasi hanya kurang dari 2 sumbu, tinggal dipass parameter d nilainya 0
- * dengan nne atau nee dimama e adalah sukbu aktif
- *
- * kok bisa? karena kalo nilai degreenya 0 sinnya juga 0 cosnya jadi 1, jadi
- * matriks identitas deh
- */
 template <typename T>
-Mat<T, 4> EULER_ROTATION_MATRIX(const Vec3<T> &d,
+Mat<T, 4> EULER_ROTATION_MATRIX(const Vec3<T> &rad,
                                 const EULER_ROTATION_TYPE &rt) {
   // semua rotasi bergantung pada global axis
   // Urutan terbalik karena Matrix selalu lhs terhadap objek
   // rotasi di sumbu x
-  Mat<T, 3> Rx{1, 0, 0, 0, cos(d.x()), -sin(d.x()), 0, sin(d.x()), cos(d.x())};
+  Mat<T, 3> Rx{1, 0, 0, 0, cos(rad.x()), -sin(rad.x()), 0, sin(rad.x()), cos(rad.x())};
   // rotasi di sumbu y
-  Mat<T, 3> Ry{cos(d.y()), 0, -sin(d.y()), 0, 1, 0, sin(d.y()), 0, cos(d.y())};
+  Mat<T, 3> Ry{cos(rad.y()), 0, -sin(rad.y()), 0, 1, 0, sin(rad.y()), 0, cos(rad.y())};
   // rotasi di sumbu z
-  Mat<T, 3> Rz{cos(d.z()), -sin(d.z()), 0, sin(d.z()), cos(d.z()), 0, 0, 0, 1};
+  Mat<T, 3> Rz{cos(rad.z()), -sin(rad.z()), 0, sin(rad.z()), cos(rad.z()), 0, 0, 0, 1};
   switch (rt) {
     case ZYX: return mat3_to_mat4(Rx * Ry * Rz);
     case ZXY: return mat3_to_mat4(Ry * Rx * Rz);
@@ -303,6 +297,30 @@ Mat<T, 4> EULER_ROTATION_MATRIX(const Vec3<T> &d,
   }
 }
 
-// TODO : implement quaternion Matrix
+template <typename T>
+Mat<T, 4> QUATERNION_MATRIX(const Vec3<T> &v, T rad) {
+  T s = sin(rad / 2), c = cos(rad / 2), x = v.x() * s, y = v.y() * s,
+    z = v.z() * s;
+
+  // Matriks quaternion dihitung
+  T mat[16] = {1 - 2 * (y * y + z * z),
+               2 * (x * y - c * z),
+               2 * (x * z + c * y),
+               0,
+               2 * (x * y + c * z),
+               1 - 2 * (x * x + z * z),
+               2 * (y * z - c * x),
+               0,
+               2 * (x * z - c * y),
+               2 * (y * z + c * x),
+               1 - 2 * (x * x + y * y),
+               0,
+               0,
+               0,
+               0,
+               1};
+
+  return Mat<T, 4>(mat);
+}
 
 }  // namespace l3d
