@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <cstring>
 #include "numbers.hxx"
 
 std::string argname[] = {"-h", "-help", "-l", "-limit", "-i", "-index"};
