@@ -1,5 +1,6 @@
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <vector>
