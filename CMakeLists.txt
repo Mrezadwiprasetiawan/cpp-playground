@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.31.2)
 project("myCpp-playground" VERSION 0.1 LANGUAGES C CXX)
 
+enable_testing()
 # Set output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/lib)

@@ -9,4 +9,4 @@ set(SRC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 #untuk testing
 add_executable(test_3d ${SRC}/test_3d.cxx)
-add_executable(test_rasterizer ${SRC}/test_rasterizer.cxx)
+add_test(NAME Test3D COMMAND test_3d)
