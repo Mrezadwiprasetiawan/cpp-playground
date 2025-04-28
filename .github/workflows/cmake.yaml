@@ -48,14 +48,14 @@ jobs:
         working-directory: bin
         run: |
           echo "Running prime -s 10k"
-          prime -s 10k
+          ./prime -s 10k
           echo "Running prime -l 10k"
-          prime -l 10k
+          ./prime -l 10k
           echo "Running prime -n 104729"
-          prime -n 104729
+          ./prime -n 104729
           exho "Running prime -i 10k"
-          prime -i 10k
+          ./prime -i 10k
           echo "Running fibonacci -l 10"
-          fibonacci -l 10
+          ./fibonacci -l 10
           echo "Running fibonacci -i 100"
-          fibonacci -i 100
+          ./fibonacci -i 100
