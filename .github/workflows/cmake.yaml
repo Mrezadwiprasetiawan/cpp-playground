@@ -1,4 +1,4 @@
-name: CMake Build with Cache
+name: CMake Build
 
 on:
   push:
@@ -13,16 +13,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Cache apt packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt
-            /var/lib/apt/lists
-          key: apt-cache-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            apt-cache-${{ runner.os }}-
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake clang
@@ -41,7 +31,7 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: Run tests
+      - name: Run ctest
         working-directory: build
         run: ctest --output-on-failure
       - name: Run real Test
