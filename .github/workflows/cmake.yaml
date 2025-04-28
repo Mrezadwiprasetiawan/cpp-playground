@@ -47,6 +47,6 @@ jobs:
 
       - name: Run real Test
         working-directory: bin
-        run:
-          prime -s 10k && prime -l 10k && prime -n 104729 && prime -i 10k\
+        run: |
+          prime -s 10k && prime -l 10k && prime -n 104729 && prime -i 10k
           && fibonacci -l 10 && fibonacci -i 100
