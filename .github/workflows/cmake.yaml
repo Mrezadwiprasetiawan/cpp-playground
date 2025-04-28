@@ -53,7 +53,7 @@ jobs:
           ./prime -l 10k
           echo "Running prime -n 104729"
           ./prime -n 104729
-          exho "Running prime -i 10k"
+          echo "Running prime -i 10k"
           ./prime -i 10k
           echo "Running fibonacci -l 10"
           ./fibonacci -l 10
