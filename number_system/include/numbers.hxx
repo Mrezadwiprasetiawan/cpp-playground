@@ -26,10 +26,10 @@ class Prime {
   std::vector<T> lastResults;
   T lastLimit = 0;
   T lastSize = 0;
-  inline static int max_thread = std::thread::hardware_concurrency();
+  inline static int maxThread = std::thread::hardware_concurrency();
 
   void main_sieve(std::vector<uint64_t> &sieve, T limit, int offset) {
-    for (T p = 3 + offset * 2; p * p <= limit; p += 2 * max_thread) {
+    for (T p = 3 + offset * 2; p * p <= limit; p += 2 * maxThread) {
       const size_t i = (p - 3) >> 1;
       if (!(sieve[i >> 6] & (1ULL << (i & 63)))) continue;
       for (T j = p * p; j <= limit; j += 2 * p) {
@@ -45,7 +45,7 @@ class Prime {
     const size_t array_size = (num_odds + 63) >> 6;
     std::vector<uint64_t> sieve(array_size, uint64_t(~0));
     std::vector<std::thread> threads;
-    for (int i = 1; i < max_thread; ++i)
+    for (int i = 1; i < maxThread; ++i)
       threads.emplace_back(
           [this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
     main_sieve(sieve, limit, 0);
@@ -108,6 +108,7 @@ class Prime {
       if (n % p == 0) return false;
     return true;
   }
+  static int max_thread() { return Prime::maxThread; }
 };
 
 class Fibonacci {
