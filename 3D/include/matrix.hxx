@@ -14,145 +14,164 @@ namespace l3d {
 // example usage Mat<double,4> Matrix 4 * 4 with double element type
 template <typename T, int N, typename = ifel_trait_t<is_fp<T>, float>>
 class Mat {
-  T val[N * N];
+ private:
+  T vals[N * N];
 
  public:
-  Mat() : val() {}
+  Mat() : vals() {}
 
-  Mat(T (&v)[N * N]) { set_element(v); }
+  Mat(T (&v)[N * N]) { set_elements(v); }
 
-  Mat(const std::initializer_list<T> &v) { set_element(v); }
+  Mat(const std::initializer_list<T> &v) { set_elements(v); }
 
   Mat(T (&v)[N][N]) {
     for (int i = 0; i < N; ++i)
-      for (int j = 0; j < N; ++j) val[N * i + j] = v[i][j];
+      for (int j = 0; j < N; ++j) vals[N * i + j] = v[i][j];
   }
 
   void to_array(T (&arr)[N * N]) const {
-    for (int i = 0; i < N * N; ++i) arr[i] = val[i];
+    for (int i = 0; i < N * N; ++i) arr[i] = vals[i];
   }
 
-  std::vector<T> to_vector() const { return std::vector<T>(val, val + N * N); }
+  std::vector<T> to_vector() const { return std::vector<T>(vals, vals + N * N); }
 
-  void set_element(T (&v)[N * N]) {
-    for (int i = 0; i < N * N; ++i) val[i] = v[i];
+  void set_elements(T (&v)[N * N]) {
+    for (int i = 0; i < N * N; ++i) vals[i] = v[i];
   }
 
-  void set_element(const std::vector<T> &v) {
+  void set_elements(const std::vector<T> &v) {
     assert(v.size() == N * N);
-    for (int i = 0; i < N * N; ++i) val[i] = v[i];
+    for (int i = 0; i < N * N; ++i) vals[i] = v[i];
   }
 
-  void set_element(const std::initializer_list<T> &v) {
+  void set_elements(const std::initializer_list<T> &v) {
     assert(v.size() == N * N);
     auto it = v.begin();
     // tricky menambah i bersamaan dengan menambah iterator it
-    for (int i = 0; i < N * N; ++i, ++it) val[i] = *it;
+    for (int i = 0; i < N * N; ++i, ++it) vals[i] = *it;
   }
 
   void set_identity() {
     for (int row = 0; row < N; ++row)
       for (int col = 0; col < N; ++col)
-        if (row == col) val[row * N + col] = 1.0;
+        if (row == col) vals[row * N + col] = 1.0;
         else
-          val[row * N + col] = 0;
+          vals[row * N + col] = 0;
+  }
+
+  void set_element(size_t i, T valsue){
+    vals[i] = valsue;
   }
 
   template <typename U>
   Mat operator*(U fp) const {
-    T val_cp[N * N];
-    for (int i = 0; i < N * N; ++i) val_cp[i] = val[i] * fp;
-    return Mat(val_cp);
+    T vals_cp[N * N];
+    for (int i = 0; i < N * N; ++i) vals_cp[i] = vals[i] * fp;
+    return Mat(vals_cp);
   }
 
   Vec<T, N> operator*(const Vec<T, N> &vn) const {
     Vec<T, N> res;
     for (int row = 0; row < N; ++row)
       for (int col = 0; col < N; ++col)
-        res[row] += val[row * N + col] * vn[col];
+        res[row] += vals[row * N + col] * vn[col];
     return res;
   }
 
   template <typename U>
   Mat operator*(const Mat<U, N> &m) const {
-    T val_res[N * N]{};
+    T vals_res[N * N]{};
     // k ini faktor untuk ngurusin perkaliannya
     // sedangkan row dan col untuk indeks hasil akhirnya
     for (int row = 0; row < N; ++row)
       for (int col = 0; col < N; ++col)
         for (int k = 0; k < N; ++k)
-          val_res[row * N + col] += val[row * N + k] * m.data()[k * N + col];
+          vals_res[row * N + col] += vals[row * N + k] * m.data()[k * N + col];
 
-    return Mat(val_res);
+    return Mat(vals_res);
   }
 
   template <typename U>
   Mat operator+(const Mat<U, N> &m) const {
-    T val_res[N * N]{};
-    T val_m[N * N];
-    m.to_array(val_m);
-    for (int i = 0; i < N * N; ++i) val_res[i] = val[i] + val_m[i];
-    return Mat(val_res);
+    T vals_res[N * N]{};
+    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] + m.data()[i];
+    return Mat(vals_res);
   }
 
   template <typename U>
   Mat operator-(const Mat<U, N> &m) const {
-    T val_res[N * N]{};
-    for (int i = 0; i < N * N; ++i) val_res[i] = val[i] - m.data()[i];
-    return Mat(val_res);
+    T vals_res[N * N]{};
+    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] - m.data()[i];
+    return Mat(vals_res);
   }
+
+  // overload juga penugasannya agar lebih mudah
+#define OV_ASSIGNMENT_OP(op)                \
+  template <typename U>                     \
+  Mat &operator op##=(const Mat<U, N> &m) { \
+    return *this = *this op m;              \
+  }
+
+  /* nambah ; sebenernya ga perlu tapi karena vim indentnya bakal ga sejajar
+   * lagi jadi ditambahin ;
+   */
+  OV_ASSIGNMENT_OP(*);
+  OV_ASSIGNMENT_OP(/);
+  OV_ASSIGNMENT_OP(+);
+  OV_ASSIGNMENT_OP(-);
+#undef OV_ASSIGNMENT_OP
 
   // row
   Vec<T, N> operator[](size_t index) const {
     T arr[N];
-    for (int i = 0; i < N; ++i) arr[i] = val[index * N + i];
+    for (int i = 0; i < N; ++i) arr[i] = vals[index * N + i];
     return Vec<T, N>(arr);
   }
 
   // eliminasi gauss
   T determinant() const {
     T det = 1;
-    T tmpval[N * N];
-    to_array(tmpval);
+    T tmpvals[N * N];
+    to_array(tmpvals);
     for (int i = 0; i < N; ++i) {
       // cari baris dengan elemen terbesar di kolom i (pivoting)
       int maxRow = i;
       for (int j = i + 1; j < N; ++j)
-        if (std::abs(tmpval[j * N + i]) > std::abs(tmpval[maxRow * N + i]))
+        if (std::abs(tmpvals[j * N + i]) > std::abs(tmpvals[maxRow * N + i]))
           maxRow = j;
       // tukar baris i dengan baris maxRow jika perlu
       if (i != maxRow) {
         for (int k = 0; k < N; ++k)
-          std::swap(tmpval[i * N + k], tmpval[maxRow * N + k]);
+          std::swap(tmpvals[i * N + k], tmpvals[maxRow * N + k]);
         det = -det;  // Perubahan tanda jika ada pertukaran baris
       }
       // jika elemen diagonalnya 0, matriks tidak invertible, det = 0
-      if (tmpval[i * N + i] == 0) return 0;
+      if (tmpvals[i * N + i] == 0) return 0;
       // eliminasi Gauss untuk baris di bawahnya
       for (int j = i + 1; j < N; ++j) {
-        T factor = tmpval[j * N + i] / tmpval[i * N + i];
+        T factor = tmpvals[j * N + i] / tmpvals[i * N + i];
         for (int k = i; k < N; ++k)
-          tmpval[j * N + k] -= factor * tmpval[i * N + k];
+          tmpvals[j * N + k] -= factor * tmpvals[i * N + k];
       }
       // Kalikan elemen diagonal untuk determinan
-      det *= tmpval[i * N + i];
+      det *= tmpvals[i * N + i];
     }
     return det;
   }
 
   Mat transpose() const {
     // tukar baris menjadi kolom dan kolom menjadi baris
-    T tmpval[N * N];
+    T tmpvals[N * N];
     for (int i = 0; i < N; ++i)
-      for (int j = 0; j < N; ++j) tmpval[i * N + j] = val[j * N + i];
-    return Mat(tmpval);
+      for (int j = 0; j < N; ++j) tmpvals[i * N + j] = vals[j * N + i];
+    return Mat(tmpvals);
   }
 
   Mat inverse() const {
     T res[N][N], tmp[N][N];
     for (int i = 0; i < N; ++i)
       for (int j = 0; j < N; ++j) {
-        tmp[i][j] = val[i * N + j];
+        tmp[i][j] = vals[i * N + j];
         res[i][j] = (i == j ? 1 : 0);
       }
 
@@ -185,7 +204,7 @@ class Mat {
 
     return Mat(res);
   }
-  const T *data() const { return val; }
+  const T *data() const { return vals; }
 };
 
 // usage Mat3<double> or Mat3<float>
@@ -277,50 +296,42 @@ Mat<T, 4> FRUSTUM_MATRIX(T l, T r, T t, T b, T n, T f) {
 }
 
 template <typename T>
-Mat<T, 4> EULER_ROTATION_MATRIX(const Vec3<T> &rad,
+Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad,
                                 const EULER_ROTATION_TYPE &rt) {
   // semua rotasi bergantung pada global axis
   // Urutan terbalik karena Matrix selalu lhs terhadap objek
   // rotasi di sumbu x
-  Mat<T, 3> Rx{1, 0, 0, 0, cos(rad.x()), -sin(rad.x()), 0, sin(rad.x()), cos(rad.x())};
+  Mat<T, 3> Rx{
+      1, 0, 0, 0, cos(rad.x()), -sin(rad.x()), 0, sin(rad.x()), cos(rad.x())};
   // rotasi di sumbu y
-  Mat<T, 3> Ry{cos(rad.y()), 0, -sin(rad.y()), 0, 1, 0, sin(rad.y()), 0, cos(rad.y())};
+  Mat<T, 3> Ry{cos(rad.y()), 0, -sin(rad.y()), 0, 1, 0,
+               sin(rad.y()), 0, cos(rad.y())};
   // rotasi di sumbu z
-  Mat<T, 3> Rz{cos(rad.z()), -sin(rad.z()), 0, sin(rad.z()), cos(rad.z()), 0, 0, 0, 1};
+  Mat<T, 3> Rz{
+      cos(rad.z()), -sin(rad.z()), 0, sin(rad.z()), cos(rad.z()), 0, 0, 0, 1};
   switch (rt) {
-    case ZYX: return mat3_to_mat4(Rx * Ry * Rz);
-    case ZXY: return mat3_to_mat4(Ry * Rx * Rz);
-    case YZX: return mat3_to_mat4(Rx * Rz * Ry);
-    case YXZ: return mat3_to_mat4(Rz * Rx * Ry);
-    case XZY: return mat3_to_mat4(Rx * Rz * Ry);
-    case XYZ: return mat3_to_mat4(Rz * Ry * Rx);
+    case ZYX: return Rx * Ry * Rz;
+    case ZXY: return Ry * Rx * Rz;
+    case YZX: return Rx * Rz * Ry;
+    case YXZ: return Rz * Rx * Ry;
+    case XZY: return Rx * Rz * Ry;
+    case XYZ: return Rz * Ry * Rx;
   }
 }
 
 template <typename T>
-Mat<T, 4> QUATERNION_MATRIX(const Vec3<T> &v, T rad) {
+Mat<T, 3> QUATERNION_MATRIX(const Vec3<T> &v, T rad) {
   T s = sin(rad / 2), c = cos(rad / 2), x = v.x() * s, y = v.y() * s,
     z = v.z() * s;
 
   // Matriks quaternion dihitung
-  T mat[16] = {1 - 2 * (y * y + z * z),
-               2 * (x * y - c * z),
-               2 * (x * z + c * y),
-               0,
-               2 * (x * y + c * z),
-               1 - 2 * (x * x + z * z),
-               2 * (y * z - c * x),
-               0,
-               2 * (x * z - c * y),
-               2 * (y * z + c * x),
-               1 - 2 * (x * x + y * y),
-               0,
-               0,
-               0,
-               0,
-               1};
+  T mat[9] = {
+      1 - 2 * (y * y + z * z), 2 * (x * y - c * z),     2 * (x * z + c * y),
+      2 * (x * y + c * z),     1 - 2 * (x * x + z * z), 2 * (y * z - c * x),
+      2 * (x * z - c * y),     2 * (y * z + c * x),     1 - 2 * (x * x + y * y),
+  };
 
-  return Mat<T, 4>(mat);
+  return Mat<T, 3>(mat);
 }
 
 }  // namespace l3d

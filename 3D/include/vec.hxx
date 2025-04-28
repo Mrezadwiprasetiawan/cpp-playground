@@ -12,9 +12,7 @@ class Vec {
   T val[N];
 
  public:
-  Vec() {
-    for (int i = 0; i < N; ++i) val[i] = 0;
-  }
+  Vec() : val() {}
 
   Vec(std::initializer_list<T> list) {
     assert(list.size() == N);
@@ -28,7 +26,7 @@ class Vec {
 
 #define VEC_BASE_OPERATOR(op)                             \
   template <typename U>                                   \
-  Vec<T, N> operator op(const Vec<U, N> &vn) const {      \
+  Vec operator op(const Vec<U, N> &vn) const {            \
     Vec<T, N> res;                                        \
     for (int i = 0; i < N; ++i) res[i] = val[i] op vn[i]; \
     return res;                                           \
@@ -39,6 +37,18 @@ class Vec {
   VEC_BASE_OPERATOR(*)
   VEC_BASE_OPERATOR(/)
 #undef VEC_BASE_OPERATOR
+
+#define VEC_OV_ASSIGNMENT(op)                \
+  template <typename U>                      \
+  Vec &operator op##=(const Vec<U, N> &vn) { \
+    return *this = *this op vn;              \
+  }
+
+  VEC_OV_ASSIGNMENT(+);
+  VEC_OV_ASSIGNMENT(-);
+  VEC_OV_ASSIGNMENT(*);
+  VEC_OV_ASSIGNMENT(/);
+#undef VEC_OV_ASSIGNMENT
 
   // karena SFINAE hanya bisa non error jika di paeameter template
   // atau di parameter fungsi maka pengecekan diletakan di parametee template

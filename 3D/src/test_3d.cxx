@@ -1,10 +1,14 @@
-#include <cmath>
 #include <custom_trait.hxx>
 #include <iomanip>
 #include <ios>
 #include <iostream>
 #include <matrix.hxx>
+#include <obj3d.hxx>
 #include <vec.hxx>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 template <typename T, int N>
 void print(const l3d::Vec<T, N> &vn, int n_indent) {
@@ -85,6 +89,20 @@ int main() {
         1);
   cout << "Matrix quaternion dengan 0,1,0 dan degree = pi \t:" << endl;
   print(l3d::QUATERNION_MATRIX<float>({0, 1, 0}, M_PI), 1);
+
+  cout << "Test obj3d\t:" << endl;
+  vector<l3d::Vec3f> pos{{-1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+  vector<l3d::Vec3<short>> face{{0, 1, 2}};
+  l3d::Obj3D obj(pos, face);
+  // rotasi pertama sebenernya ga ada bedanya global dan lokal
+  obj.rotate_global({0, 1, 0}, M_PI / 2);
+  obj.translate_local({0, 0, 1});
+  cout << "\ttranslation\t:" << endl;
+  print(obj.get_translation(), 2);
+  cout << "\trotation Matrix\t:";
+  print(obj.get_rotation_matrix(), 2);
+  cout << "position object\t:";
+  print(obj.get_model_matrix(), 2);
 
   return 0;
 }

@@ -5,24 +5,27 @@
 #include <vec.hxx>
 
 namespace l3d {
-template <typename V, typename F>
+// FP = floating point I = integer
+template <typename FP, typename I>
 class Obj3D {
-  std::vector<Vec3<V>> vertices;
-  std::vector<Vec3<F>> face_indices;
-  std::vector<Vec3<V>> renew_vertices;
-  std::vector<Vec3<V>> normals;
-  Mat<V, 4> modelMatrix;
+  Mat<FP, 3> modelMat;
+  Mat<FP, 3> QcurrMat;
+  Vec3<FP> pos;
+  std::vector<Vec3<FP>> vertices;
+  std::vector<Vec3<I>> face_indices;
+  std::vector<Vec3<FP>> renew_vertices;
+  std::vector<Vec3<FP>> normals;
 
   // update vertices
-  void update_vertices(int line) {
+  void update_vertices() {
     for (size_t i = 0; i < face_indices.size(); ++i) {
       Vec3 f_i = face_indices[i];
-      assert(f_i.x > 0 && f_i.x < vertices.size());
-      assert(f_i.y > 0 && f_i.y < vertices.size());
-      assert(f_i.z > 0 && f_i.z < vertices.size());
-      renew_vertices.push_back(vertices[f_i.x]);
-      renew_vertices.push_back(vertices[f_i.y]);
-      renew_vertices.push_back(vertices[f_i.z]);
+      assert(f_i.x() > 0 && f_i.x() < vertices.size());
+      assert(f_i.y() > 0 && f_i.y() < vertices.size());
+      assert(f_i.z() > 0 && f_i.z() < vertices.size());
+      renew_vertices.push_back(vertices[f_i.x()]);
+      renew_vertices.push_back(vertices[f_i.y()]);
+      renew_vertices.push_back(vertices[f_i.z()]);
     }
   }
 
@@ -31,35 +34,59 @@ class Obj3D {
    * otomatis memperbarui vertices tapi originalnya tidak dihapus agar lebih
    * mudah diambil nanti
    */
-  Obj3D(std::vector<Vec3<V>> vertices, std::vector<Vec3<F>> face_indices)
+  Obj3D(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> face_indices)
       : vertices(vertices), face_indices(face_indices) {
     update_vertices();
-    modelMatrix.set_identity();
+    QcurrMat.set_identity();
+    modelMat.set_identity();
   }
 
   // ===== Fungsional ======
   // rotasi
-  void rotate_local(V degree, V x, V y, V z);
-  void rotate_global(V degree, V x, V y, V z);
-  void translate_local(V x, V y, V z);
-  void translate_global(V x, V y, V z);
+  /* Hanya merubah matriks Quaternion agar matriks model tidak perlu dihitung
+   * trus menerus setiap kali set rotasi
+   */
+  void rotate_local(Vec3<FP> xyz, FP rad) {
+    Mat3<FP> Qnew = QUATERNION_MATRIX(xyz, rad);
+    QcurrMat *= Qnew;
+  }
+
+  void rotate_global(Vec3<FP> xyz, FP rad) {
+    Mat3<FP> Qnew = QUATERNION_MATRIX(xyz, rad);
+    QcurrMat = Qnew * QcurrMat;
+  }
+
+  void translate_local(Vec3<FP> xyz) { pos += QcurrMat * xyz; }
+  void translate_global(Vec3<FP> xyz) { pos += xyz; }
 
   // ===== Getter and Setter =====
   // getter
-  std::vector<Vec3<F>> get_face_index() const { return face_indices; }
-  std::vector<Vec3<V>> get_default_vertices() const { return vertices; }
-  std::vector<Vec3<V>> get_processed_vertices() const { return renew_vertices; }
+  Vec3<FP> get_translation() { return pos; }
+  Mat3<FP> get_rotation_matrix() { return QcurrMat; }
+  Mat4<FP> get_model_matrix() {
+    Mat4<FP> res = mat3_to_mat4(QcurrMat * modelMat * QcurrMat.inverse());
+    res.set_element(3, pos.x());
+    res.set_element(7, pos.y());
+    res.set_element(11, pos.z());
+    return res;
+  }
+
+  std::vector<Vec3<I>> get_face_index() const { return face_indices; }
+  std::vector<Vec3<FP>> get_default_vertices() const { return vertices; }
+  std::vector<Vec3<FP>> get_processed_vertices() const {
+    return renew_vertices;
+  }
   // setter
-  void update_vertices(std::vector<Vec3<V>> vertices) {
+  void update_vertices(std::vector<Vec3<FP>> vertices) {
     this->vertices = vertices;
     update_vertices();
   }
-  void update_face(std::vector<Vec3<V>> face_indices) {
+  void update_face(std::vector<Vec3<FP>> face_indices) {
     this->face_indices = face_indices;
     update_vertices();
   }
-  void update_face_vertices(std::vector<Vec3<V>> vertices,
-                            std::vector<Vec3<F>> face_indices) {
+  void update_face_vertices(std::vector<Vec3<FP>> vertices,
+                            std::vector<Vec3<I>> face_indices) {
     this->vertices = vertices;
     this->face_indices = face_indices;
     update_vertices();
