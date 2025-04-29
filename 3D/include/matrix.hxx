@@ -33,7 +33,9 @@ class Mat {
     for (int i = 0; i < N * N; ++i) arr[i] = vals[i];
   }
 
-  std::vector<T> to_vector() const { return std::vector<T>(vals, vals + N * N); }
+  std::vector<T> to_vector() const {
+    return std::vector<T>(vals, vals + N * N);
+  }
 
   void set_elements(T (&v)[N * N]) {
     for (int i = 0; i < N * N; ++i) vals[i] = v[i];
@@ -59,9 +61,7 @@ class Mat {
           vals[row * N + col] = 0;
   }
 
-  void set_element(size_t i, T valsue){
-    vals[i] = valsue;
-  }
+  void set_element(size_t i, T valsue) { vals[i] = valsue; }
 
   template <typename U>
   Mat operator*(U fp) const {
@@ -204,7 +204,7 @@ class Mat {
 
     return Mat(res);
   }
-  const T *data() const { return vals; }
+  const T *data() { return vals; }
 };
 
 // usage Mat3<double> or Mat3<float>
@@ -236,8 +236,9 @@ Mat<T, 4> mat3_to_mat4(const Mat<T, 3> &m) {
   return Mat<T, 4>(res_arr);
 }
 
-// operasi matriks 4×4 * 3×3
-// rubah dulu yang 3×3 ke 4×4 dengan menambahkan komponen w
+/*operasi matriks 4×4 * 3×3
+ * rubah dulu yang 3×3 ke 4×4 dengan menambahkan komponen w
+ */
 template <typename T>
 Mat<T, 4> operator*(const Mat<T, 4> &a, const Mat<T, 3> &b) {
   return a * mat3_to_mat4<T>(b);

@@ -40,7 +40,7 @@ jobs:
           echo "Running prime -s 100"
           ./prime -s 100
           echo "Running prime -l 100"
-          ./prime -l 1k
+          ./prime -l 100
           echo "Running prime -n 104729"
           ./prime -n 104729
           echo "Running prime -i 1m"
@@ -49,3 +49,5 @@ jobs:
           ./fibonacci -l 10
           echo "Running fibonacci -i 100"
           ./fibonacci -i 100
+          echo "Running test_3d"
+          ./test_3d

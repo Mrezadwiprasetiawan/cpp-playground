@@ -50,8 +50,6 @@ class Vec {
   VEC_OV_ASSIGNMENT(/);
 #undef VEC_OV_ASSIGNMENT
 
-  // karena SFINAE hanya bisa non error jika di paeameter template
-  // atau di parameter fungsi maka pengecekan diletakan di parametee template
 #define GETTER_XYZ(type, index)         \
   template <typename U = T>             \
   is_type_t<(N >= 3), U> type() const { \

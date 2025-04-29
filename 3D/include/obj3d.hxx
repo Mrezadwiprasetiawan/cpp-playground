@@ -12,20 +12,20 @@ class Obj3D {
   Mat<FP, 3> QcurrMat;
   Vec3<FP> pos;
   std::vector<Vec3<FP>> vertices;
-  std::vector<Vec3<I>> face_indices;
-  std::vector<Vec3<FP>> renew_vertices;
+  std::vector<Vec3<I>> faceIndices;
+  std::vector<Vec3<FP>> newVertices;
   std::vector<Vec3<FP>> normals;
 
   // update vertices
   void update_vertices() {
-    for (size_t i = 0; i < face_indices.size(); ++i) {
-      Vec3 f_i = face_indices[i];
+    for (size_t i = 0; i < faceIndices.size(); ++i) {
+      Vec3 f_i = faceIndices[i];
       assert(f_i.x() > 0 && f_i.x() < vertices.size());
       assert(f_i.y() > 0 && f_i.y() < vertices.size());
       assert(f_i.z() > 0 && f_i.z() < vertices.size());
-      renew_vertices.push_back(vertices[f_i.x()]);
-      renew_vertices.push_back(vertices[f_i.y()]);
-      renew_vertices.push_back(vertices[f_i.z()]);
+      newVertices.push_back(vertices[f_i.x()]);
+      newVertices.push_back(vertices[f_i.y()]);
+      newVertices.push_back(vertices[f_i.z()]);
     }
   }
 
@@ -34,8 +34,8 @@ class Obj3D {
    * otomatis memperbarui vertices tapi originalnya tidak dihapus agar lebih
    * mudah diambil nanti
    */
-  Obj3D(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> face_indices)
-      : vertices(vertices), face_indices(face_indices) {
+  Obj3D(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> faceIndices)
+      : vertices(vertices), faceIndices(faceIndices) {
     update_vertices();
     QcurrMat.set_identity();
     modelMat.set_identity();
@@ -71,24 +71,24 @@ class Obj3D {
     return res;
   }
 
-  std::vector<Vec3<I>> get_face_index() const { return face_indices; }
+  std::vector<Vec3<I>> get_face_index() const { return faceIndices; }
   std::vector<Vec3<FP>> get_default_vertices() const { return vertices; }
   std::vector<Vec3<FP>> get_processed_vertices() const {
-    return renew_vertices;
+    return newVertices;
   }
   // setter
   void update_vertices(std::vector<Vec3<FP>> vertices) {
     this->vertices = vertices;
     update_vertices();
   }
-  void update_face(std::vector<Vec3<FP>> face_indices) {
-    this->face_indices = face_indices;
+  void update_face(std::vector<Vec3<FP>> faceIndices) {
+    this->faceIndices = faceIndices;
     update_vertices();
   }
   void update_face_vertices(std::vector<Vec3<FP>> vertices,
-                            std::vector<Vec3<I>> face_indices) {
+                            std::vector<Vec3<I>> faceIndices) {
     this->vertices = vertices;
-    this->face_indices = face_indices;
+    this->faceIndices = faceIndices;
     update_vertices();
   }
 };
