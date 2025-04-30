@@ -302,14 +302,29 @@ Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad,
   // semua rotasi bergantung pada global axis
   // Urutan terbalik karena Matrix selalu lhs terhadap objek
   // rotasi di sumbu x
-  Mat<T, 3> Rx{
-      1, 0, 0, 0, cos(rad.x()), -sin(rad.x()), 0, sin(rad.x()), cos(rad.x())};
+  Mat<T, 3> Rx{1,
+               0,
+               0,
+               0,
+               static_cast<T>(cos(rad.x())),
+               static_cast<T>(-sin(rad.x())),
+               0,
+               static_cast<T>(sin(rad.x())),
+               static_cast<T>(cos(rad.x()))};
   // rotasi di sumbu y
-  Mat<T, 3> Ry{cos(rad.y()), 0, -sin(rad.y()), 0, 1, 0,
-               sin(rad.y()), 0, cos(rad.y())};
+  Mat<T, 3> Ry{
+      static_cast<T>(cos(rad.y())), 0, static_cast<T>(-sin(rad.y())), 0, 1, 0,
+      static_cast<T>(sin(rad.y())), 0, static_cast<T>(cos(rad.y()))};
   // rotasi di sumbu z
-  Mat<T, 3> Rz{
-      cos(rad.z()), -sin(rad.z()), 0, sin(rad.z()), cos(rad.z()), 0, 0, 0, 1};
+  Mat<T, 3> Rz{static_cast<T>(cos(rad.z())),
+               static_cast<T>(-sin(rad.z())),
+               0,
+               static_cast<T>(sin(rad.z())),
+               static_cast<T>(cos(rad.z())),
+               0,
+               0,
+               0,
+               1};
   switch (rt) {
     case ZYX: return Rx * Ry * Rz;
     case ZXY: return Ry * Rx * Rz;
@@ -322,8 +337,8 @@ Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad,
 
 template <typename T>
 Mat<T, 3> QUATERNION_MATRIX(const Vec3<T> &v, T rad) {
-  T s = sin(rad / 2), c = cos(rad / 2), x = v.x() * s, y = v.y() * s,
-    z = v.z() * s;
+  T s = static_cast<T>(sin(rad / 2)), c = static_cast<T>(cos(rad / 2)),
+    x = v.x() * s, y = v.y() * s, z = v.z() * s;
 
   // Matriks quaternion dihitung
   T mat[9] = {
