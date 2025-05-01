@@ -86,7 +86,7 @@ class Mat {
     for (int row = 0; row < N; ++row)
       for (int col = 0; col < N; ++col)
         for (int k = 0; k < N; ++k)
-          vals_res[row * N + col] += vals[row * N + k] * m.data()[k * N + col];
+          vals_res[row * N + col] += vals[row * N + k] * m[k][col];
 
     return Mat(vals_res);
   }
@@ -94,14 +94,14 @@ class Mat {
   template <typename U>
   Mat operator+(const Mat<U, N> &m) const {
     T vals_res[N * N]{};
-    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] + m.data()[i];
+    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] + m[i / N][i % N];
     return Mat(vals_res);
   }
 
   template <typename U>
   Mat operator-(const Mat<U, N> &m) const {
     T vals_res[N * N]{};
-    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] - m.data()[i];
+    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] - m[i / N][i % N];
     return Mat(vals_res);
   }
 
@@ -204,7 +204,7 @@ class Mat {
 
     return Mat(res);
   }
-  const T *data() { return vals; }
+  T *data() { return vals; }
 };
 
 // usage Mat3<double> or Mat3<float>
@@ -231,7 +231,7 @@ Mat<T, 4> mat3_to_mat4(const Mat<T, 3> &m) {
   for (int i = 0; i < 16; ++i) {
     if ((i & 3) == 3 || (i >> 2) == 3) res_arr[i] = (i == 15) ? 1 : 0;
     else
-      res_arr[i] = m.data()[(i & 3) * 3 + (i >> 2)];
+      res_arr[i] = m[i >> 2][i & 3];
   }
   return Mat<T, 4>(res_arr);
 }
