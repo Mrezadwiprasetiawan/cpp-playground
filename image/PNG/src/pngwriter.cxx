@@ -53,14 +53,14 @@ int main(int argc, const char* argv[]) {
   std::vector<png_byte> data(AREA * 3);
 
   Prime<uint64_t> prime;
-  const float scale_r = 1.0f;
-  const float scale_theta = 0.15f;
+  const float scaleR = 1.0f;
+  const float scaleTheta = 0.15f;
   const uint64_t cx = WIDTH / 2;
   const uint64_t cy = HEIGHT / 2;
 
   for (uint32_t i : prime.from_range_limit(AREA)) {
-    float r = scale_r * std::sqrt(i);
-    float theta = scale_theta * i;
+    float r = scaleR * std::sqrt(i);
+    float theta = scaleTheta * i;
     uint64_t x = uint64_t(cx + r * std::cos(theta));
     uint64_t y = uint64_t(cy + r * std::sin(theta));
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
