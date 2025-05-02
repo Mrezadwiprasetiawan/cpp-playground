@@ -3,7 +3,6 @@
 #include <png.h>
 
 #include <fstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
