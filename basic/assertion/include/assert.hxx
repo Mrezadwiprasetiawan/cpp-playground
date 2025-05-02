@@ -1,4 +1,6 @@
 #pragma once
+
+#include <cstdio>
 #include <cstdlib>
 
 #define assert(b)               \
