@@ -69,5 +69,5 @@ Mau kontribusi silahkan, ga ya silahkan. Orang projek latihan doang
 
 ## Lisensi
 
-MIT License.[LICENSE](CEK DISINI).
+GPL V3 License.![CEK DISINI](LICENSE).
 
