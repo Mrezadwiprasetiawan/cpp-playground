@@ -37,7 +37,7 @@ Beberapa masih belum selesai sih, tapi ya begini adanya. Untuk project image png
 * `image/`                  Pengolahan dan manipulasi gambar
 * `number_system/`          Sistem bilangan
 
-## Menjalankan Contoh
+## Run
 
 Prerequisites:
 
@@ -69,5 +69,5 @@ Mau kontribusi silahkan, ga ya silahkan. Orang projek latihan doang
 
 ## Lisensi
 
-GPL V3 License.![CEK DISINI](LICENSE).
+GPL V3 License.[CEK DISINI](LICENSE).
 
