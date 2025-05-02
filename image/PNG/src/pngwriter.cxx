@@ -2,6 +2,7 @@
 #include <iostream>
 #include <numbers.hxx>
 #include <png.hxx>
+#include <cstring>
 #include <string>
 #include <vector>
 
