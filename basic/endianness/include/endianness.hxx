@@ -11,5 +11,5 @@ inline bool is_little_endian() {
 
 inline bool is_big_endian() { return !is_little_endian(); }
 
-const Endianness CURRENT =
+const Endianness CURRENT_ENDIANNESS =
     is_little_endian() ? Endianness::LITTLE : Endianness::BIG;
