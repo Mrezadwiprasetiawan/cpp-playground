@@ -23,7 +23,9 @@ jobs:
           path: build
           key: build-cache-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt', '**/*.cpp', '**/*.h') }}
           restore-keys: |
-            build-cache-${{ runner.os }}-
+            build-cache-${{ runner.os }}
+      - name: Install libpng
+        run: sudo apt-get install -y libpng-dev
 
       - name: Configure CMake
         run: cmake -S . -B build
