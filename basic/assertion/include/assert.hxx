@@ -1,5 +1,8 @@
 #pragma once
 #include <cstdlib>
 
-#define assert(b)\
-  if(!(b)) std::exit(EXIT_FAILURE);
+#define assert(b)               \
+  if (!(b)) {                   \
+    printf("Error : %s\n", #b); \
+    exit(EXIT_FAILURE);         \
+  }
