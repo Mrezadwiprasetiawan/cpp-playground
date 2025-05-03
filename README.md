@@ -3,6 +3,14 @@
 Kumpulan eksperimen dan kode kode C++ hasil gabut dan latihan.
 Beberapa masih belum selesai sih, tapi ya begini adanya. Untuk project image png perlu libpng, jadi install dulu sesuai OS masing masing
 
+## Overview
+- `some prime art`
+  1. `prime spiral 100 × 100 png` ![](prime-spiral-100-100.png)
+  2. `prime spiral 1000 × 1000 png` ![](prime-spiral-1000-1000.png)
+  3. `prime spiral 1024 × 1024 png `![](prime-spiral-1024-1024.png)
+  4. `prime spiral 10240 × 10240 png`![](prime-spiral-10240-10240.png)
+
+
 ## Struktur Direktori
 
 ```
@@ -14,16 +22,16 @@ Beberapa masih belum selesai sih, tapi ya begini adanya. Untuk project image png
 ├── basic/
 ├── electrical/
 │   └── component/
-│       └── include/
 ├── image/
 ├── number_system/
 ├── .gitignore
 ├── CMakeLists.txt
 ├── LICENSE
-├── output.png
-├── output100-100.png
-├── output1000-1000.png
-└── struct.txt // ini sebenernya buat struktur directory, taoi karena udah ada README.md nanti yw hapus
+├── init-cmake.sh // cmake only
+├── prime-spiral-100-100.png
+├── prime-spiral-1000-1000.png
+├── prime-spiral-1024-1024.png
+└── prime-spiral-10240-10240.png
 ```
 
 ## Deskripsi Folder
