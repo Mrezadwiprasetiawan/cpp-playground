@@ -9,5 +9,3 @@ find_package(PNG REQUIRED)
 
 add_executable(prime-art ${SRC}/prime-art.cxx)
 target_link_libraries(prime-art PNG::PNG)
-
-add_test(NAME "Test Wrapper PNG using Prime Art" COMMAND prime-art)

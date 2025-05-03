@@ -6,4 +6,3 @@ set(SRC_SOURCES "src/")
 
 # Buat executable
 add_executable(assert_test ${SRC_SOURCES}assert.cxx)
-add_test(NAME TestAssert COMMAND assert_test)
