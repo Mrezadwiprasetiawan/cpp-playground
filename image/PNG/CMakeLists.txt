@@ -7,5 +7,5 @@ set(SRC "src")
 
 find_package(PNG REQUIRED)
 
-add_executable(pngw ${SRC}/pngwriter.cxx)
-target_link_libraries(pngw PNG::PNG)
+add_executable(prime-art ${SRC}/prime-art.cxx)
+target_link_libraries(prime-art PNG::PNG)
