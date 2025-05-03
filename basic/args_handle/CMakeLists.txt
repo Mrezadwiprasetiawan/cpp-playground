@@ -6,3 +6,4 @@ set(SRC_SOURCES "src/")
 
 # Buat executable
 add_executable(args_handle ${SRC_SOURCES}args_handle.cxx)
+add_test(NAME TestArgsHandle COMMAND args_handle)
