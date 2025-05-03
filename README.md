@@ -8,9 +8,9 @@ A collection of C++ experiments and code created as part of exploration and prac
 ### 🎨 Recent Projects
 - **Prime Art**: Visualization of prime numbers in a spiral:
   1. `100 × 100` ![](prime-spiral-100-100.png)
-  2. `1000 × 1000` ![](prime-spiral-1000-1000.png)
-  3. `1024 × 1024` ![](prime-spiral-1024-1024.png)
-  4. `10240 × 10240` ![](prime-spiral-10240-10240.png)
+  2. `250 × 250` ![](prime-spiral-250-250.png)
+  3. `500 × 500` ![](prime-spiral-500-500.png)
+  4. `1000 × 1000` ![](prime-spiral-1000-1000.png)
 
 ### 📂 Directory Structure
 ```
@@ -29,9 +29,9 @@ A collection of C++ experiments and code created as part of exploration and prac
 ├── LICENSE
 ├── init-cmake.sh
 ├── prime-spiral-100-100.png
-├── prime-spiral-1000-1000.png
-├── prime-spiral-1024-1024.png
-└── prime-spiral-10240-10240.png
+├── prime-spiral-250-250.png
+├── prime-spiral-500-500.png
+└── prime-spiral-1000-1000.png
 ```
 
 ### 📁 Folder Descriptions
