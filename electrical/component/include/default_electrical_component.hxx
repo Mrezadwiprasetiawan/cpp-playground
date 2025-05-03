@@ -1,13 +1,13 @@
 #pragma once
 
-#include <memory>
-#include <vector>
 #include <chrono>
-#include <thread>
 #include <cmath>
+#include <memory>
+#include <thread>
+#include <vector>
 
 namespace elc {
-template<typename T>
+template <typename T>
 struct node {
   size_t n;
   std::vector<std::shared_ptr<T>> data, muatan, impedansi;
@@ -16,18 +16,18 @@ struct node {
   node(size_t n, double timestep = 1e-7)
       : n(n), data(n), muatan(n), impedansi(n), timestep(timestep) {
     for (size_t i = 0; i < n; ++i) {
-      data[i]      = std::make_shared<T>(0);
-      muatan[i]    = std::make_shared<T>(0);
+      data[i] = std::make_shared<T>(0);
+      muatan[i] = std::make_shared<T>(0);
       impedansi[i] = std::make_shared<T>(1);
     }
   }
 
   virtual ~node() = default;
 
-  T& operator[](size_t i)             { return this->data[i]; }
+  T& operator[](size_t i) { return this->data[i]; }
   const T& operator[](size_t i) const { return this->data[i]; }
-  T& q(size_t i)                      { return *muatan[i]; }
-  const T& q(size_t i) const          { return *muatan[i]; }
+  T& q(size_t i) { return *muatan[i]; }
+  const T& q(size_t i) const { return *muatan[i]; }
 
   virtual void update_tegangan() {
     for (size_t i = 0; i < n; ++i)
@@ -36,8 +36,8 @@ struct node {
 
   void connect(node<T>& other, size_t pin_this, size_t pin_other) {
     if (pin_this >= n || pin_other >= other.n) return;
-    data[pin_this]      = other.data[pin_other];
-    muatan[pin_this]    = other.muatan[pin_other];
+    data[pin_this] = other.data[pin_other];
+    muatan[pin_this] = other.muatan[pin_other];
     impedansi[pin_this] = other.impedansi[pin_other];
   }
 
@@ -47,7 +47,7 @@ struct node {
     for (size_t i = 0; i < iterations; ++i) {
       auto start = std::chrono::high_resolution_clock::now();
       update_tegangan();
-      auto end   = std::chrono::high_resolution_clock::now();
+      auto end = std::chrono::high_resolution_clock::now();
       double dur = std::chrono::duration<double>(end - start).count();
       double sleep_time = timestep - dur;
       if (sleep_time > 0)
@@ -56,9 +56,11 @@ struct node {
   }
 };
 
-template<typename T>
+template <typename T>
 struct kapasitor : node<T> {
-  T c; double dt; T i;
+  T c;
+  double dt;
+  T i;
   kapasitor(T c, double dt, double ts = 1e-7)
       : node<T>(2, ts), c(c), dt(dt), i(0) {}
 
@@ -75,15 +77,15 @@ struct kapasitor : node<T> {
   }
 };
 
-template<typename T>
+template <typename T>
 struct induktor : node<T> {
-  T l; double dt; T i;
+  T l;
+  double dt;
+  T i;
   induktor(T l, double dt, double ts = 1e-7)
       : node<T>(2, ts), l(l), dt(dt), i(0) {}
 
-  void terapkan_tegangan(T v) {
-    i += (v / l) * dt;
-  }
+  void terapkan_tegangan(T v) { i += (v / l) * dt; }
 
   void update_tegangan() override {
     this->data[0] = i;
@@ -91,11 +93,10 @@ struct induktor : node<T> {
   }
 };
 
-template<typename T>
+template <typename T>
 struct resistor : node<T> {
   T r;
-  resistor(T r, double ts = 1e-7)
-      : node<T>(2, ts), r(r) {}
+  resistor(T r, double ts = 1e-7) : node<T>(2, ts), r(r) {}
 
   void update_tegangan() override {
     T v = this->q(0) * r;
@@ -104,7 +105,7 @@ struct resistor : node<T> {
   }
 };
 
-template<typename T>
+template <typename T>
 struct transistor : node<T> {
   T beta, vth;
   transistor(T beta, T vth, double ts = 1e-7)
@@ -112,7 +113,7 @@ struct transistor : node<T> {
 
   void update_tegangan() override {
     T vbe = (this->data[1] - this->data[2]);
-    T ic  = vbe > vth ? beta * (vbe - vth) : 0;
+    T ic = vbe > vth ? beta * (vbe - vth) : 0;
     this->q(0) = ic;
     this->q(2) = -ic;
     this->data[0] = ic;
@@ -121,11 +122,10 @@ struct transistor : node<T> {
   }
 };
 
-template<typename T>
+template <typename T>
 struct memristor : node<T> {
   T m;
-  memristor(T m, double ts = 1e-7)
-      : node<T>(2, ts), m(m) {}
+  memristor(T m, double ts = 1e-7) : node<T>(2, ts), m(m) {}
 
   void update_tegangan() override {
     T v = m * this->q(0);
@@ -134,29 +134,27 @@ struct memristor : node<T> {
   }
 };
 
-template<typename T>
+template <typename T>
 struct dioda : node<T> {
   T i0, vt;
-  dioda(T i0, T vt, double ts = 1e-7)
-      : node<T>(2, ts), i0(i0), vt(vt) {}
+  dioda(T i0, T vt, double ts = 1e-7) : node<T>(2, ts), i0(i0), vt(vt) {}
 
   void update_tegangan() override {
     T iin = this->q(0);
-    T v   = iin > 0 ? vt * std::log(iin / i0) : 0;
+    T v = iin > 0 ? vt * std::log(iin / i0) : 0;
     this->data[0] = v;
     this->data[1] = 0;
   }
 };
 
-template<typename T>
+template <typename T>
 struct sumber_tegangan : node<T> {
   T vsrc;
-  sumber_tegangan(T vsrc, double ts = 1e-7)
-      : node<T>(2, ts), vsrc(vsrc) {}
+  sumber_tegangan(T vsrc, double ts = 1e-7) : node<T>(2, ts), vsrc(vsrc) {}
 
   void update_tegangan() override {
     this->data[0] = vsrc;
     this->data[1] = 0;
   }
 };
-}
+}  // namespace elc

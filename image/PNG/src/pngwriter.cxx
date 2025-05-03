@@ -1,8 +1,8 @@
 #include <cmath>
+#include <cstring>
 #include <iostream>
 #include <numbers.hxx>
 #include <png.hxx>
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -53,8 +53,8 @@ int main(int argc, const char* argv[]) {
   std::vector<png_byte> data(AREA * 3);
 
   Prime<uint64_t> prime;
-  const float scaleR = 1.0f;
-  const float scaleTheta = 0.15f;
+  const float scaleR = 0.5 * sqrt(2);
+  const float scaleTheta = std::log(scaleR);
   const uint64_t cx = WIDTH / 2;
   const uint64_t cy = HEIGHT / 2;
 
