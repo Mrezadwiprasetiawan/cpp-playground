@@ -2,10 +2,10 @@ Kumpulan eksperimen dan kode C++ buat belajar dan iseng-iseng. Beberapa mungkin 
 
 ## 🎨 Proyek Terbaru
 Prime Art – visualisasi bilangan prima dalam bentuk spiral:
-    1. 100 × 100 
-    2. 250 × 250 
-    3. 500 × 500 
-    4. 1000 × 1000 
+    1. ![](prime-spiral-100-100.png)
+    2. ![](prime-spiral-250-250.png)
+    3. ![](prime-spiral-500-500.png)
+    4. ![](prime-spiral-1000-1000.png)
 
 ## 📂 Isi Folder
 ```

@@ -2,10 +2,10 @@ Just a bunch of C++ experiments and random code from my learning and tinkering. 
 
 ## 🎨 Latest Experiments
 Prime Art – visualizing prime numbers in a spiral:
-    1. [100 × 100](prime-spiral-100-100.png)
-    2. [250 × 250](prime-spiral-250-250.png)
-    3. [500 × 500](prime-spiral-500-500.png)
-    4. [1000 × 1000](prime-spiral-1000-1000.png)
+    1. ![](prime-spiral-100-100.png)
+    2. ![](prime-spiral-250-250.png)
+    3. ![](prime-spiral-500-500.png)
+    4. ![](prime-spiral-1000-1000.png)
 
 ## 📂 What’s in the folders?
 ```
