@@ -3,7 +3,7 @@
   Copyright (C) 2025 M. Reza Dwi Prasetiawan
 
   This project contains various experiments and explorations in C++,
-  including topics such as number systems, neural networks, and 
+  including topics such as number systems, neural networks, and
   visualizations of prime number patterns.
 
   This program is free software: you can redistribute it and/or modify
@@ -20,29 +20,90 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #pragma once
 
+#include <cstddef>
+#include <random>
 #include <type_traits>
-
-#define INPUT_SIZE 1
-#define HIDDEN1_SIZE 256
-#define HIDDEN2_SIZE 256
-#define OUTPUT_SIZE 1
-
 namespace NN {
 
-template <typename FP,
+enum ACTIVATION_TYPE { RELU, SIGMOID, TANH };
+
+// peelu dimasukan ke typename karena semua array di dalamnya statis
+template <typename FP, size_t inputSize, size_t hidden1Size, size_t hidden2Size,
+          size_t outputSize,
           typename = std::enable_if_t<std::is_floating_point_v<FP>, FP>>
-class BaseFFN {
-  FP wIn[INPUT_SIZE][HIDDEN1_SIZE], wHid1[HIDDEN1_SIZE][HIDDEN2_SIZE],
-      wHid2[HIDDEN2_SIZE][OUTPUT_SIZE];
-  FP bIn[INPUT_SIZE], bHid1[HIDDEN1_SIZE], b[OUTPUT_SIZE];
-  void init_wb() {}
+class FFN {
+  ACTIVATION_TYPE act_t;
+  FP wIn[inputSize][hidden1Size], wHid1[hidden1Size][hidden2Size],
+      wHid2[hidden2Size][outputSize];
+  FP bIn[hidden1Size], bHid1[hidden2Size], bHid2[outputSize];
+  FP resIn[hidden1Size], resHid1[hidden2Size], res[outputSize];
+  bool xavier = false;
+
+  template <size_t inSize, size_t outSize>
+  void init_layer(FP k, FP (&w)[inSize][outSize], FP (&b)[inSize]) {
+    std::random_device rd;
+    std::mt19937 gen(rd);
+    std::normal_distribution<FP> dis(0, std::sqrt(k));
+
+    for (size_t i = 0; i < outSize; ++i) {
+      for (size_t j = 0; j < inSize; ++j) w[j][i] = dis(gen);
+      b[i] = 1e-6;
+    }
+  }
+
+  void init_wb() {
+    FP k0 = inputSize, k1 = hidden1Size, k2 = hidden2Size;
+    if (xavier) {
+      k0 += hidden1Size;
+      k1 += hidden2Size;
+      k2 += outputSize;
+    }
+    init_layer<inputSize, hidden1Size>(k0, wIn, bIn);
+    init_layer<hidden1Size, hidden2Size>(k1, wHid1, bHid1);
+    init_layer<hidden2Size, outputSize>(k2, wHid2, bHid2);
+  }
+
+  static FP ReLU(FP x) { return x > 0 ? x : 1e-6; }
+  static FP ReLU_deriv(FP y) { return y > 0 ? 1 : 1e-6; }
+  static FP sigmoid(FP x) { return 1 / (1 + std::exp(-x)); }
+  static FP sigmoid_deriv(FP y) { return y * (1 - y); }
+  static FP tanh(FP x) { return std::tanh(x); }
+  static FP tanh_deriv(FP y) { return 1 - y * y; }
+
+  template <size_t inSize, size_t outSize, bool hidden>
+  void forward_layer(FP (&w)[inSize][outSize], FP (&b)[outSize],
+                     FP (&in)[inputSize], FP (&res)[outSize],
+                     FP (*actFunc)(FP x)) {
+    for (size_t i = 0; i < outSize; ++i) {
+      for (size_t j = 0; j < inSize; ++j)
+        res[i] += hidden ? actFunc(in[i] * w[j][i]) : w[j][i] * res[j][i];
+      res[i] += b[i];
+    }
+  }
 
  public:
-  BaseFFN() { init_wb(); }
-  FP (&forward())[OUTPUT_SIZE] {}
+  FFN(ACTIVATION_TYPE act_t = ACTIVATION_TYPE::RELU) : act_t(act_t) {
+    init_wb();
+  }
+  FP (&forward(FP (&data)[inputSize]))[outputSize] {
+    // reset layer data first
+    resIn = {};
+    resHid1 = {};
+    res = {};
+    auto actFuncFromType = [](ACTIVATION_TYPE act_t) {
+      switch (act_t) {
+        case ACTIVATION_TYPE::RELU: return ReLU;
+        case ACTIVATION_TYPE::SIGMOID: return sigmoid;
+        case ACTIVATION_TYPE::TANH: return tanh;
+      }
+    };
+    forward_layer(wIn, bIn, data, resIn, actFuncFromType(act_t));
+    forward_layer(wHid1, bHid1, resIn, resHid1, actFuncFromType(act_t));
+    forward_layer(wHid2, bHid2, resHid1, res, actFuncFromType(act_t));
+    return res;
+  }
 };
 
 }  // namespace NN
