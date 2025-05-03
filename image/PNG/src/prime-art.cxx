@@ -3,7 +3,7 @@
   Copyright (C) 2025 M. Reza Dwi Prasetiawan
 
   This project contains various experiments and explorations in C++,
-  including topics such as number systems, neural networks, and 
+  including topics such as number systems, neural networks, and
   visualizations of prime number patterns.
 
   This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,6 @@
   You should have received a copy of the GNU General Public License
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
-
 
 #include <cmath>
 #include <cstring>
@@ -106,23 +105,24 @@ int main(int argc, const char* argv[]) {
    * dTheta = 2/sqrt(2) * sqrt(i)
    */
 
-  const float dR = 0.5 * std::sqrt(2.0f);
+  float dR = 0.5 * std::sqrt(2.0f);
   const uint64_t cx = WIDTH / 2;
   const uint64_t cy = HEIGHT / 2;
 
   for (uint32_t i : prime.from_range_limit(AREA)) {
-    float dTheta = 2 / std::sqrt(2 * i);
-    float r = dR * std::sqrt(i);
-    float theta = dTheta * i;
-    uint64_t x = uint64_t(cx + r * std::cos(theta));
-    uint64_t y = uint64_t(cy + r * std::sin(theta));
-    if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-      uint64_t n = y * WIDTH + x;
-      uint64_t base = (n) * 3;
-      data[base + 0] = 255;
-      data[base + 1] = 255;
-      data[base + 2] = 255;
-    }
+    const float dTheta = 2 / std::sqrt(2 * i);
+    const float r = dR * std::sqrt(i);
+    const float theta = dTheta * i;
+    const int64_t dx = r * std::cos(theta);
+    const int64_t dy = r * std::sin(theta);
+    if (std::abs(dx) > WIDTH / 2 || std::abs(dy) > HEIGHT / 2) continue;
+    uint64_t x = uint64_t(cx + dx);
+    uint64_t y = uint64_t(cy + dy);
+    uint64_t n = y * WIDTH + x;
+    uint64_t base = (n) * 3;
+    data[base + 0] = 255;
+    data[base + 1] = 255;
+    data[base + 2] = 255;
   }
 
   writer.set_buffer(data);
@@ -137,15 +137,16 @@ int main(int argc, const char* argv[]) {
   for (uint32_t i : prime.from_range_limit(AREA)) {
     float r = dR * std::sqrt(i);
     float theta = dTheta * i;
-    uint64_t x = uint64_t(cx + r * std::cos(theta));
-    uint64_t y = uint64_t(cy + r * std::sin(theta));
-    if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-      uint64_t n = y * WIDTH + x;
-      uint64_t base = (n) * 3;
-      data2[base + 0] = 255;
-      data2[base + 1] = 255;
-      data2[base + 2] = 255;
-    }
+    const int64_t dx = r * std::cos(theta);
+    const int64_t dy = r * std::sin(theta);
+    if (std::abs(dx) > WIDTH / 2 || std::abs(dy) > HEIGHT / 2) continue;
+    uint64_t x = uint64_t(cx + dx);
+    uint64_t y = uint64_t(cy + dy);
+    uint64_t n = y * WIDTH + x;
+    uint64_t base = (n) * 3;
+    data2[base + 0] = 255;
+    data2[base + 1] = 255;
+    data2[base + 2] = 255;
   }
 
   writer.set_filename(filename2);
