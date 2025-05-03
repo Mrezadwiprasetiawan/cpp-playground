@@ -42,25 +42,55 @@ int main(int argc, const char* argv[]) {
   else
     HEIGHT = WIDTH;
   AREA = WIDTH * HEIGHT;
-  std::string filename =
-      "prime-spiral-" + std::to_string(WIDTH) + "-" + std::to_string(HEIGHT) + ".png";
+  std::string filename = "prime-uniform-" + std::to_string(WIDTH) + "-" +
+                         std::to_string(HEIGHT) + ".png";
+  std::string filename2 = "prime-spiral-" + std::to_string(WIDTH) + "-" +
+                          std::to_string(HEIGHT) + ".png";
   PNG writer(filename);
   writer.set_width(WIDTH);
   writer.set_height(HEIGHT);
   writer.set_color_type(PNG_COLOR_TYPE_RGB);
   writer.set_bit_depth(8);
 
-  std::vector<png_byte> data(AREA * 3);
+  std::vector<png_byte> data(AREA * 3), data2(AREA * 3);
 
   Prime<uint64_t> prime;
-  const float scaleR = 0.5 * sqrt(2);
-  const float scaleTheta = std::log(scaleR);
+
+  /* Solve r untuk setiap i
+   *
+   * ketika i = s * s gw mau r = halfdiagonal = sqrt(2)/2 * s
+   * sehingga r = dR * s * s = sqrt(2)/2 *s
+   * r = d R * s = sqrt(2)
+   * karena s * s = i
+   * s haruslah sqrt(i)
+   * sehingga r = dR * sqrt(i)
+   */
+
+  /* Solve dR
+   *
+   * r(s*s) haruslah dR * s
+   * sehingga dR = r(s*s)/s
+   * karena r(s*s) = sqrt(2)/2 *s
+   * dR = sqrt(2)/2
+   */
+
+  /* Solve dTheta
+   *
+   * anggap r tetap sehingga ada 2pi * r unit titik
+   * karena ada 2pi*r titik dan pada titik terakhir theta harus = 2pi
+   * maka dTheta = 1/r
+   * karena r = dR * sqrt(i) dan dR = sqrt(2)/2 maka
+   * dTheta = 2/sqrt(2) * sqrt(i)
+   */
+
+  const float dR = 0.5 * std::sqrtf(2.0f);
   const uint64_t cx = WIDTH / 2;
   const uint64_t cy = HEIGHT / 2;
 
   for (uint32_t i : prime.from_range_limit(AREA)) {
-    float r = scaleR * std::sqrt(i);
-    float theta = scaleTheta * i;
+    float dTheta = 2 / std::sqrtf(2 * i);
+    float r = dR * std::sqrtf(i);
+    float theta = dTheta * i;
     uint64_t x = uint64_t(cx + r * std::cos(theta));
     uint64_t y = uint64_t(cy + r * std::sin(theta));
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
@@ -77,4 +107,28 @@ int main(int argc, const char* argv[]) {
     std::cout << "berhasil ditulis ke " << filename << std::endl;
   else
     std::cout << "gagal menulis ke " << filename << std::endl;
+
+  // spiral logarithmic cek ini
+  // https://en.wikipedia.org/wiki/Logarithmic_spiral
+  const float dTheta = std::log(dR);
+  for (uint32_t i : prime.from_range_limit(AREA)) {
+    float r = dR * std::sqrtf(i);
+    float theta = dTheta * i;
+    uint64_t x = uint64_t(cx + r * std::cos(theta));
+    uint64_t y = uint64_t(cy + r * std::sin(theta));
+    if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+      uint64_t n = y * WIDTH + x;
+      uint64_t base = (n) * 3;
+      data2[base + 0] = 255;
+      data2[base + 1] = 255;
+      data2[base + 2] = 255;
+    }
+  }
+
+  writer.set_filename(filename2);
+  writer.set_buffer(data2);
+  if (writer.write())
+    std::cout << "berhasil ditulis ke " << filename2 << std::endl;
+  else
+    std::cout << "gagal menulis ke " << filename2 << std::endl;
 }

@@ -42,7 +42,7 @@ class PNG {
   }
 
  public:
-  PNG(const std::string &fileName) : fileName(fileName) {}
+  PNG(std::string fileName) : fileName(fileName) {}
 
   ~PNG() {
     if (pngPtr) {
@@ -81,9 +81,14 @@ class PNG {
   }
 
   bool write() {
+    if (pngPtr && infoPtr) {
+      png_destroy_write_struct(&pngPtr, &infoPtr);
+      pngPtr = nullptr;
+      infoPtr = nullptr;
+    }
+
     output.open(fileName, std::ios::binary);
     if (!output) return false;
-
     int rowBytes = imageWidth * get_channel_count();
     if (imageBuffer.size() != static_cast<size_t>(imageHeight * rowBytes))
       imageBuffer.resize(imageHeight * rowBytes);
@@ -126,4 +131,9 @@ class PNG {
   void set_color_type(png_byte ct) { imageColorType = ct; }
   void set_bit_depth(png_byte bd) { imageBitDepth = bd; }
   void set_buffer(const std::vector<png_byte> &buf) { imageBuffer = buf; }
+  void set_filename(const std::string &fileName) {
+    if (input.is_open()) input.close();
+    if (output.is_open()) output.close();
+    this->fileName = fileName;
+  }
 };
