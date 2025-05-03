@@ -1,7 +1,7 @@
 Just a bunch of C++ experiments and random code from my learning and tinkering. Some stuff might be unfinished—thanks for your patience! For anything with PNG images, make sure you've got libpng installed for your OS.
 
 ## 🎨 Latest Experiments
-`Prime Art – visualizing prime numbers in a spiral`
+- `Prime Art – visualizing prime numbers in a spiral`
     1. `100 × 100` ![](prime-spiral-100-100.png)
     2. `250 × 250` ![](prime-spiral-250-250.png)
     3. `500 × 500` ![](prime-spiral-500-500.png)
