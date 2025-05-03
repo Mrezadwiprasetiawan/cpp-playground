@@ -1,7 +1,7 @@
 Kumpulan eksperimen dan kode C++ buat belajar dan iseng-iseng. Beberapa mungkin belum selesai—mohon maklum ya! Kalau mainan sama gambar PNG, pastikan udah install libpng sesuai sistem operasimu.
 
 ## 🎨 Proyek Terbaru
-Prime Art – visualisasi bilangan prima dalam bentuk spiral:
+`Prime Art – visualisasi bilangan prima dalam bentuk spiral`
     1. `100 ×100` ![](prime-spiral-100-100.png)
     2. `250 × 250` ![](prime-spiral-250-250.png)
     3. `500 × 500` ![](prime-spiral-500-500.png)
