@@ -83,13 +83,13 @@ int main(int argc, const char* argv[]) {
    * dTheta = 2/sqrt(2) * sqrt(i)
    */
 
-  const float dR = 0.5 * std::sqrtf(2.0f);
+  const float dR = 0.5 * std::sqrt(2.0f);
   const uint64_t cx = WIDTH / 2;
   const uint64_t cy = HEIGHT / 2;
 
   for (uint32_t i : prime.from_range_limit(AREA)) {
-    float dTheta = 2 / std::sqrtf(2 * i);
-    float r = dR * std::sqrtf(i);
+    float dTheta = 2 / std::sqrt(2 * i);
+    float r = dR * std::sqrt(i);
     float theta = dTheta * i;
     uint64_t x = uint64_t(cx + r * std::cos(theta));
     uint64_t y = uint64_t(cy + r * std::sin(theta));
@@ -112,7 +112,7 @@ int main(int argc, const char* argv[]) {
   // https://en.wikipedia.org/wiki/Logarithmic_spiral
   const float dTheta = std::log(dR);
   for (uint32_t i : prime.from_range_limit(AREA)) {
-    float r = dR * std::sqrtf(i);
+    float r = dR * std::sqrt(i);
     float theta = dTheta * i;
     uint64_t x = uint64_t(cx + r * std::cos(theta));
     uint64_t y = uint64_t(cy + r * std::sin(theta));
