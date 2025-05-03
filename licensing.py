@@ -1,3 +1,6 @@
+import os
+
+header = '''\
 /*
   cpp-playground - C++ experiments and learning playground
   Copyright (C) 2025 M. Reza Dwi Prasetiawan
@@ -19,35 +22,22 @@
   You should have received a copy of the GNU General Public License
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
+'''
 
+def has_license(content):
+  return "GNU General Public License" in content
 
-#include <iostream>
-#include <utility>  // untuk std::move
+def process_file(filepath):
+  with open(filepath, 'r', encoding='utf-8') as f:
+    content = f.read()
+  if not has_license(content):
+    with open(filepath, 'w', encoding='utf-8') as f:
+      f.write(header + '\n\n' + content)
+    print(f"Header added: {filepath}")
+  else:
+    print(f"Already licensed: {filepath}")
 
-class Abstract {
-  int a;
-
- public:
-  Abstract(int a) : a(a) {}
-
-  // copy constructor
-  Abstract(const Abstract &a) noexcept : a(a.a) {}
-
-  // move constructor
-  Abstract(Abstract &&a) noexcept : a(a.a) { a.a = 0; }
-
-  int getA() const { return a; }
-};
-
-std::ostream &operator<<(std::ostream &os, const Abstract &abs) {
-  return os << abs.getA();
-}
-
-int main() {
-  std::cout << "isi a dengan 8" << std::endl;
-  Abstract a(8);
-  std::cout << "move a ke b" << std::endl;
-  Abstract b = std::move(a);
-  std::cout << "a sekarang berisi " << a << " b sekarang berisi " << b
-            << std::endl;
-}
+for root, _, files in os.walk('.'):
+  for file in files:
+    if file.endswith(('.cxx', '.hxx')):
+      process_file(os.path.join(root, file))
