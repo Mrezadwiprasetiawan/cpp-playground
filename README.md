@@ -1,4 +1,4 @@
-# cpp-playgroun
+# cpp-playground
 [README.md Bahasa Indonesia](README-id.md)
 
 ## 🇺🇸 English
