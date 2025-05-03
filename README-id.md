@@ -1,18 +1,27 @@
-# cpp-playground
+🇮🇩 Bahasa Indonesia (Santai)
 
-## 🇮🇩 Bahasa Indonesia
+Kumpulan eksperimen dan kode C++ buat belajar dan iseng-iseng. Beberapa mungkin belum selesai—mohon maklum ya! Kalau mainan sama gambar PNG, pastikan udah install libpng sesuai sistem operasimu.
 
-Kumpulan eksperimen dan kode C++ sebagai hasil eksplorasi dan latihan. Beberapa proyek mungkin belum selesai, jadi harap dimaklumi. Untuk proyek manipulasi gambar PNG, Anda perlu menginstal **libpng** sesuai sistem operasi Anda.
+🎨 Proyek Terbaru
 
-### 🎨 Proyek Terkini
-- **Prime Art**: Visualisasi angka prima dalam bentuk spiral:
-  1. `100 × 100` ![](prime-spiral-100-100.png)
-  2. `250 × 250` ![](prime-spiral-250-250.png)
-  3. `500 × 500` ![](prime-spiral-500-500.png)
-  4. `1000 × 1000` ![](prime-spiral-1000-1000.png)
+Prime Art – visualisasi bilangan prima dalam bentuk spiral:
 
-### 📂 Struktur Direktori
-```
+1. 100 × 100 
+
+
+2. 250 × 250 
+
+
+3. 500 × 500 
+
+
+4. 1000 × 1000 
+
+
+
+
+📂 Isi Folder
+
 .
 ├── .github/
 │   └── workflows/
@@ -31,38 +40,49 @@ Kumpulan eksperimen dan kode C++ sebagai hasil eksplorasi dan latihan. Beberapa 
 ├── prime-spiral-250-250.png
 ├── prime-spiral-500-500.png
 └── prime-spiral-1000-1000.png
-```
 
-### 📁 Deskripsi Folder
-- `3D/`                     Eksperimen pemrograman 3D.
-- `NN/`                     Implementasi Neural Network dari nol.
-- `basic/`                  Sintaks dasar C++.
-- `electrical/`             Simulasi elemen elektronik.
-  - `component/include/`    Header file untuk komponen elektronik.
-- `image/`                  Pengolahan dan manipulasi gambar.
-- `number_system/`          Sistem bilangan.
+3D/ – coba-coba grafik 3D
 
-### 🚀 Kompilasi
-**Persyaratan:**
-- Kompiler C++20 (g++, clang++).
-- CMake (opsional).
-- **libpng** untuk proyek image/PNG.
+NN/ – bikin neural network sendiri dari nol
 
-```bash
+basic/ – eksperimen dasar dan syntax C++
+
+electrical/ – simulasi komponen elektronik
+
+component/include/ – file header komponen
+
+
+image/ – utak-atik gambar
+
+number_system/ – sistem bilangan
+
+
+⚙️ Cara Kompilasi
+
+Yang dibutuhin:
+
+Compiler C++20 (g++ atau clang++)
+
+CMake (opsional)
+
+libpng (buat proyek gambar)
+
+
 g++ -std=gnu++20 ...
-```
+
 atau
-```bash
+
 clang++ -std=c++20 ...
-```
-atau menggunakan CMake:
-```bash
+
+atau pake CMake:
+
 cmake -S . -B build
 cmake --build build
-```
 
-### 🤝 Kontribusi
-Ingin kontribusi? Silakan! Kalau tidak, juga tidak masalah. Proyek ini hanya untuk latihan kok.
+🤝 Mau Ikut Kontribusi?
 
-### 📜 Lisensi
-Proyek ini dilisensikan di bawah **GPL v3 License**. [Baca detailnya di sini](LICENSE).
+Silakan banget! Tapi santai aja juga nggak apa-apa. Proyek ini buat latihan dan seneng-seneng aja.
+
+📜 Lisensi
+
+Proyek ini pakai GPL v3 License. Baca selengkapnya di sini.
