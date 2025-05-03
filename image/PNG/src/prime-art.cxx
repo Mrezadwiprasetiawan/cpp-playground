@@ -80,19 +80,10 @@ int main(int argc, const char* argv[]) {
 
   /* Solve r untuk setiap i
    *
-   * ketika i = s * s gw mau r = halfdiagonal = sqrt(2)/2 * s
-   * sehingga r = dR * s * s = sqrt(2)/2 *s
-   * r = d R * s = sqrt(2)
-   * karena s * s = i
-   * s haruslah sqrt(i)
-   * sehingga r = dR * sqrt(i)
-   */
-
-  /* Solve dR
-   *
-   * r(s*s) haruslah dR * s
-   * sehingga dR = r(s*s)/s
-   * karena r(s*s) = sqrt(2)/2 *s
+   * ketika i = s * s gw mau r = halfdiagonal
+   * sehingga r = sqrt(2)/2 * s
+   * dR linear terhadap i dan s = sqrt(i) sehingga
+   * r = dR * sqrt(i)
    * dR = sqrt(2)/2
    */
 
