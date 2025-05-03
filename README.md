@@ -1,4 +1,4 @@
-🇺🇸 English (Casual)
+🇺🇸 English
 
 Just a bunch of C++ experiments and random code from my learning and tinkering. Some stuff might be unfinished—thanks for your patience! For anything with PNG images, make sure you've got libpng installed for your OS.
 

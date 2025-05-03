@@ -1,4 +1,4 @@
-🇮🇩 Bahasa Indonesia (Santai)
+🇮🇩 Bahasa Indonesia
 
 Kumpulan eksperimen dan kode C++ buat belajar dan iseng-iseng. Beberapa mungkin belum selesai—mohon maklum ya! Kalau mainan sama gambar PNG, pastikan udah install libpng sesuai sistem operasimu.
 
