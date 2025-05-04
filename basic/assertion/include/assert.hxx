@@ -2,9 +2,6 @@
   cpp-playground - C++ experiments and learning playground
   Copyright (C) 2025 M. Reza Dwi Prasetiawan
 
-  This project contains various experiments and explorations in C++,
-  including topics such as number systems, neural networks, and 
-  visualizations of prime number patterns.
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
