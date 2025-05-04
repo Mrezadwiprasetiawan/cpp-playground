@@ -27,6 +27,10 @@
 #include <type_traits>
 namespace NN {
 
+enum LOSS_TYPE {
+  MAE,
+  MSE,
+};
 enum ACTIVATION_TYPE { RELU, SIGMOID, TANH };
 
 // peelu dimasukan ke typename karena semua array di dalamnya statis
@@ -69,16 +73,18 @@ class FFN {
   static FP ReLU_deriv(FP y) { return y > 0 ? 1 : 1e-6; }
   static FP sigmoid(FP x) { return 1 / (1 + std::exp(-x)); }
   static FP sigmoid_deriv(FP y) { return y * (1 - y); }
-  static FP tanh(FP x) { return std::tanh(x); }
+  static FP tanh(FP x) {
+    return (std::exp(x) - std::exp(-x)) / (std::exp(x) - std::exp(-x));
+  }
   static FP tanh_deriv(FP y) { return 1 - y * y; }
 
   template <size_t inSize, size_t outSize, bool hidden>
-  void forward_layer(FP (&w)[inSize][outSize], FP (&b)[outSize],
-                     FP (&in)[inputSize], FP (&res)[outSize],
-                     FP (*actFunc)(FP x)) {
+  void forwardlayer(FP (&w)[inSize][outSize], FP (&b)[outSize],
+                    FP (&in)[inputSize], FP (&res)[outSize],
+                    FP (*actFunc)(FP x)) {
     for (size_t i = 0; i < outSize; ++i) {
       for (size_t j = 0; j < inSize; ++j)
-        res[i] += hidden ? actFunc(in[i] * w[j][i]) : w[j][i] * res[j][i];
+        res[i] += hidden ? actFunc(in[j] * w[j][i]) : w[j][i] * in[j];
       res[i] += b[i];
     }
   }
@@ -99,10 +105,22 @@ class FFN {
         case ACTIVATION_TYPE::TANH: return tanh;
       }
     };
-    forward_layer(wIn, bIn, data, resIn, actFuncFromType(act_t));
-    forward_layer(wHid1, bHid1, resIn, resHid1, actFuncFromType(act_t));
-    forward_layer(wHid2, bHid2, resHid1, res, actFuncFromType(act_t));
+    forwardlayer<inputSize, outputSize, 0>(wIn, bIn, data, resIn, 0);
+    forwardlayer<outputSize, hidden1Size, 1>(wHid1, bHid1, resIn, resHid1,
+                                             actFuncFromType(act_t));
+    forwardlayer<hidden1Size, hidden2Size>(wHid2, bHid2, resHid1, res,
+                                           actFuncFromType(act_t));
     return res;
+  }
+
+  void backward(FP (&data)[outputSize]) {
+    auto actDerivFuncFromType = [](ACTIVATION_TYPE act_t) {
+      switch (act_t) {
+        case ACTIVATION_TYPE::RELU: return ReLU_deriv;
+        case ACTIVATION_TYPE::SIGMOID: return sigmoid_deriv;
+        case ACTIVATION_TYPE::TANH: return tanh_deriv;
+      }
+    };
   }
 };
 
