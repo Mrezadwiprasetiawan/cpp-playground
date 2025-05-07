@@ -66,24 +66,25 @@ void do_l(uint64_t limit) {
   using namespace std;
   Prime<uint64_t> prime;
   for (uint64_t p : prime.from_range_limit(limit)) cout << p << endl;
-  cout << "Prime finded using " << Prime<uint64_t>::max_thread() << "threads" << endl;
+  cout << "Prime finded using up to " << Prime<uint64_t>::max_thread() << "threads" << endl;
 }
 
 void do_s(size_t size) {
   using namespace std;
   Prime<uint64_t> prime;
   for (uint64_t p : prime.from_size(size)) cout << p << endl;
-  cout << "Prime finded using " << Prime<uint64_t>::max_thread() << "threads" << endl;
+  cout << "Prime finded using up to " << Prime<uint64_t>::max_thread() << "threads" << endl;
 }
 void do_n(uint64_t value) {
   using namespace std;
   Prime<uint64_t> prime;
   if (prime.is_prime(value)) {
     cout << value << " is prime" << endl;
+    cout << "Prime finded using up to " << Prime<uint64_t>::max_thread() << "threads" << endl;
     return;
   }
   cout << value << " is not prime" << endl;
-  cout << "Prime finded using " << Prime<uint64_t>::max_thread() << "threads" << endl;
+  cout << "Prime finded using up to " << Prime<uint64_t>::max_thread() << "threads" << endl;
 }
 
 void do_i(size_t index) {
