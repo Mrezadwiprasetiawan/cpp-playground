@@ -72,7 +72,7 @@ class FFN {
   static FP sigmoid(FP x) { return 1 / (1 + std::exp(-x)); }
   static FP sigmoid_deriv(FP y) { return y * (1 - y); }
   static FP tanh(FP x) {
-    return (std::exp(x) - std::exp(-x)) / (std::exp(x) - std::exp(-x));
+    return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x));
   }
   static FP tanh_deriv(FP y) { return 1 - y * y; }
 
