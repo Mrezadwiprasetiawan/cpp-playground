@@ -17,7 +17,6 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #pragma once
 
 #include <cassert>
@@ -40,9 +39,9 @@ class Obj3D {
   void update_vertices() {
     for (size_t i = 0; i < faceIndices.size(); ++i) {
       Vec3 f_i = faceIndices[i];
-      assert(f_i.x() > 0 && f_i.x() < vertices.size());
-      assert(f_i.y() > 0 && f_i.y() < vertices.size());
-      assert(f_i.z() > 0 && f_i.z() < vertices.size());
+      assert(f_i.x() >= 0 && f_i.x() < vertices.size());
+      assert(f_i.y() >= 0 && f_i.y() < vertices.size());
+      assert(f_i.z() >= 0 && f_i.z() < vertices.size());
       newVertices.push_back(vertices[f_i.x()]);
       newVertices.push_back(vertices[f_i.y()]);
       newVertices.push_back(vertices[f_i.z()]);
@@ -93,9 +92,7 @@ class Obj3D {
 
   std::vector<Vec3<I>> get_face_index() const { return faceIndices; }
   std::vector<Vec3<FP>> get_default_vertices() const { return vertices; }
-  std::vector<Vec3<FP>> get_processed_vertices() const {
-    return newVertices;
-  }
+  std::vector<Vec3<FP>> get_processed_vertices() const { return newVertices; }
   // setter
   void update_vertices(std::vector<Vec3<FP>> vertices) {
     this->vertices = vertices;
