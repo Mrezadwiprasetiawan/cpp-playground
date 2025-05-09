@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include <factorial.hxx>
 
 template <typename T>
 std::enable_if<std::is_arithmetic<T>::value,T>
