@@ -25,13 +25,17 @@
 #include <type_traits>
 namespace NN {
 
+
+  /* MAE = Mean Absolute Error
+   * MSE = Mean Squared Error
+   */
 enum LOSS_TYPE {
   MAE,
   MSE,
 };
 enum ACTIVATION_TYPE { RELU, SIGMOID, TANH };
 
-// peelu dimasukan ke typename karena semua array di dalamnya statis
+// perlu dimasukan ke parameter template karena semua array di dalamnya statis
 template <typename FP, size_t inputSize, size_t hidden1Size, size_t hidden2Size,
           size_t outputSize,
           typename = std::enable_if_t<std::is_floating_point_v<FP>, FP>>
@@ -43,8 +47,10 @@ class FFN {
   FP resIn[hidden1Size], resHid1[hidden2Size], res[outputSize];
   bool xavier = false;
 
+  // setiap layer punya distribusi yang berbeda
   template <size_t inSize, size_t outSize>
   void init_layer(FP k, FP (&w)[inSize][outSize], FP (&b)[inSize]) {
+    //setup random
     std::random_device rd;
     std::mt19937 gen(rd);
     std::normal_distribution<FP> dis(0, std::sqrt(k));
@@ -55,6 +61,9 @@ class FFN {
     }
   }
 
+  /* He Initialization cuma make k = input
+   * sedangkan xavier init make k = input + output;
+   */
   void init_wb() {
     FP k0 = inputSize, k1 = hidden1Size, k2 = hidden2Size;
     if (xavier) {
@@ -67,6 +76,16 @@ class FFN {
     init_layer<hidden2Size, outputSize>(k2, wHid2, bHid2);
   }
 
+  //Loss func
+  static FP MSE(FP ypred, FP y){
+    FP semi_loss = ypred - y;
+    return 0.5 * semi_loss * semi_loss;
+  }
+  static FP MSE_deriv(FP ypred, FP y){
+    return ypred - y;
+  }
+
+  // Activation func
   static FP ReLU(FP x) { return x > 0 ? x : 1e-6; }
   static FP ReLU_deriv(FP y) { return y > 0 ? 1 : 1e-6; }
   static FP sigmoid(FP x) { return 1 / (1 + std::exp(-x)); }
@@ -75,6 +94,7 @@ class FFN {
     return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x));
   }
   static FP tanh_deriv(FP y) { return 1 - y * y; }
+
 
   template <size_t inSize, size_t outSize, bool hidden>
   void forwardlayer(FP (&w)[inSize][outSize], FP (&b)[outSize],
@@ -87,11 +107,15 @@ class FFN {
     }
   }
 
+
+
  public:
+  // default acrivation using ReLU
   FFN(ACTIVATION_TYPE act_t = ACTIVATION_TYPE::RELU) : act_t(act_t) {
     init_wb();
   }
-  FP (&forward(FP (&data)[inputSize]))[outputSize] {
+
+  void forward(FP (&data)[inputSize]) {
     // reset layer data first
     resIn = {};
     resHid1 = {};
@@ -111,6 +135,8 @@ class FFN {
     return res;
   }
 
+  // using w = wcurr - eta * dL/dw
+  // using b = bcurr - eta * dL/db;
   void backward(FP (&data)[outputSize]) {
     auto actDerivFuncFromType = [](ACTIVATION_TYPE act_t) {
       switch (act_t) {
