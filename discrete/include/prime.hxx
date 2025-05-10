@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <cmath>
 #include <vector>
 #include <cstdint>
 #include <thread>
