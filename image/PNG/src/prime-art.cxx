@@ -21,7 +21,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include <numbers.hxx>
+#include <discrete/include/prime.hxx>
 #include <png.hxx>
 #include <string>
 #include <vector>
