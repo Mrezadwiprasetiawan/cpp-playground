@@ -1,7 +1,7 @@
 include_directories(include)
 
 #untuk kelas prime jadi include header dari subproject number_system
-include_directories(${CMAKE_SOURCE_DIR}/number_system/include)
+include_directories(${CMAKE_SOURCE_DIR}/discrete/include)
 
 set(SRC "src")
 

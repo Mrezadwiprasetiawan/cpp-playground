@@ -18,13 +18,13 @@
 */
 
 
-#include <custom_trait.hxx>
+#include <type_traits>
 #include <iomanip>
 #include <ios>
 #include <iostream>
-#include <matrix.hxx>
+#include <linear/include/matrix.hxx>
 #include <obj3d.hxx>
-#include <vec.hxx>
+#include <linear/include/vec.hxx>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -42,7 +42,7 @@ void print(const l3d::Vec<T, N> &vn, int n_indent) {
 template <typename T, int N>
 void print(const l3d::Mat<T, N> &m, int n_indent) {
   using namespace std;
-  bool is_float = ::is_same<T, float>;
+  bool is_float = std::is_same_v<T, float>;
   ios oldState(nullptr);
   oldState.copyfmt(cout);
   cout << fixed << setprecision(is_float ? 6 : 15) << endl;

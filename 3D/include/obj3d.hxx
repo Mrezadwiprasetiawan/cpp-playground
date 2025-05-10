@@ -20,8 +20,8 @@
 #pragma once
 
 #include <cassert>
-#include <matrix.hxx>
-#include <vec.hxx>
+#include <linear/include/matrix.hxx>
+#include <linear/include/vec.hxx>
 
 namespace l3d {
 // FP = floating point I = integer

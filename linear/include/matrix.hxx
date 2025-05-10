@@ -22,16 +22,16 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
-#include <custom_trait.hxx>
+#include <type_traits>
 #include <initializer_list>
 #include <stdexcept>
-#include <vec.hxx>
+#include "vec.hxx"
 #include <vector>
 
 namespace l3d {
 
 // example usage Mat<double,4> Matrix 4 * 4 with double element type
-template <typename T, int N, typename = ifel_trait_t<is_fp<T>, float>>
+template <typename T, int N, typename = std::enable_if_t<std::is_floating_point_v<T>, float>>
 class Mat {
  private:
   T vals[N * N];
@@ -277,7 +277,7 @@ enum MATRIX_PROJECTION_TYPE { PERSPECTIVE, ORTHOGRAPHIC, FRUSTUM };
 enum EULER_ROTATION_TYPE { ZYX, ZXY, YXZ, YZX, XZY, XYZ };
 
 // View matrix
-template <typename T, typename = ifel_trait_t<is_fp<T>, float>>
+template <typename T, typename = std::enable_if_t<std::is_floating_point_v<T>, float>>
 Mat<T, 4> VIEW_MATRIX(const Vec3<T> &eye, const Vec3<T> &center,
                       const Vec3<T> &up = {0, 1, 0},
                       const Vec3<T> &t = {0, 0, 0}) {

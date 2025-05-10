@@ -21,7 +21,7 @@
 #pragma once
 
 #include <cassert>
-#include <custom_trait.hxx>
+#include <type_traits>
 #include <initializer_list>
 
 namespace l3d {
@@ -72,7 +72,7 @@ class Vec {
 
 #define GETTER_XYZ(type, index)         \
   template <typename U = T>             \
-  is_type_t<(N >= 3), U> type() const { \
+  std::enable_if_t<(N >= 3), U> type() const { \
     return val[index];                  \
   }
 
@@ -81,7 +81,7 @@ class Vec {
   GETTER_XYZ(z, 2);
 #undef GETTER_XYZ
   template <typename U = T>
-  is_type_t<(N >= 4), U> w() {
+  std::enable_if_t<(N >= 4), U> w() {
     return val[3];
   }
 
@@ -90,7 +90,7 @@ class Vec {
   T *data() { return val; }
 };
 
-template <typename T, int N, typename = ifel_trait_t<is_fp<T>, float>>
+template <typename T, int N, typename = std::enable_if<std::is_floating_point_v<T>, float>>
 Vec<T, N> normalize(Vec<T, N> target) {
   T length = 0;
   for (int i = 0; i < N; ++i) length += target[i] * target[i];
@@ -99,14 +99,14 @@ Vec<T, N> normalize(Vec<T, N> target) {
   return target;
 }
 
-template <typename T, int N, typename = ifel_trait_t<is_fp<T>, float>>
+template <typename T, int N, typename = std::enable_if<std::is_floating_point_v<T>, float>>
 T dot(const Vec<T, N> &a, const Vec<T, N> &b) {
   T res = 0;
   for (int i = 0; i < N; ++i) res += a[i] * b[i];
   return res;
 }
 
-template <typename T, typename = ifel_trait_t<is_fp<T>, float>>
+template <typename T, typename = std::enable_if<std::is_floating_point_v<T>, float>>
 Vec<T, 3> cross(const Vec<T, 3> &a, const Vec<T, 3> &b) {
   return {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
           a[0] * b[1] - a[1] * b[0]};
