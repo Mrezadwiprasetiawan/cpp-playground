@@ -20,7 +20,7 @@
 
 #include <iostream>
 #include <cstring>
-#include "numbers.hxx"
+#include <fibonacci.hxx>
 
 std::string argname[] = {"-h", "-help", "-l", "-limit", "-i", "-index"};
 

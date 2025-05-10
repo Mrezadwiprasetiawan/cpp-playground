@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include "numbers.hxx"
+#include <prime.hxx>
 
 uint64_t to_number_with_suffix(const char *str) {
   using namespace std;
