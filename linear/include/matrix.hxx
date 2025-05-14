@@ -31,7 +31,7 @@
 namespace l3d {
 
 // example usage Mat<double,4> Matrix 4 * 4 with double element type
-template <typename T, int N, typename = std::enable_if_t<std::is_floating_point_v<T>, float>>
+template <typename T, int N, typename = std::enable_if_t<std::is_floating_point_v<T>, T>>
 class Mat {
  private:
   T vals[N * N];
