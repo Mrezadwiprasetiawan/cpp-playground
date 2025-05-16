@@ -2,7 +2,7 @@
 #include <type_traits>
 
 template <typename T>
-std::enable_if<std::is_arithmetic_v<T>> factorial(T n) {
+std::enable_if_t<std::is_arithmetic_v<T>> factorial(T n) {
   if (n == 1) return 1;
   return n * factorial(n - 1);
 }
