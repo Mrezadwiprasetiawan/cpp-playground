@@ -8,7 +8,7 @@
 
 template <typename T, typename Ret = T>
 using enable_if_arithmetic = typename std::enable_if<
-    std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, Ret>::type;
+  std::is_arithmetic<T>::value && !std::is_same<T, bool>::value, Ret>::type;
 
 template <typename T, enable_if_arithmetic<T> = 0>
 class Prime {
@@ -31,13 +31,13 @@ class Prime {
 
   std::vector<uint64_t> create_sieve(T limit) {
     if (limit < 3) return {};
-    const size_t num_odds = ((limit - 3) >> 1) + 1;
-    const size_t array_size = (num_odds + 63) >> 6;
-    std::vector<uint64_t> sieve(array_size, uint64_t(~0));
+    const size_t numOdds = ((limit - 3) >> 1) + 1;
+    const size_t arraySize = (numOdds + 63) >> 6;
+    std::vector<uint64_t> sieve(arraySize, uint64_t(~0));
     std::vector<std::thread> threads;
     for (int i = 1; i < maxThread; ++i)
       threads.emplace_back(
-          [this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
+        [this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
     main_sieve(sieve, limit, 0);
     for (auto &t : threads) t.join();
     return sieve;
@@ -55,19 +55,20 @@ class Prime {
       this->lastResults.resize(size);
       return this->lastResults;
     }
-    if (size == 0) return {};
+    if (!size) return {};
     std::vector<T> primes;
     primes.push_back(2);
     if (size == 1) return primes;
     T limit = estimate_limit_from_size(size);
     lastLimit = limit;
     auto sieve = create_sieve(limit);
-    const size_t num_odds = ((limit - 3) >> 1) + 1;
+    const size_t numOdds = ((limit - 3) >> 1) + 1;
 
-    for (size_t i = 0; i < num_odds && primes.size() < size; ++i)
+    for (size_t i = 0; i < numOdds && primes.size() < size; ++i)
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
 
     lastResults = primes;
+    lastSize = size;
     return primes;
   }
 
@@ -79,9 +80,9 @@ class Prime {
     if (limit < 3) return primes;
     lastLimit = limit;
     auto sieve = create_sieve(limit);
-    const size_t num_odds = ((limit - 3) >> 1) + 1;
+    const size_t numOdds = ((limit - 3) >> 1) + 1;
 
-    for (size_t i = 0; i < num_odds; ++i)
+    for (size_t i = 0; i < numOdds; ++i)
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
 
     lastResults = primes;
@@ -91,12 +92,13 @@ class Prime {
   bool is_prime(T n) {
     if (n <= 1) return false;
     if (n == 2) return true;
-    if ((n & 1) == 0) return false;
-    T sqrt_n = static_cast<T>(std::sqrt(n));
-    auto sieve = from_range_limit(sqrt_n);
+    if (!(n & 1)) return false;
+    T sqrtN = static_cast<T>(std::sqrt(n));
+    auto sieve = from_range_limit(sqrtN);
     for (T p : sieve)
-      if (n % p == 0) return false;
+      if (!(n % p)) return false;
     return true;
   }
+
   static int max_thread() { return Prime::maxThread; }
 };
