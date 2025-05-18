@@ -36,8 +36,9 @@ class Prime {
     std::vector<uint64_t> sieve(arraySize, uint64_t(~0));
     std::vector<std::thread> threads;
     for (int i = 1; i < maxThread; ++i)
-      threads.emplace_back(
-        [this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
+      threads.emplace_back([this, &sieve, limit, i]() {
+        main_sieve(sieve, limit, i);
+      });
     main_sieve(sieve, limit, 0);
     for (auto &t : threads) t.join();
     return sieve;
@@ -52,8 +53,8 @@ class Prime {
  public:
   std::vector<T> from_size(size_t size) {
     if (size <= lastSize) {
-      this->lastResults.resize(size);
-      return this->lastResults;
+      if (size == lastSize) return this->lastResults;
+      return std::vector<T>(this->lastResults.begin(), this->lastResults.begin() + size);
     }
     if (!size) return {};
     std::vector<T> primes;
@@ -63,28 +64,32 @@ class Prime {
     lastLimit = limit;
     auto sieve = create_sieve(limit);
     const size_t numOdds = ((limit - 3) >> 1) + 1;
-
     for (size_t i = 0; i < numOdds && primes.size() < size; ++i)
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
-
     lastResults = primes;
     lastSize = size;
     return primes;
   }
 
   std::vector<T> from_range_limit(T limit) {
-    if (limit == lastLimit) return this->lastResults;
     std::vector<T> primes;
     if (limit < 2) return primes;
     primes.push_back(2);
     if (limit < 3) return primes;
+    if (limit <= lastLimit) {
+      if (limit == lastLimit) return this->lastResults;
+
+      // estimasi end awal
+      size_t end = static_cast<size_t>(limit / std::log(limit)) + 1;
+      if (end >= lastResults.size()) end = lastResults.size();
+      while (end < lastResults.size() && lastResults[end] <= limit) ++end;
+      return std::vector<T>(this->lastResults.begin(), this->lastResults.begin() + end);
+    }
     lastLimit = limit;
     auto sieve = create_sieve(limit);
     const size_t numOdds = ((limit - 3) >> 1) + 1;
-
     for (size_t i = 0; i < numOdds; ++i)
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
-
     lastResults = primes;
     return primes;
   }
