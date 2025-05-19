@@ -81,7 +81,7 @@ class Prime {
 
       // estimasi end awal
       size_t end = static_cast<size_t>(limit / std::log(limit)) + 1;
-      if (end >= lastResults.size()) end = lastResults.size();
+      if (end > lastResults.size()) end = lastResults.size();
       while (end < lastResults.size() && lastResults[end] <= limit) ++end;
       return std::vector<T>(this->lastResults.begin(), this->lastResults.begin() + end);
     }
