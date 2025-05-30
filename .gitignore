@@ -9,6 +9,9 @@ compile_commands.json
 
 #swap file from vim
 **/*.sw*
+<<<<<<< HEAD
 
 #vscode file
 .vscode
+=======
+>>>>>>> refs/remotes/origin/main
