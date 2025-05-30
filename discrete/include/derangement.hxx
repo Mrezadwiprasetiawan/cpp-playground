@@ -1,6 +1,5 @@
 #include <cstdint>
 #include <type_traits>
-<<<<<<< HEAD
 #include <vector>
 
 namespace Discrete {
@@ -28,13 +27,3 @@ public:
   }
 };
 } // namespace Discrete
-=======
-
-template <typename T, typename Ret = uint64_t>
-std::enable_if_t<std::is_arithmetic_v<T>, Ret>
-derangement(T n){
-  if (!n) return 1;
-  if (n==1) return 0;
-  return (n-1)*(derangement(n-1)+derangement(n-2));
-}
->>>>>>> refs/remotes/origin/main
