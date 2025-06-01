@@ -15,6 +15,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -funroll-loops -ffast-math")
 
 if(win32)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake")
+add_subdirectory(win32)
 endif()
 
 # Add subprojects
@@ -23,4 +24,3 @@ add_subdirectory(number_system)
 add_subdirectory(3D)
 add_subdirectory(image)
 add_subdirectory(discrete)
-add_subdirectory(win32)
