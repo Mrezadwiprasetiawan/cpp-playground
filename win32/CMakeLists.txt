@@ -5,4 +5,4 @@ set_target_properties(win32app PROPERTIES
   WIN32_EXECUTABLE YES
 )
 
-target_link_libraries(winn32app PRIVATE user32 gdi32 kernel32)
+target_link_libraries(win32app PRIVATE user32 gdi32 kernel32)

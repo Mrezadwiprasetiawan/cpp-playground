@@ -17,10 +17,9 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
-#include <iostream>
 #include <cstring>
 #include <fibonacci.hxx>
+#include <iostream>
 
 std::string argname[] = {"-h", "-help", "-l", "-limit", "-i", "-index"};
 
@@ -53,13 +52,16 @@ void printHelp() {
 void do_l(uint64_t limit) {
   using std::cout;
   using std::endl;
+  using namespace Discrete;
   Fibonacci fbnc;
-  for (std::string value : fbnc.get_all(limit)) cout << value << endl;
+  for (std::string value : fbnc.get_all(limit))
+    cout << value << endl;
 }
 
 void do_i(size_t index) {
   using std::cout;
   using std::endl;
+  using namespace Discrete;
   Fibonacci fbnc;
   cout << fbnc.get_index(index) << endl;
 }

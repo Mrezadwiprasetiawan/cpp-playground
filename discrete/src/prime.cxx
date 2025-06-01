@@ -17,7 +17,6 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
@@ -34,17 +33,26 @@ uint64_t to_number_with_suffix(const char *str) {
 
   for (int i = 0; i < len; ++i) {
     char c = str[i];
-    if (c >= '0' && c <= '9') num = num * 10 + (c - '0');
+    if (c >= '0' && c <= '9')
+      num = num * 10 + (c - '0');
     else {
       char suffix = tolower(str[i]);
       switch (suffix) {
-        case 'k': return num << 10;
-        case 'm': return num << 20;
-        case 'g': return num << 30;
-        case 't': return num << 40;
-        case 'p': return num << 50;
-        case 'e': return num << 60;
-        default: cerr << "Invalid suffix: " << str[i] << endl; exit(1);
+      case 'k':
+        return num << 10;
+      case 'm':
+        return num << 20;
+      case 'g':
+        return num << 30;
+      case 't':
+        return num << 40;
+      case 'p':
+        return num << 50;
+      case 'e':
+        return num << 60;
+      default:
+        cerr << "Invalid suffix: " << str[i] << endl;
+        exit(1);
       }
     }
   }
@@ -64,31 +72,41 @@ void printHelp() {
 
 void do_l(uint64_t limit) {
   using namespace std;
+  using namespace Discrete;
   Prime<uint64_t> prime;
-  for (uint64_t p : prime.from_range_limit(limit)) cout << p << endl;
-  cout << "Prime finded using up to " << Prime<uint64_t>::max_thread() << "threads" << endl;
+  for (uint64_t p : prime.from_range_limit(limit))
+    cout << p << endl;
+  cout << "Prime finded using up to " << Prime<uint64_t>::max_thread()
+       << "threads" << endl;
 }
 
 void do_s(size_t size) {
   using namespace std;
+  using namespace Discrete;
   Prime<uint64_t> prime;
-  for (uint64_t p : prime.from_size(size)) cout << p << endl;
-  cout << "Prime finded using up to " << Prime<uint64_t>::max_thread() << "threads" << endl;
+  for (uint64_t p : prime.from_size(size))
+    cout << p << endl;
+  cout << "Prime finded using up to " << Prime<uint64_t>::max_thread()
+       << "threads" << endl;
 }
 void do_n(uint64_t value) {
   using namespace std;
+  using namespace Discrete;
   Prime<uint64_t> prime;
   if (prime.is_prime(value)) {
     cout << value << " is prime" << endl;
-    cout << "Prime finded using up to " << Prime<uint64_t>::max_thread() << "threads" << endl;
+    cout << "Prime finded using up to " << Prime<uint64_t>::max_thread()
+         << "threads" << endl;
     return;
   }
   cout << value << " is not prime" << endl;
-  cout << "Prime finded using up to " << Prime<uint64_t>::max_thread() << "threads" << endl;
+  cout << "Prime finded using up to " << Prime<uint64_t>::max_thread()
+       << "threads" << endl;
 }
 
 void do_i(size_t index) {
   using namespace std;
+  using namespace Discrete;
   Prime<uint64_t> prime;
   vector<uint64_t> primes = prime.from_size(index + 1);
   if (index < primes.size()) {
@@ -96,7 +114,8 @@ void do_i(size_t index) {
   } else {
     cerr << "Index out of bounds" << endl;
   }
-  cout << "Prime finded using " << Prime<uint64_t>::max_thread() << "threads" << endl;
+  cout << "Prime finded using " << Prime<uint64_t>::max_thread() << "threads"
+       << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -134,37 +153,37 @@ int main(int argc, char *argv[]) {
   }
 
   switch (found_index) {
-    case 0:  // -h
-      printHelp();
-      return 0;
-    case 1:  // -l
-      if (arg_pos + 1 >= argc) {
-        cerr << "Error: Missing argument for -l option" << endl;
-        return 1;
-      }
-      do_l(to_number_with_suffix(argv[arg_pos + 1]));
-      break;
-    case 2:  // -s
-      if (arg_pos + 1 >= argc) {
-        cerr << "Error: Missing argument for -s option" << endl;
-        return 1;
-      }
-      do_s(to_number_with_suffix(argv[arg_pos + 1]));
-      break;
-    case 3:  // -n
-      if (arg_pos + 1 >= argc) {
-        cerr << "Error: Missing argument for -n option" << endl;
-        return 1;
-      }
-      do_n(to_number_with_suffix(argv[arg_pos + 1]));
-      break;
-    case 4:  // -i
-      if (arg_pos + 1 >= argc) {
-        cerr << "Error: Missing argument for -i option" << endl;
-        return 1;
-      }
-      do_i(to_number_with_suffix(argv[arg_pos + 1]));
-      break;
+  case 0: // -h
+    printHelp();
+    return 0;
+  case 1: // -l
+    if (arg_pos + 1 >= argc) {
+      cerr << "Error: Missing argument for -l option" << endl;
+      return 1;
+    }
+    do_l(to_number_with_suffix(argv[arg_pos + 1]));
+    break;
+  case 2: // -s
+    if (arg_pos + 1 >= argc) {
+      cerr << "Error: Missing argument for -s option" << endl;
+      return 1;
+    }
+    do_s(to_number_with_suffix(argv[arg_pos + 1]));
+    break;
+  case 3: // -n
+    if (arg_pos + 1 >= argc) {
+      cerr << "Error: Missing argument for -n option" << endl;
+      return 1;
+    }
+    do_n(to_number_with_suffix(argv[arg_pos + 1]));
+    break;
+  case 4: // -i
+    if (arg_pos + 1 >= argc) {
+      cerr << "Error: Missing argument for -i option" << endl;
+      return 1;
+    }
+    do_i(to_number_with_suffix(argv[arg_pos + 1]));
+    break;
   }
 
   return 0;
