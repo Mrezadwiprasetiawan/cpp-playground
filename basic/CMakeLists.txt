@@ -6,4 +6,6 @@ if(NOT WIN32)
 endif()
 add_subdirectory(move)
 add_subdirectory(endianness)
-add_subdirectory(module)
+
+# temporary exclude module
+# add_subdirectory(module)
