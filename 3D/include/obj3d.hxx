@@ -26,7 +26,8 @@
 namespace l3d {
 using namespace Linear;
 // FP = floating point I = integer
-template <typename FP, typename I> class Obj3D {
+template <typename FP, typename I>
+class Obj3D {
   Mat<FP, 3> modelMat;
   Mat<FP, 3> QcurrMat;
   Vec3<FP> pos;
@@ -48,7 +49,7 @@ template <typename FP, typename I> class Obj3D {
     }
   }
 
-public:
+ public:
   /*
    * otomatis memperbarui vertices tapi originalnya tidak dihapus agar lebih
    * mudah diambil nanti
@@ -109,4 +110,4 @@ public:
     update_vertices();
   }
 };
-} // namespace l3d
+}  // namespace l3d

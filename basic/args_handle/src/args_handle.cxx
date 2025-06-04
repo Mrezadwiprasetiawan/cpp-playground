@@ -17,7 +17,6 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #include <iostream>
 #include <map>
 #include <string>
@@ -38,9 +37,9 @@ int main(int argc, char *argv[]) {
       // Check if option has value
       if (i + 1 < argc && argv[i + 1][0] != '-') {
         options[option_name] = argv[i + 1];
-        i++; // Skip value in next iteration
+        i++;  // Skip value in next iteration
       } else {
-        options[option_name] = ""; // Option without value
+        options[option_name] = "";  // Option without value
       }
     } else {
       positional_args.push_back(arg);
@@ -55,9 +54,7 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << "\nPositional arguments:\n";
-  for (const auto &arg : positional_args) {
-    std::cout << arg << "\n";
-  }
+  for (const auto &arg : positional_args) { std::cout << arg << "\n"; }
 
   return 0;
 }

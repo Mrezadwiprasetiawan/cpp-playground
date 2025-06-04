@@ -26,22 +26,46 @@ template <typename T, typename = std::enable_if_t<std::is_integral_v<T>, T>>
 class Combination {
   T n, k;
 
-public:
+ public:
   explicit Combination() {}
+  explicit Combination(T init_cache, T k = 0) { Combination::count(n, k); }
 
-  static T calc(T n) const {
+  static T count(T n, T k) const {
     T res = 1;
     T maxK = k > n / 2 ? k : n - k;
-    for (T i = maxK + 1; i <= n; ++i)
-      res *= i;
-    return res / Permutation::calc(n - maxK);
+    for (T i = maxK + 1; i <= n; ++i) res *= i;
+    return res / Permutation::count(n - maxK);
   }
 
   template <typename U>
   std::vector<std::vector<U>> choose(const std::vector<U> &sources, T k) const {
+    T n = static_cast<T>(sources.size());
+    if (k < 0) throw std::runtime_error("k must be non-negative");
+    if (k == 0) return {{}};
+    if (n < k) throw std::runtime_error("sources.size() must be >= k");
 
-    if (!k || k == sources.size())
-      return {};
+    std::vector<std::vector<U>> res;
+    res.reserve(static_cast<std::size_t>(count(n, k)));
+
+    std::vector<U> current;
+    current.reserve(static_cast<std::size_t>(k));
+
+    // Deep First Search with start parameter
+    std::function<void(T, T)> dfs = [&](T start, T depth) {
+      if (depth == k) {
+        res.push_back(current);
+        return;
+      }
+      // pilih elemen di posisi i, lalu naikkan i
+      for (T i = start; i < n; ++i) {
+        current.push_back(sources[static_cast<std::size_t>(i)]);
+        dfs(i + 1, depth + 1);
+        current.pop_back();
+      }
+    };
+
+    dfs(0, 0);
+    return res;
   }
 };
-} // namespace Discrete
+}  // namespace Discrete

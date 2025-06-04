@@ -1,0 +1,3 @@
+import testModule;
+
+int main() {}

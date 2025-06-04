@@ -17,11 +17,11 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
-#include <iostream>
 #include <endianness.hxx>
+#include <iostream>
 
-int main(){
+int main() {
   using namespace std;
-  cout << "Current Device is " << (is_little_endian()?"Little ":"Big ") << "Endian" << endl;
+  cout << "Current Device is " << (is_little_endian() ? "Little " : "Big ")
+       << "Endian" << endl;
 }

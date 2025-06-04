@@ -17,10 +17,9 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #include <csignal>
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
 void handler(int sig, siginfo_t *info, void *context) {
   std::cout << "Segfault at address: " << info->si_addr << std::endl;
@@ -34,7 +33,7 @@ int main() {
   sigemptyset(&sa.sa_mask);
   sigaction(SIGSEGV, &sa, nullptr);
 
-  int *p = (int*)0xDEADBEEF; // alamat ilegal
+  int *p = (int *)0xDEADBEEF;  // alamat ilegal
   *p = 42;
 
   return 0;

@@ -17,9 +17,22 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <assert.hxx>
+#pragma once
 
-int main() {
-  assert(4 == 5);
-  return 0;
+#include <algorithm>
+#include <big_int.hxx>
+#include <string>
+
+
+template <typename T,
+          typename = std::enable_if<
+              std::is_integral_v<T> or std::is_same_v<T, Big_int>, T>>
+std::string to_string(T val, int base) {
+  string res;
+  while (val) {
+    res += (val % base) + '0';
+    val /= base;
+  }
+  std::reverse(res.begin(), res.end());
+  return res;
 }

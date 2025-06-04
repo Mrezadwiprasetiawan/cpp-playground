@@ -17,7 +17,6 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #pragma once
 
 #include <cstddef>
@@ -25,10 +24,9 @@
 #include <type_traits>
 namespace NN {
 
-
-  /* MAE = Mean Absolute Error
-   * MSE = Mean Squared Error
-   */
+/* MAE = Mean Absolute Error
+ * MSE = Mean Squared Error
+ */
 enum LOSS_TYPE {
   MAE,
   MSE,
@@ -50,7 +48,7 @@ class FFN {
   // setiap layer punya distribusi yang berbeda
   template <size_t inSize, size_t outSize>
   void init_layer(FP k, FP (&w)[inSize][outSize], FP (&b)[inSize]) {
-    //setup random
+    // setup random
     std::random_device rd;
     std::mt19937 gen(rd);
     std::normal_distribution<FP> dis(0, std::sqrt(k));
@@ -76,14 +74,12 @@ class FFN {
     init_layer<hidden2Size, outputSize>(k2, wHid2, bHid2);
   }
 
-  //Loss func
-  static FP MSE(FP ypred, FP y){
+  // Loss func
+  static FP MSE(FP ypred, FP y) {
     FP semi_loss = ypred - y;
     return 0.5 * semi_loss * semi_loss;
   }
-  static FP MSE_deriv(FP ypred, FP y){
-    return ypred - y;
-  }
+  static FP MSE_deriv(FP ypred, FP y) { return ypred - y; }
 
   // Activation func
   static FP ReLU(FP x) { return x > 0 ? x : 1e-6; }
@@ -95,7 +91,6 @@ class FFN {
   }
   static FP tanh_deriv(FP y) { return 1 - y * y; }
 
-
   template <size_t inSize, size_t outSize, bool hidden>
   void forwardlayer(FP (&w)[inSize][outSize], FP (&b)[outSize],
                     FP (&in)[inputSize], FP (&res)[outSize],
@@ -106,8 +101,6 @@ class FFN {
       res[i] += b[i];
     }
   }
-
-
 
  public:
   // default acrivation using ReLU

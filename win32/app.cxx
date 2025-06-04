@@ -3,9 +3,7 @@
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
                             LPARAM lParam) {
   switch (uMsg) {
-  case WM_DESTROY:
-    PostQuitMessage(0);
-    return 0;
+    case WM_DESTROY: PostQuitMessage(0); return 0;
   }
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
@@ -24,8 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
                              WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
                              800, 600, nullptr, nullptr, hInstance, nullptr);
 
-  if (!hwnd)
-    return 0;
+  if (!hwnd) return 0;
 
   ShowWindow(hwnd, nCmdShow);
 

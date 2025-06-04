@@ -17,7 +17,6 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 template <typename T>
 T move(T&& val) {
   return static_cast<T&&>(val);

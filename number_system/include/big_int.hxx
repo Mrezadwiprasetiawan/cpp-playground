@@ -17,7 +17,6 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #pragma once
 #include <cassert>
 #include <cstdint>
@@ -26,7 +25,7 @@
 #include <vector>
 
 // most 64bit on the highest index
-class big_int {
+class Big_int {
  private:
   std::vector<uint64_t> values;
   // mutable = non logic state
@@ -35,7 +34,7 @@ class big_int {
   const static uint16_t max_thread;
 
   // For positive only
-  big_int(std::vector<uint64_t> values) : values(values) {}
+  Big_int(std::vector<uint64_t> values) : values(values) {}
   std::string uint64_to_string(uint64_t val) {
     std::string res;
     if (!val) return "0";
@@ -60,12 +59,12 @@ class big_int {
     }
     std::string res;
     // multiply
-    std::vector<int> tmpres(val.size() + big_int::two_pow_64.size(), 0);
+    std::vector<int> tmpres(val.size() + Big_int::two_pow_64.size(), 0);
     for (size_t i = 0; i < val.size(); ++i) {
       size_t rev_i = val.size() - 1 - i;
-      for (size_t j = 0; j < big_int::two_pow_64.size(); ++j) {
-        size_t rev_j = big_int::two_pow_64.size() - 1 - j;
-        int mul = (val[rev_i] - '0') * (big_int::two_pow_64[rev_j] - '0');
+      for (size_t j = 0; j < Big_int::two_pow_64.size(); ++j) {
+        size_t rev_j = Big_int::two_pow_64.size() - 1 - j;
+        int mul = (val[rev_i] - '0') * (Big_int::two_pow_64[rev_j] - '0');
         size_t p1 = rev_i + rev_j, p2 = p1 + 1;
         int sum = tmpres[p2] + mul;
         tmpres[p2] = sum % 10;
@@ -105,13 +104,13 @@ class big_int {
 
   // TODO : Implement this method
   void div_mod_2_64(std::string &val, std::string *remainder) const {
-    if (val.size() < big_int::two_pow_64.size()) {
+    if (val.size() < Big_int::two_pow_64.size()) {
       if (remainder) *remainder = val;
       val = "";
       return;
     }
     std::vector<int> sub_res(val.size(), 0);
-    size_t offset = val.size() - big_int::two_pow_64.size();
+    size_t offset = val.size() - Big_int::two_pow_64.size();
     uint64_t div_res = 0;
     bool greater_equal = true;
     bool carry = 0;
@@ -126,10 +125,10 @@ class big_int {
  public:
   // done
   static const std::string two_pow_64;
-  big_int(std::vector<uint64_t> values, bool negative)
+  Big_int(std::vector<uint64_t> values, bool negative)
       : values(values), negative(negative) {}
 
-  big_int(uint64_t value) {
+  Big_int(uint64_t value) {
     if (value < (1ULL << 63)) values = {value};
     else {
       values = {~value + 1};
@@ -137,7 +136,7 @@ class big_int {
     }
   }
 
-  big_int(std::string value) {
+  Big_int(std::string value) {
     std::string rem = "0";
     std::vector<uint64_t> chunks;
     while (!value.empty()) {
@@ -148,7 +147,7 @@ class big_int {
 
   std::string to_string() const {}
 
-#define FUNC_OP(op) big_int op(const big_int &other) const
+#define FUNC_OP(op) Big_int op(const Big_int &other) const
 
   FUNC_OP(add) {
     std::vector<uint64_t> this_copy = this->values, other_copy = other.values,
@@ -201,11 +200,11 @@ class big_int {
       }
     }
 
-    return big_int(result, negative);
+    return Big_int(result, negative);
   }
 
   FUNC_OP(min) {
-    big_int big_new(other.values, !other.negative);
+    Big_int big_new(other.values, !other.negative);
     return this->add(big_new);
   }
   FUNC_OP(mul) {
@@ -213,7 +212,7 @@ class big_int {
     if (res_bit < this->values.size())
       throw std::runtime_error("overflow reached");
 
-    big_int res(0);
+    Big_int res(0);
 
     if (this->negative ^ other.negative) res.negative = true;
 
@@ -231,27 +230,27 @@ class big_int {
 #undef FUNC_OP
 
 #define OPERATOR_DECL(op, alter) \
-  big_int operator op(const big_int &other) const { return alter(other); }
+  Big_int operator op(const Big_int &other) const { return alter(other); }
   OPERATOR_DECL(+, add);
   OPERATOR_DECL(-, min);
   OPERATOR_DECL(*, mul);
   OPERATOR_DECL(/, div);
 #undef OPERATOR_DECL
   // special case
-  big_int operator++(int) { return add(big_int(1)); }
-  big_int operator--(int) { return min(big_int(1)); }
+  Big_int operator++(int) { return add(Big_int(1)); }
+  Big_int operator--(int) { return min(Big_int(1)); }
   bool operator!() {
     return (values.size() == 1 && values[0] == 0) || values.empty();
   }
 
-#define BITWISE(op) big_int operator op(const big_int &other) const
+#define BITWISE(op) Big_int operator op(const Big_int &other) const
 
   BITWISE(&) {}
 #undef BITWISE
 
 #define OPERATOR_LOGIC_DECL(op, alter)    \
-  bool alter(const big_int &other) const; \
-  bool operator op(const big_int &other) const { return alter(other); }
+  bool alter(const Big_int &other) const; \
+  bool operator op(const Big_int &other) const { return alter(other); }
 
   OPERATOR_LOGIC_DECL(>, gt);
   OPERATOR_LOGIC_DECL(>=, gteq);
@@ -262,9 +261,9 @@ class big_int {
   OPERATOR_LOGIC_DECL(&&, andand);
   OPERATOR_LOGIC_DECL(||, oror);
 
-  big_int shift_left(uint64_t k) const {
+  Big_int shift_left(uint64_t k) const {
     std::vector<uint64_t> res_values(this->values);
-    if (!k) return big_int(res_values, this->negative);
+    if (!k) return Big_int(res_values, this->negative);
     assert((k >> 6) + res_values.size() > res_values.size());
     if (k >> 6) res_values.insert(res_values.end(), k >> 6, 0);
     uint64_t carry = 0;
@@ -277,15 +276,15 @@ class big_int {
         *it = tmp;
       }
     }
-    return big_int(res_values, this->negative);
+    return Big_int(res_values, this->negative);
   }
 
-  big_int operator<<(uint64_t k) const { return shift_left(k); }
+  Big_int operator<<(uint64_t k) const { return shift_left(k); }
 
-  big_int shift_right(uint64_t k) const {
+  Big_int shift_right(uint64_t k) const {
     std::vector<uint64_t> res_values(this->values);
-    if (!k) return big_int(res_values, this->negative);
-    if (k >> 6 >= res_values.size()) return big_int({0}, this->negative);
+    if (!k) return Big_int(res_values, this->negative);
+    if (k >> 6 >= res_values.size()) return Big_int({0}, this->negative);
     if (k >> 6) res_values.resize(res_values.size() - (k >> 6));
     uint64_t carry = 0;
     uint64_t bits = (k & 63ULL);
@@ -297,19 +296,19 @@ class big_int {
       }
     }
     while (res_values.size() > 1 && !res_values.back()) res_values.pop_back();
-    return big_int(res_values, this->negative);
+    return Big_int(res_values, this->negative);
   }
 
-  big_int operator>>(uint64_t k) const { return shift_right(k); }
-};  // END big_int class
+  Big_int operator>>(uint64_t k) const { return shift_right(k); }
+};  // END Big_int class
 // static member init
 const std::string two_pow_64 = "18446744073709551616";
 
-inline big_int operator""_big(unsigned long long i) { return big_int(i); }
-inline big_int operator""_big(const char *str, size_t size) {
-  return big_int(std::string(str));
+inline Big_int operator""_big(unsigned long long i) { return Big_int(i); }
+inline Big_int operator""_big(const char *str, size_t size) {
+  return Big_int(std::string(str));
 };
 
-inline std::ostream &operator<<(const std::ostream &a, const big_int &other) {
+inline std::ostream &operator<<(const std::ostream &a, const Big_int &other) {
   return a << other.to_string();
 }

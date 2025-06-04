@@ -35,15 +35,14 @@ using enable_if_integral = typename std::enable_if<
     std::is_integral<T>::value && !std::is_same<T, bool>::value, Ret>::type;
 namespace Discrete {
 class Fibonacci {
-private:
+ private:
   std::vector<std::vector<uint64_t>> values;
   size_t lastLimit = 0;
   std::vector<std::string> values_str;
   const std::string TWO_POW_64 = "18446744073709551616";
 
   std::string multiplyStrings(const std::string &a, const std::string &b) {
-    if (a == "0" || b == "0")
-      return "0";
+    if (a == "0" || b == "0") return "0";
     int m = a.size(), n = b.size();
     std::vector<int> res(m + n, 0);
     for (int i = m - 1; i >= 0; i--) {
@@ -58,8 +57,7 @@ private:
 
     std::string result;
     for (int num : res)
-      if (!(result.empty() && num == 0))
-        result.push_back(num + '0');
+      if (!(result.empty() && num == 0)) result.push_back(num + '0');
     return result.empty() ? "0" : result;
   }
 
@@ -74,8 +72,7 @@ private:
     uint64_t add_val = add;
     while (i >= 0 || add_val > 0 || carry > 0) {
       int sum = carry;
-      if (i >= 0)
-        sum += numStr[i--] - '0';
+      if (i >= 0) sum += numStr[i--] - '0';
       if (add_val > 0) {
         sum += add_val % 10;
         add_val /= 10;
@@ -106,10 +103,8 @@ private:
       res.push_back(sum_limb);
       carry = carry1 + carry2;
     }
-    if (carry)
-      res.push_back(carry);
-    while (!res.empty() && res.back() == 0)
-      res.pop_back();
+    if (carry) res.push_back(carry);
+    while (!res.empty() && res.back() == 0) res.pop_back();
     return res.empty() ? std::vector<uint64_t>{0} : res;
   }
 
@@ -132,8 +127,8 @@ private:
       return;
     }
     if (values.empty()) {
-      values.push_back({0}); // F0
-      values.push_back({1}); // F1
+      values.push_back({0});  // F0
+      values.push_back({1});  // F1
     }
     size_t currentSize = values.size();
     if (limit <= currentSize) {
@@ -143,22 +138,20 @@ private:
     }
     values.resize(limit);
     for (size_t i = currentSize; i < limit; ++i) {
-      if (i < 2)
-        continue;
+      if (i < 2) continue;
       values[i] = add64_ext(values[i - 1], values[i - 2]);
     }
     lastLimit = limit;
     values_str = decode();
   }
 
-public:
+ public:
   std::vector<std::string> get_all(size_t limit) {
-    if (limit == lastLimit)
-      return values_str;
+    if (limit == lastLimit) return values_str;
     generate(limit);
     return values_str;
   }
 
   std::string get_index(size_t index) { return get_all(index + 1)[index]; }
 };
-} // namespace Discrete
+}  // namespace Discrete

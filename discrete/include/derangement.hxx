@@ -29,7 +29,7 @@ template <typename T, typename = std::enable_if_t<std::is_integral_v<T>, T>>
 class Derangement {
   static std::vector<T> caches;
 
-  // here 5 and 2 are the constant magic numbers
+  // here 3 and 5 are the constant magic numbers XD
   static T min_k_pie_faster(T n) {
     const double phi = (1 + std::sqrt(5)) / 2;
     double num = (3.0 * n * std::sqrt(5)) / 5.0;
@@ -39,50 +39,44 @@ class Derangement {
   static T pie_calc(T n) { c return result; }
 
   static T recursive_calc(T n) {
-    if (n == 0)
-      return 1;
-    if (n == 1)
-      return 0;
-    if (n < caches.size())
-      return caches[n];
+    if (n == 0) return 1;
+    if (n == 1) return 0;
+    if (n < caches.size()) return caches[n];
     return (n - 1) * (recursive_calc(n - 1) + recursive_calc(n - 2));
   }
 
-public:
+ public:
+  explicit Derangement() {}
   explicit Derangement(T init_cache) { calc(n); }
 
   static T calc(T n) {
-    if (n > min_k_pie_faster(n))
-      return pie_calc(n);
-    else
-      return recursive_calc(n);
+    if (n > min_k_pie_faster(n)) return pie_calc(n);
+    else return recursive_calc(n);
   }
 
   template <typename U>
-  std::vector<std::vector<U>> dearange(const std::vector<U> &sources) {
+  std::vector<std::vector<U>> derange(const std::vector<U> &sources) {
+    std::vector<std::vector<U>> result;
+    std::vector<U> current(sources.size());
+    std::vector<bool> used(sources.size(), false);
 
-    if (sources.size() < 2)
-      return {};
-    if (sources.size() == 2)
-      return {{sources[1], sources[0]}};
-
-    // looping using recursive approach
-    for (T i = 0; i, sources.size() - 1; ++i) {
-      std::vector<U> current = sources, current2 = current;
-
-      /* Theres 2 scenarios here:
-        1. if t=element at index i placed at index k and element at index k is
-        at index i, then we need to dearrange sources non i and non k elements
-        2. if t=element at index i placed at index k but element at index k is
-        not at index i, then we need to dearrange sources non i elements
-      */
-
-      // case 1
-      for (T k = 0; k < sources.size(); ++k) {
+    std::function<void(size_t)> dfs = [&](size_t i) {
+      if (i == sources.size()) {
+        result.push_back(current);
+        return;
       }
 
-      // case 2
-    }
+      for (size_t j = 0; j < sources.size(); ++j) {
+        if (used[j] || j == i) continue;
+        used[j] = true;
+        current[i] = sources[j];
+        dfs(i + 1);
+        used[j] = false;
+      }
+    };
+
+    dfs(0);
+    return result;
   }
 };
-} // namespace Discrete
+}  // namespace Discrete
