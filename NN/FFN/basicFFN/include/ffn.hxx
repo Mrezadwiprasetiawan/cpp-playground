@@ -64,7 +64,7 @@ class BasicFFN {
     std::seed_seq seq(std::begin(seed_data), std::end(seed_data));
     std::mt19937 gen(seq);
 #else
-    std::mt19937 gen(rd);
+    std::mt19937 gen(rd());
 #endif
     std::normal_distribution<FP> dis(0, std::sqrt(k));
 
@@ -151,7 +151,7 @@ class BasicFFN {
   }
 
   // set epsilon if using ReLU to avoid dead neuron, @param epsilon default 1e-6
-  void set_epsilon(FP epsilon) { epsilon = epsilon; }
+  void set_epsilon(FP epsilon) { BasicFFN::epsilon = epsilon; }
   void set_learning_rate(FP eta) { this->eta = eta; }
   void set_adaptive_learning_rate_func(FP (*adaptive_eta_func)(FP, FP)) {
     this->adaptive_eta_func = adaptive_eta_func;
