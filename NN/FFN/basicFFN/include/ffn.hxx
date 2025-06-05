@@ -56,16 +56,7 @@ class BasicFFN {
   void init_layer(FP k, FP (&w)[inSize][outSize], FP (&b)[outSize]) {
     // setup random
     std::random_device rd;
-#if defined(_WIN32)
-    std::mt19937::result_type seed_data[std::mt19937::state_size];
-
-    for (auto &val : seed_data) val = rd();
-
-    std::seed_seq seq(std::begin(seed_data), std::end(seed_data));
-    std::mt19937 gen(seq);
-#else
     std::mt19937 gen(rd());
-#endif
     std::normal_distribution<FP> dis(0, std::sqrt(k));
 
     for (size_t i = 0; i < outSize; ++i) {
