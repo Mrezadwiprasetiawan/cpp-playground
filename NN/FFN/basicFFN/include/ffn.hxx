@@ -120,7 +120,7 @@ class BasicFFN {
     for (size_t i = 0; i < outSize; ++i) {
       for (size_t j = 0; j < inSize; ++j) deltaOut[i] += w[i][j] * deltaIn[j];
       // aturan rantai
-      deltaOut[i] *= actFuncDeriv(dataIn[i]);
+      if (actFuncDeriv) deltaOut[i] *= actFuncDeriv(dataIn[i]);
     }
   }
 
@@ -199,7 +199,7 @@ class BasicFFN {
 
     backward_layer<outputSize, hidden2Size>(wHid2, bHid2, dOut, dHid2, actFuncDeriv, eta);
     backward_layer<hidden2Size, hidden1Size>(wHid1, bHid1, dHid2, dHid1, actFuncDeriv, eta);
-    backward_layer<hidden1Size, inputSize>(wIn, bIn, dHid1, 0, actFuncDeriv, eta);
+    backward_layer<hidden1Size, inputSize>(wIn, bIn, dHid1, 0, 0, eta);
   }
 };
 
