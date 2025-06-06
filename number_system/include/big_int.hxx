@@ -127,7 +127,7 @@ class Big_int {
   static const std::string two_pow_64;
   explicit Big_int(std::vector<uint64_t> values, bool negative) noexcept : values(values), negative(negative) {}
 
-  explicit Big_int(uint64_t value) {
+  Big_int(uint64_t value) {
     if (value < (1ULL << 63)) values = {value};
     else {
       values = {~value + 1};
@@ -135,7 +135,7 @@ class Big_int {
     }
   }
 
-  explicit Big_int(std::string value) {
+  Big_int(std::string value) {
     std::string rem = "0";
     std::vector<uint64_t> chunks;
     while (!value.empty()) {

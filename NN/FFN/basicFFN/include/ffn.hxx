@@ -40,7 +40,7 @@ class BasicFFN {
   FP wIn[inputSize][hidden1Size], wHid1[hidden1Size][hidden2Size], wHid2[hidden2Size][outputSize];
   FP bIn[hidden1Size], bHid1[hidden2Size], bHid2[outputSize];
   FP toHid1[hidden1Size], toHid2[hidden2Size], out[outputSize];
-  FP dOut[outputSize], dHid2[hidden2Size], dHid1[hidden1Size], dIn[inputSize];
+  FP dOut[outputSize], dHid2[hidden2Size], dHid1[hidden1Size];
   inline static FP epsilon = 1e-6;  // untuk mencegah dead neuron ketika menggunakan ReLU
   bool xavier = false;
   FP eta = 1e-2;
@@ -107,7 +107,7 @@ class BasicFFN {
   @param actFuncDeriv pointer ke turunan fungsi aktivasi
    */
   template <size_t inSize, size_t outSize>
-  void backward_layer(FP (&w)[outSize][inSize], FP (&b)[inSize], FP (&dataIn)[inSize], FP (&deltaIn)[inSize], FP (&deltaOut)[outSize], FP (*actFuncDeriv)(FP),
+  void backward_layer(FP (&w)[outSize][inSize], FP (&b)[inSize], FP (&dataIn)[inSize], FP (&deltaIn)[inSize], FP (*deltaOut)[outSize], FP (*actFuncDeriv)(FP),
                       FP eta) {
     // update bobot dan bias berdasarkan delta in
     for (size_t i = 0; i < inSize; ++i) {
@@ -115,7 +115,8 @@ class BasicFFN {
       b[i] -= eta * deltaIn[inSize];
     }
 
-    // update delta Outnya (ga berguna buat layer hidden ke input)
+    if (!deltaOut) return;
+    // update delta Out jika disediakan
     for (size_t i = 0; i < outSize; ++i) {
       for (size_t j = 0; j < inSize; ++j) deltaOut[i] += w[i][j] * deltaIn[j];
       // aturan rantai
@@ -198,7 +199,7 @@ class BasicFFN {
 
     backward_layer<outputSize, hidden2Size>(wHid2, bHid2, dOut, dHid2, actFuncDeriv, eta);
     backward_layer<hidden2Size, hidden1Size>(wHid1, bHid1, dHid2, dHid1, actFuncDeriv, eta);
-    backward_layer<hidden1Size, inputSize>(wIn, bIn, dHid1, dIn, actFuncDeriv, eta);
+    backward_layer<hidden1Size, inputSize>(wIn, bIn, dHid1, 0, actFuncDeriv, eta);
   }
 };
 
