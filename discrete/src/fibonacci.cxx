@@ -29,10 +29,7 @@ uint64_t to_number(char *number) {
   size_t len = strlen(number);
   for (size_t i = 0; i < len; ++i) {
     char c = number[i];
-    if (!std::isdigit(c)) {
-      throw runtime_error("Invalid character '" + std::string(1, c) +
-                          "' in number.");
-    }
+    if (!std::isdigit(c)) { throw runtime_error("Invalid character '" + std::string(1, c) + "' in number."); }
     result = result * 10 + (c - '0');
   }
   return result;
@@ -54,8 +51,7 @@ void do_l(uint64_t limit) {
   using std::endl;
   using namespace Discrete;
   Fibonacci fbnc;
-  for (std::string value : fbnc.get_all(limit))
-    cout << value << endl;
+  for (std::string value : fbnc.get_all(limit)) cout << value << endl;
 }
 
 void do_i(size_t index) {

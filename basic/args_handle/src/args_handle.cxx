@@ -48,10 +48,7 @@ int main(int argc, char *argv[]) {
 
   // Contoh penggunaan hasil parsing
   std::cout << "Options:\n";
-  for (const auto &pair : options) {
-    std::cout << "-" << pair.first << ": "
-              << (pair.second.empty() ? "(no value)" : pair.second) << "\n";
-  }
+  for (const auto &pair : options) { std::cout << "-" << pair.first << ": " << (pair.second.empty() ? "(no value)" : pair.second) << "\n"; }
 
   std::cout << "\nPositional arguments:\n";
   for (const auto &arg : positional_args) { std::cout << arg << "\n"; }

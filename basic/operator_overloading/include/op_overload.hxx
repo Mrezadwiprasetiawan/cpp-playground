@@ -50,10 +50,6 @@ class Dog : public Animal {
   Dog() : Animal("guk") {}
 };
 
-inline std::ostream& operator<<(std::ostream& a, const Suara& b) {
-  return a << b.value;
-}
+inline std::ostream& operator<<(std::ostream& a, const Suara& b) { return a << b.value; }
 
-inline Suara operator<<(const Animal& a, const Animal& b) {
-  return Suara(a.suara + " " + b.suara);
-}
+inline Suara operator<<(const Animal& a, const Animal& b) { return Suara(a.suara + " " + b.suara); }

@@ -1,7 +1,6 @@
 #include <windows.h>
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
-                            LPARAM lParam) {
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
   switch (uMsg) {
     case WM_DESTROY: PostQuitMessage(0); return 0;
   }
@@ -18,9 +17,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
   RegisterClass(&wc);
 
-  HWND hwnd = CreateWindowEx(0, CLASS_NAME, "Hello, Win32 with CMake!",
-                             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-                             800, 600, nullptr, nullptr, hInstance, nullptr);
+  HWND hwnd = CreateWindowEx(0, CLASS_NAME, "Hello, Win32 with CMake!", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr,
+                             hInstance, nullptr);
 
   if (!hwnd) return 0;
 

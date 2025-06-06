@@ -54,8 +54,7 @@ class Obj3D {
    * otomatis memperbarui vertices tapi originalnya tidak dihapus agar lebih
    * mudah diambil nanti
    */
-  Obj3D(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> faceIndices)
-      : vertices(vertices), faceIndices(faceIndices) {
+  Obj3D(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> faceIndices) : vertices(vertices), faceIndices(faceIndices) {
     update_vertices();
     QcurrMat.set_identity();
     modelMat.set_identity();
@@ -103,8 +102,7 @@ class Obj3D {
     this->faceIndices = faceIndices;
     update_vertices();
   }
-  void update_face_vertices(std::vector<Vec3<FP>> vertices,
-                            std::vector<Vec3<I>> faceIndices) {
+  void update_face_vertices(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> faceIndices) {
     this->vertices = vertices;
     this->faceIndices = faceIndices;
     update_vertices();

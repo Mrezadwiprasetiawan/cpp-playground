@@ -125,10 +125,9 @@ class Big_int {
  public:
   // done
   static const std::string two_pow_64;
-  Big_int(std::vector<uint64_t> values, bool negative)
-      : values(values), negative(negative) {}
+  explicit Big_int(std::vector<uint64_t> values, bool negative) noexcept : values(values), negative(negative) {}
 
-  Big_int(uint64_t value) {
+  explicit Big_int(uint64_t value) {
     if (value < (1ULL << 63)) values = {value};
     else {
       values = {~value + 1};
@@ -136,7 +135,7 @@ class Big_int {
     }
   }
 
-  Big_int(std::string value) {
+  explicit Big_int(std::string value) {
     std::string rem = "0";
     std::vector<uint64_t> chunks;
     while (!value.empty()) {
@@ -150,20 +149,15 @@ class Big_int {
 #define FUNC_OP(op) Big_int op(const Big_int &other) const
 
   FUNC_OP(add) {
-    std::vector<uint64_t> this_copy = this->values, other_copy = other.values,
-                          result;
+    std::vector<uint64_t> this_copy = this->values, other_copy = other.values, result;
 
     // for flag and result
     bool negative = false;
 
     // padding
     if (this->values.size() != other.values.size()) {
-      size_t pad = this->values.size() > other.values.size()
-                       ? this->values.size() - other.values.size()
-                       : other.values.size() - this->values.size();
-      this->values.size() > other.values.size()
-          ? other_copy.insert(other_copy.begin(), pad, 0)
-          : this_copy.insert(this_copy.begin(), pad, 0);
+      size_t pad = this->values.size() > other.values.size() ? this->values.size() - other.values.size() : other.values.size() - this->values.size();
+      this->values.size() > other.values.size() ? other_copy.insert(other_copy.begin(), pad, 0) : this_copy.insert(this_copy.begin(), pad, 0);
     }
 
     // inverse bit and add 1 for negative
@@ -186,8 +180,7 @@ class Big_int {
     bool carry = false;
     for (size_t i = 0; i < this_copy.size(); ++i) {
       result.push_back(this_copy[i] + other_copy[i] + carry);
-      carry =
-          (result[i] < this_copy[i] || (carry && result[i] == this_copy[i]));
+      carry = (result[i] < this_copy[i] || (carry && result[i] == this_copy[i]));
     }
 
     // if carry (outside to make sure if false skip) but both not equal
@@ -209,8 +202,7 @@ class Big_int {
   }
   FUNC_OP(mul) {
     size_t res_bit = (this->values.size() << 6) + (other.values.size() << 6);
-    if (res_bit < this->values.size())
-      throw std::runtime_error("overflow reached");
+    if (res_bit < this->values.size()) throw std::runtime_error("overflow reached");
 
     Big_int res(0);
 
@@ -239,9 +231,7 @@ class Big_int {
   // special case
   Big_int operator++(int) { return add(Big_int(1)); }
   Big_int operator--(int) { return min(Big_int(1)); }
-  bool operator!() {
-    return (values.size() == 1 && values[0] == 0) || values.empty();
-  }
+  bool operator!() { return (values.size() == 1 && values[0] == 0) || values.empty(); }
 
 #define BITWISE(op) Big_int operator op(const Big_int &other) const
 
@@ -305,10 +295,6 @@ class Big_int {
 const std::string two_pow_64 = "18446744073709551616";
 
 inline Big_int operator""_big(unsigned long long i) { return Big_int(i); }
-inline Big_int operator""_big(const char *str, size_t size) {
-  return Big_int(std::string(str));
-};
+inline Big_int operator""_big(const char *str, size_t size) { return Big_int(std::string(str)); };
 
-inline std::ostream &operator<<(const std::ostream &a, const Big_int &other) {
-  return a << other.to_string();
-}
+inline std::ostream &operator<<(const std::ostream &a, const Big_int &other) { return a << other.to_string(); }

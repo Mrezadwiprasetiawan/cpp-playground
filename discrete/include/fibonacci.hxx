@@ -31,8 +31,7 @@
 
 // Template type traits dengan pengecekan ketat
 template <typename T, typename Ret = T>
-using enable_if_integral = typename std::enable_if<
-    std::is_integral<T>::value && !std::is_same<T, bool>::value, Ret>::type;
+using enable_if_integral = typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, Ret>::type;
 namespace Discrete {
 class Fibonacci {
  private:
@@ -61,9 +60,7 @@ class Fibonacci {
     return result.empty() ? "0" : result;
   }
 
-  std::string multiplyBy2To64(const std::string &numStr) {
-    return multiplyStrings(numStr, TWO_POW_64);
-  }
+  std::string multiplyBy2To64(const std::string &numStr) { return multiplyStrings(numStr, TWO_POW_64); }
 
   std::string addUint64ToString(const std::string &numStr, uint64_t add) {
     std::string result;
@@ -86,8 +83,7 @@ class Fibonacci {
     return (start != std::string::npos) ? result.substr(start) : "0";
   }
 
-  std::vector<uint64_t> add64_ext(const std::vector<uint64_t> &a,
-                                  const std::vector<uint64_t> &b) {
+  std::vector<uint64_t> add64_ext(const std::vector<uint64_t> &a, const std::vector<uint64_t> &b) {
     std::vector<uint64_t> res;
     size_t max_size = std::max(a.size(), b.size());
     std::vector<uint64_t> a_copy = a;

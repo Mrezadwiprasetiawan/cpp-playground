@@ -26,9 +26,7 @@
 #include <vector>
 
 namespace Discrete {
-template <typename T,
-          typename = std::enable_if<
-              std::is_integral<T>::value && !std::is_same<T, bool>::value, T>>
+template <typename T, typename = std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, T>>
 class Prime {
  private:
   std::vector<T> lastResults;
@@ -53,9 +51,7 @@ class Prime {
     const size_t arraySize = (numOdds + 63) >> 6;
     std::vector<uint64_t> sieve(arraySize, uint64_t(~0));
     std::vector<std::thread> threads;
-    for (int i = 1; i < maxThread; ++i)
-      threads.emplace_back(
-          [this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
+    for (int i = 1; i < maxThread; ++i) threads.emplace_back([this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
     main_sieve(sieve, limit, 0);
     for (auto &t : threads) t.join();
     return sieve;
@@ -72,8 +68,7 @@ class Prime {
   std::vector<T> from_size(size_t size) noexcept {
     if (size <= lastSize) {
       if (size == lastSize) return this->lastResults;
-      return std::vector<T>(this->lastResults.begin(),
-                            this->lastResults.begin() + size);
+      return std::vector<T>(this->lastResults.begin(), this->lastResults.begin() + size);
     }
     if (!size) return {};
     std::vector<T> primes;
@@ -102,8 +97,7 @@ class Prime {
       size_t end = static_cast<size_t>(limit / std::log(limit)) + 1;
       if (end > lastResults.size()) end = lastResults.size();
       while (end < lastResults.size() && lastResults[end] <= limit) ++end;
-      return std::vector<T>(this->lastResults.begin(),
-                            this->lastResults.begin() + end);
+      return std::vector<T>(this->lastResults.begin(), this->lastResults.begin() + end);
     }
     lastLimit = limit;
     auto sieve = create_sieve(limit);

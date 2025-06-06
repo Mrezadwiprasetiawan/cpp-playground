@@ -36,15 +36,13 @@ class PNG {
   png_byte imageColorType = 0, imageBitDepth = 8;
   std::vector<png_byte> imageBuffer;
 
-  static void png_write_callback(png_structp png, png_bytep data,
-                                 png_size_t length) {
+  static void png_write_callback(png_structp png, png_bytep data, png_size_t length) {
     auto stream = reinterpret_cast<std::ostream *>(png_get_io_ptr(png));
     stream->write(reinterpret_cast<char *>(data), length);
     if (!*stream) png_error(png, "WRITE Error");
   }
 
-  static void png_read_callback(png_structp png, png_bytep data,
-                                png_size_t length) {
+  static void png_read_callback(png_structp png, png_bytep data, png_size_t length) {
     auto stream = reinterpret_cast<std::istream *>(png_get_io_ptr(png));
     stream->read(reinterpret_cast<char *>(data), length);
     if (!*stream) png_error(png, "READ Error");
@@ -74,8 +72,7 @@ class PNG {
     input.open(fileName, std::ios::binary);
     if (!input) return false;
 
-    pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr,
-                                    nullptr);
+    pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (!pngPtr) return false;
     infoPtr = png_create_info_struct(pngPtr);
     if (!infoPtr || setjmp(png_jmpbuf(pngPtr))) return false;
@@ -109,20 +106,16 @@ class PNG {
     output.open(fileName, std::ios::binary);
     if (!output) return false;
     int rowBytes = imageWidth * get_channel_count();
-    if (imageBuffer.size() != static_cast<size_t>(imageHeight * rowBytes))
-      imageBuffer.resize(imageHeight * rowBytes);
+    if (imageBuffer.size() != static_cast<size_t>(imageHeight * rowBytes)) imageBuffer.resize(imageHeight * rowBytes);
 
-    pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr,
-                                     nullptr);
+    pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (!pngPtr) return false;
     infoPtr = png_create_info_struct(pngPtr);
     if (!infoPtr || setjmp(png_jmpbuf(pngPtr))) return false;
 
-    png_set_write_fn(pngPtr, static_cast<void *>(&output), png_write_callback,
-                     nullptr);
-    png_set_IHDR(pngPtr, infoPtr, imageWidth, imageHeight, imageBitDepth,
-                 imageColorType, PNG_INTERLACE_NONE,
-                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_set_write_fn(pngPtr, static_cast<void *>(&output), png_write_callback, nullptr);
+    png_set_IHDR(pngPtr, infoPtr, imageWidth, imageHeight, imageBitDepth, imageColorType, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+                 PNG_FILTER_TYPE_DEFAULT);
     png_write_info(pngPtr, infoPtr);
 
     std::vector<png_bytep> rows(imageHeight);
@@ -133,9 +126,7 @@ class PNG {
     return true;
   }
 
-  png_byte &pixel(int x, int y, int channel = 0) {
-    return imageBuffer[(y * imageWidth + x) * get_channel_count() + channel];
-  }
+  png_byte &pixel(int x, int y, int channel = 0) { return imageBuffer[(y * imageWidth + x) * get_channel_count() + channel]; }
 
   // Getters
   int get_width() const { return imageWidth; }

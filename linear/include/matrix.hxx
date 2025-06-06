@@ -32,8 +32,7 @@
 namespace Linear {
 
 // example usage Mat<double,4> Matrix 4 * 4 with double element type
-template <typename T, int N,
-          typename = std::enable_if_t<std::is_floating_point_v<T>, T>>
+template <typename T, int N, typename = std::enable_if_t<std::is_floating_point_v<T>, T>>
 class Mat {
  private:
   T vals[N * N];
@@ -54,9 +53,7 @@ class Mat {
     for (int i = 0; i < N * N; ++i) arr[i] = vals[i];
   }
 
-  std::vector<T> to_vector() const {
-    return std::vector<T>(vals, vals + N * N);
-  }
+  std::vector<T> to_vector() const { return std::vector<T>(vals, vals + N * N); }
 
   void set_elements(T (&v)[N * N]) {
     for (int i = 0; i < N * N; ++i) vals[i] = v[i];
@@ -93,8 +90,7 @@ class Mat {
   Vec<T, N> operator*(const Vec<T, N> &vn) const {
     Vec<T, N> res;
     for (int row = 0; row < N; ++row)
-      for (int col = 0; col < N; ++col)
-        res[row] += vals[row * N + col] * vn[col];
+      for (int col = 0; col < N; ++col) res[row] += vals[row * N + col] * vn[col];
     return res;
   }
 
@@ -105,8 +101,7 @@ class Mat {
     // sedangkan row dan col untuk indeks hasil akhirnya
     for (int row = 0; row < N; ++row)
       for (int col = 0; col < N; ++col)
-        for (int k = 0; k < N; ++k)
-          vals_res[row * N + col] += vals[row * N + k] * m[k][col];
+        for (int k = 0; k < N; ++k) vals_res[row * N + col] += vals[row * N + k] * m[k][col];
 
     return Mat(vals_res);
   }
@@ -157,12 +152,10 @@ class Mat {
       // cari baris dengan elemen terbesar di kolom i (pivoting)
       int maxRow = i;
       for (int j = i + 1; j < N; ++j)
-        if (std::abs(tmpvals[j * N + i]) > std::abs(tmpvals[maxRow * N + i]))
-          maxRow = j;
+        if (std::abs(tmpvals[j * N + i]) > std::abs(tmpvals[maxRow * N + i])) maxRow = j;
       // tukar baris i dengan baris maxRow jika perlu
       if (i != maxRow) {
-        for (int k = 0; k < N; ++k)
-          std::swap(tmpvals[i * N + k], tmpvals[maxRow * N + k]);
+        for (int k = 0; k < N; ++k) std::swap(tmpvals[i * N + k], tmpvals[maxRow * N + k]);
         det = -det;  // Perubahan tanda jika ada pertukaran baris
       }
       // jika elemen diagonalnya 0, matriks tidak invertible, det = 0
@@ -170,8 +163,7 @@ class Mat {
       // eliminasi Gauss untuk baris di bawahnya
       for (int j = i + 1; j < N; ++j) {
         T factor = tmpvals[j * N + i] / tmpvals[i * N + i];
-        for (int k = i; k < N; ++k)
-          tmpvals[j * N + k] -= factor * tmpvals[i * N + k];
+        for (int k = i; k < N; ++k) tmpvals[j * N + k] -= factor * tmpvals[i * N + k];
       }
       // Kalikan elemen diagonal untuk determinan
       det *= tmpvals[i * N + i];
@@ -277,48 +269,39 @@ enum MATRIX_PROJECTION_TYPE { PERSPECTIVE, ORTHOGRAPHIC, FRUSTUM };
 enum EULER_ROTATION_TYPE { ZYX, ZXY, YXZ, YZX, XZY, XYZ };
 
 // View matrix
-template <typename T,
-          typename = std::enable_if_t<std::is_floating_point_v<T>, float>>
-Mat<T, 4> VIEW_MATRIX(const Vec3<T> &eye, const Vec3<T> &center,
-                      const Vec3<T> &up = {0, 1, 0},
-                      const Vec3<T> &t = {0, 0, 0}) {
+template <typename T, typename = std::enable_if_t<std::is_floating_point_v<T>, float>>
+Mat<T, 4> VIEW_MATRIX(const Vec3<T> &eye, const Vec3<T> &center, const Vec3<T> &up = {0, 1, 0}, const Vec3<T> &t = {0, 0, 0}) {
   // Forward, Right, dan Up vector
   Vec3<T> f = normalize(center - eye);  // forward vector
   Vec3<T> r = normalize(cross(f, up));  // right vector
   Vec3<T> u = cross(r, f);              // real up vector
 
-  return Mat<T, 4>({r.x(), u.x(), -f.x(), 0, r.y(), u.y(), -f.y(), 0, r.z(),
-                    u.z(), -f.z(), 0, -(dot(r, eye)) + t.x(),
-                    -(dot(u, eye)) + t.y(), dot(f, eye) + t.z(), 1});
+  return Mat<T, 4>(
+      {r.x(), u.x(), -f.x(), 0, r.y(), u.y(), -f.y(), 0, r.z(), u.z(), -f.z(), 0, -(dot(r, eye)) + t.x(), -(dot(u, eye)) + t.y(), dot(f, eye) + t.z(), 1});
 }
 
 // Perspective Matrix
 template <typename T>
 Mat<T, 4> PERSPECTIVE_MATRIX(T Fov, T a, T n, T f) {
   T tan_half_fov = std::tan(Fov / 2);
-  return Mat<T, 4>({1 / (tan_half_fov * a), 0, 0, 0, 0, 1 / tan_half_fov, 0, 0,
-                    0, 0, (f + n) / (f - n), 2 * f * n / (f - n), 0, 0, -1, 0});
+  return Mat<T, 4>({1 / (tan_half_fov * a), 0, 0, 0, 0, 1 / tan_half_fov, 0, 0, 0, 0, (f + n) / (f - n), 2 * f * n / (f - n), 0, 0, -1, 0});
 }
 
 // Orthographic Matrix
 template <typename T>
 Mat<T, 4> ORTHOGRAPHIC_MATRIX(T l, T r, T t, T b, T n, T f) {
-  return Mat<T, 4>({2 / (r - l), 0, 0, -(r + l) / (r - l), 0, 2 / (t - b), 0,
-                    -(t + b) / (t - b), 0, 0, -2 / (f - n), -(f + n) / (f - n),
-                    0, 0, 0, 1});
+  return Mat<T, 4>({2 / (r - l), 0, 0, -(r + l) / (r - l), 0, 2 / (t - b), 0, -(t + b) / (t - b), 0, 0, -2 / (f - n), -(f + n) / (f - n), 0, 0, 0, 1});
 }
 
 // Frustum Matrix
 template <typename T>
 Mat<T, 4> FRUSTUM_MATRIX(T l, T r, T t, T b, T n, T f) {
-  return Mat<T, 4>({(2 * n) / (r - l), 0, (r + l) / (r - l), 0, 0,
-                    (2 * n) / (t - b), (t + b) / (t - b), 0, 0, 0,
-                    (f + n) / (f - n), (2 * f * n) / (f - n), 0, 0, -1, 0});
+  return Mat<T, 4>(
+      {(2 * n) / (r - l), 0, (r + l) / (r - l), 0, 0, (2 * n) / (t - b), (t + b) / (t - b), 0, 0, 0, (f + n) / (f - n), (2 * f * n) / (f - n), 0, 0, -1, 0});
 }
 
 template <typename T>
-Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad,
-                                const EULER_ROTATION_TYPE &rt) {
+Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad, const EULER_ROTATION_TYPE &rt) {
   // semua rotasi bergantung pada global axis
   // Urutan terbalik karena Matrix selalu lhs terhadap objek
   // rotasi di sumbu x
@@ -343,14 +326,12 @@ Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad,
 
 template <typename T>
 Mat<T, 3> QUATERNION_MATRIX(const Vec3<T> &v, T rad) {
-  T s = static_cast<T>(sin(rad / 2)), c = static_cast<T>(cos(rad / 2)),
-    x = v.x() * s, y = v.y() * s, z = v.z() * s;
+  T s = static_cast<T>(sin(rad / 2)), c = static_cast<T>(cos(rad / 2)), x = v.x() * s, y = v.y() * s, z = v.z() * s;
 
   // Matriks quaternion dihitung
   T mat[9] = {
-      1 - 2 * (y * y + z * z), 2 * (x * y - c * z),     2 * (x * z + c * y),
-      2 * (x * y + c * z),     1 - 2 * (x * x + z * z), 2 * (y * z - c * x),
-      2 * (x * z - c * y),     2 * (y * z + c * x),     1 - 2 * (x * x + y * y),
+      1 - 2 * (y * y + z * z), 2 * (x * y - c * z), 2 * (x * z + c * y), 2 * (x * y + c * z),     1 - 2 * (x * x + z * z),
+      2 * (y * z - c * x),     2 * (x * z - c * y), 2 * (y * z + c * x), 1 - 2 * (x * x + y * y),
   };
 
   return Mat<T, 3>(mat);

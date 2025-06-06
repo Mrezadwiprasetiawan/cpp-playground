@@ -30,9 +30,7 @@ class Permutation {
 
  public:
   explicit Permutation() {}
-  explicit Permutation(T init_cache, k = 0) {
-    Permutation::calc(init_cache, k);
-  }
+  explicit Permutation(T init_cache, k = 0) { Permutation::calc(init_cache, k); }
 
   // Hitung nP_k = n! / (n-k)!
   static T calc(T n, T k) {
@@ -78,6 +76,5 @@ class Permutation {
 };
 
 template <typename T>
-std::enable_if_t<std::is_integral_v<T>, T> (*factorial)(T n) =
-    Permutation<T>::calc(n);
+std::enable_if_t<std::is_integral_v<T>, T> (*factorial)(T n) = Permutation<T>::calc(n);
 }  // namespace Discrete

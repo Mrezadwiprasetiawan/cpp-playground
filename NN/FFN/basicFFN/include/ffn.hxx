@@ -33,19 +33,15 @@ enum LOSS_TYPE { MAE, MSE, CROSS_ENTROPY };
 enum ACTIVATION_TYPE { RELU, SIGMOID, TANH };
 
 // perlu dimasukan ke parameter template karena semua array di dalamnya statis
-template <typename FP, size_t inputSize, size_t hidden1Size, size_t hidden2Size,
-          size_t outputSize,
-          typename = std::enable_if_t<std::is_floating_point_v<FP>>>
+template <typename FP, size_t inputSize, size_t hidden1Size, size_t hidden2Size, size_t outputSize, typename = std::enable_if_t<std::is_floating_point_v<FP>>>
 class BasicFFN {
   ACTIVATION_TYPE act_t;
   LOSS_TYPE loss_t;
-  FP wIn[inputSize][hidden1Size], wHid1[hidden1Size][hidden2Size],
-      wHid2[hidden2Size][outputSize];
+  FP wIn[inputSize][hidden1Size], wHid1[hidden1Size][hidden2Size], wHid2[hidden2Size][outputSize];
   FP bIn[hidden1Size], bHid1[hidden2Size], bHid2[outputSize];
   FP toHid1[hidden1Size], toHid2[hidden2Size], out[outputSize];
   FP dOut[outputSize], dHid2[hidden2Size], dHid1[hidden1Size], dIn[inputSize];
-  inline static FP epsilon =
-      1e-6;  // untuk mencegah dead neuron ketika menggunakan ReLU
+  inline static FP epsilon = 1e-6;  // untuk mencegah dead neuron ketika menggunakan ReLU
   bool xavier = false;
   FP eta = 1e-2;
   // FP = Floating Point @param FP1 current eta/learning rate @param FP2 grad
@@ -85,9 +81,7 @@ class BasicFFN {
   static FP ReLU_deriv(FP y) { return y > 0 ? 1 : epsilon; }
   static FP sigmoid(FP x) { return 1 / (1 + std::exp(-x)); }
   static FP sigmoid_deriv(FP y) { return y * (1 - y); }
-  static FP tanh(FP x) {
-    return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x));
-  }
+  static FP tanh(FP x) { return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x)); }
   static FP tanh_deriv(FP y) { return 1 - y * y; }
 
   /* Agar lebih mudah dibaca, layer layernya diabstraksi jadi fungsi independen.
@@ -99,9 +93,7 @@ class BasicFFN {
   // fungsi untuk forward per layer, @actFunc pointer fungsi aktivasi atau 0
   // alias nullptr jika tidak
   template <size_t inSize, size_t outSize>
-  void forward_layer(FP (&w)[inSize][outSize], FP (&b)[outSize],
-                     FP (&dataIn)[inSize], FP (&dataOut)[outSize],
-                     FP (*actFunc)(FP)) {
+  void forward_layer(FP (&w)[inSize][outSize], FP (&b)[outSize], FP (&dataIn)[inSize], FP (&dataOut)[outSize], FP (*actFunc)(FP)) {
     for (size_t i = 0; i < outSize; ++i) {
       for (size_t j = 0; j < inSize; ++j) dataOut[i] += w[j][i] * dataIn[j];
       if (actFunc) dataOut[i] = actFunc(dataOut[i]);
@@ -115,13 +107,11 @@ class BasicFFN {
   @param actFuncDeriv pointer ke turunan fungsi aktivasi
    */
   template <size_t inSize, size_t outSize>
-  void backward_layer(FP (&w)[outSize][inSize], FP (&b)[inSize],
-                      FP (&dataIn)[inSize], FP (&deltaIn)[inSize],
-                      FP (&deltaOut)[outSize], FP (*actFuncDeriv)(FP), FP eta) {
+  void backward_layer(FP (&w)[outSize][inSize], FP (&b)[inSize], FP (&dataIn)[inSize], FP (&deltaIn)[inSize], FP (&deltaOut)[outSize], FP (*actFuncDeriv)(FP),
+                      FP eta) {
     // update bobot dan bias berdasarkan delta in
     for (size_t i = 0; i < inSize; ++i) {
-      for (size_t j = 0; j < outSize; ++j)
-        w[j][i] -= eta * deltaIn[inSize] * dataIn[i];
+      for (size_t j = 0; j < outSize; ++j) w[j][i] -= eta * deltaIn[inSize] * dataIn[i];
       b[i] -= eta * deltaIn[inSize];
     }
 
@@ -135,18 +125,12 @@ class BasicFFN {
 
  public:
   // default activation using ReLU
-  explicit BasicFFN(ACTIVATION_TYPE act_t = ACTIVATION_TYPE::RELU,
-                    LOSS_TYPE loss_t = LOSS_TYPE::MSE)
-      : act_t(act_t), loss_t(loss_t) {
-    init_wb();
-  }
+  explicit BasicFFN(ACTIVATION_TYPE act_t = ACTIVATION_TYPE::RELU, LOSS_TYPE loss_t = LOSS_TYPE::MSE) : act_t(act_t), loss_t(loss_t) { init_wb(); }
 
   // set epsilon if using ReLU to avoid dead neuron, @param epsilon default 1e-6
   void set_epsilon(FP epsilon) { BasicFFN::epsilon = epsilon; }
   void set_learning_rate(FP eta) { this->eta = eta; }
-  void set_adaptive_learning_rate_func(FP (*adaptive_eta_func)(FP, FP)) {
-    this->adaptive_eta_func = adaptive_eta_func;
-  }
+  void set_adaptive_learning_rate_func(FP (*adaptive_eta_func)(FP, FP)) { this->adaptive_eta_func = adaptive_eta_func; }
 
   /* return output in array
   @note array will be lost after class is destroyed
@@ -164,8 +148,7 @@ class BasicFFN {
     // input data to the input layer
     forward_layer<inputSize, hidden1Size>(wIn, bIn, data, toHid1, 0);
     // hidden layer
-    forward_layer<hidden1Size, hidden2Size>(wHid1, bHid1, toHid1, toHid2,
-                                            actFunc);
+    forward_layer<hidden1Size, hidden2Size>(wHid1, bHid1, toHid1, toHid2, actFunc);
     forward_layer<hidden2Size, outputSize>(wHid2, bHid2, toHid2, out, actFunc);
 
     return out;
@@ -175,9 +158,7 @@ class BasicFFN {
   // Mean Absolute Error
   static FP MAE(FP ypred, FP y) { return std::abs(ypred - y); }
   // Derivative of Mean Absolute Error
-  static FP MAE_deriv(FP ypred, FP y) {
-    return (ypred > y) ? 1 : (ypred < y) ? -1 : 0;
-  }
+  static FP MAE_deriv(FP ypred, FP y) { return (ypred > y) ? 1 : (ypred < y) ? -1 : 0; }
   // Mean Squared Error
   static FP MSE(FP ypred, FP y) {
     FP semi_loss = ypred - y;
@@ -186,13 +167,8 @@ class BasicFFN {
   // Derivative of Mean Squared Error
   static FP MSE_deriv(FP ypred, FP y) { return ypred - y; }
 
-  static FP cross_entropy_loss(FP ypred, FP y) {
-    return -y * std::log(ypred + epsilon) -
-           (1 - y) * std::log(1 - ypred + epsilon);
-  }
-  static FP cross_entropy_loss_deriv(FP ypred, FP y) {
-    return (ypred - y) / ((ypred + epsilon) * (1 - ypred + epsilon));
-  }
+  static FP cross_entropy_loss(FP ypred, FP y) { return -y * std::log(ypred + epsilon) - (1 - y) * std::log(1 - ypred + epsilon); }
+  static FP cross_entropy_loss_deriv(FP ypred, FP y) { return (ypred - y) / ((ypred + epsilon) * (1 - ypred + epsilon)); }
 
   /* using w = wcurr - eta * dL/dw
    using b = bcurr - eta * dL/db;
@@ -218,15 +194,11 @@ class BasicFFN {
     auto lossDerivFunc = lossDerivFuncFromType(loss_t);
 
     // calculate dOut first for update through backward_layer template function
-    for (size_t i = 0; i < outputSize; ++i)
-      dOut[i] = lossDerivFunc(out[i], targetData[i]) * actFuncDeriv(out[i]);
+    for (size_t i = 0; i < outputSize; ++i) dOut[i] = lossDerivFunc(out[i], targetData[i]) * actFuncDeriv(out[i]);
 
-    backward_layer<outputSize, hidden2Size>(wHid2, bHid2, dOut, dHid2,
-                                            actFuncDeriv, eta);
-    backward_layer<hidden2Size, hidden1Size>(wHid1, bHid1, dHid2, dHid1,
-                                             actFuncDeriv, eta);
-    backward_layer<hidden1Size, inputSize>(wIn, bIn, dHid1, dIn, actFuncDeriv,
-                                           eta);
+    backward_layer<outputSize, hidden2Size>(wHid2, bHid2, dOut, dHid2, actFuncDeriv, eta);
+    backward_layer<hidden2Size, hidden1Size>(wHid1, bHid1, dHid2, dHid1, actFuncDeriv, eta);
+    backward_layer<hidden1Size, inputSize>(wIn, bIn, dHid1, dIn, actFuncDeriv, eta);
   }
 };
 

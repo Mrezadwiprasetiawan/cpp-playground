@@ -17,14 +17,13 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
-#include <type_traits>
 #include <iomanip>
 #include <ios>
 #include <iostream>
 #include <linear/include/matrix.hxx>
-#include <obj3d.hxx>
 #include <linear/include/vec.hxx>
+#include <obj3d.hxx>
+#include <type_traits>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -104,9 +103,7 @@ int main() {
   cout << "test mat3 ke mat 4 dari m3\t:" << endl;
   print(mat3_to_mat4(m3), 1);
   cout << "Matrix euler dengan 0,1,0\t:" << endl;
-  print(l3d::EULER_ROTATION_MATRIX<float>({0, 1, 0},
-                                          l3d::EULER_ROTATION_TYPE::XYZ),
-        1);
+  print(l3d::EULER_ROTATION_MATRIX<float>({0, 1, 0}, l3d::EULER_ROTATION_TYPE::XYZ), 1);
   cout << "Matrix quaternion dengan 0,1,0 dan degree = pi \t:" << endl;
   print(l3d::QUATERNION_MATRIX<float>({0, 1, 0}, M_PI), 1);
 
