@@ -96,8 +96,8 @@ class BasicFFN {
   void forward_layer(FP (&w)[inSize][outSize], FP (&b)[outSize], FP (&dataIn)[inSize], FP (&dataOut)[outSize], FP (*actFunc)(FP)) {
     for (size_t i = 0; i < outSize; ++i) {
       for (size_t j = 0; j < inSize; ++j) dataOut[i] += w[j][i] * dataIn[j];
-      if (actFunc) dataOut[i] = actFunc(dataOut[i]);
       dataOut[i] += b[i];
+      if (actFunc) dataOut[i] = actFunc(dataOut[i]);
     }
   }
 
