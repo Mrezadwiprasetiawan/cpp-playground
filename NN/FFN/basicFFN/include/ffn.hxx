@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <random>
 #include <thread>
@@ -44,15 +46,15 @@ class BasicFFN {
   inline static FP epsilon = 1e-6;  // untuk mencegah dead neuron ketika menggunakan ReLU
   bool xavier = false;
   FP eta = 1e-2;
+  std::random_device rd;
+  std::mt19937 gen;
   // FP = Floating Point @param FP1 current eta/learning rate @param FP2 grad
   FP (*adaptive_eta_func)(FP, FP);
 
   // setiap layer punya distribusi yang berbeda
   template <size_t inSize, size_t outSize>
   void init_layer(FP k, FP (&w)[inSize][outSize], FP (&b)[outSize]) {
-    // setup random
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    // setup normal distribution
     std::normal_distribution<FP> dis(0, std::sqrt(k));
 
     for (size_t i = 0; i < outSize; ++i) {
@@ -65,6 +67,8 @@ class BasicFFN {
    * sedangkan xavier init make k = input + output;
    */
   void init_wb() {
+    // setup random number generator
+    gen.seed(rd());
     FP k0 = inputSize, k1 = hidden1Size, k2 = hidden2Size;
     if (xavier) {
       k0 += hidden1Size;
@@ -111,16 +115,16 @@ class BasicFFN {
                       FP eta) {
     // update bobot dan bias berdasarkan delta in
     for (size_t i = 0; i < inSize; ++i) {
-      for (size_t j = 0; j < outSize; ++j) w[j][i] -= eta * deltaIn[inSize] * dataIn[i];
-      b[i] -= eta * deltaIn[inSize];
+      for (size_t j = 0; j < outSize; ++j) w[j][i] -= eta * deltaIn[i] * dataIn[i];
+      b[i] -= eta * deltaIn[i];
     }
 
     if (!deltaOut) return;
     // update delta Out jika disediakan
     for (size_t i = 0; i < outSize; ++i) {
-      for (size_t j = 0; j < inSize; ++j) deltaOut[i] += w[i][j] * deltaIn[j];
+      for (size_t j = 0; j < inSize; ++j) (*deltaOut)[i] += w[i][j] * deltaIn[j];
       // aturan rantai
-      if (actFuncDeriv) deltaOut[i] *= actFuncDeriv(dataIn[i]);
+      if (actFuncDeriv) (*deltaOut)[i] *= actFuncDeriv(dataIn[i]);
     }
   }
 
@@ -137,6 +141,12 @@ class BasicFFN {
   @note array will be lost after class is destroyed
   */
   FP (&forward(FP (&data)[inputSize]))[outputSize] {
+    // zeroing data layer agar tidak menumpuk
+    std::fill(toHid1, toHid1 + hidden1Size, 0);
+    std::fill(toHid2, toHid2 + hidden2Size, 0);
+    std::fill(out, out + outputSize, 0);
+
+    // lambda switch for mathing activation function
     auto actFuncFromType = [](ACTIVATION_TYPE act_t) {
       switch (act_t) {
         case ACTIVATION_TYPE::RELU: return ReLU;
@@ -176,6 +186,12 @@ class BasicFFN {
    */
   void backward(FP (&inputData)[inputSize], FP (&targetData)[outputSize]) {
     forward(inputData);
+    // zeroing delta layer agar tidak menumpuk
+    std::fill(dOut, dOut + outputSize, 0);
+    std::fill(dHid2, dHid2 + hidden2Size, 0);
+    std::fill(dHid1, dHid1 + hidden1Size, 0);
+
+    // lambda switch for mathing activation function derivative
     auto actFuncDerivFromType = [](ACTIVATION_TYPE act_t) {
       switch (act_t) {
         case ACTIVATION_TYPE::RELU: return ReLU_deriv;
@@ -197,9 +213,9 @@ class BasicFFN {
     // calculate dOut first for update through backward_layer template function
     for (size_t i = 0; i < outputSize; ++i) dOut[i] = lossDerivFunc(out[i], targetData[i]) * actFuncDeriv(out[i]);
 
-    backward_layer<outputSize, hidden2Size>(wHid2, bHid2, dOut, dHid2, actFuncDeriv, eta);
-    backward_layer<hidden2Size, hidden1Size>(wHid1, bHid1, dHid2, dHid1, actFuncDeriv, eta);
-    backward_layer<hidden1Size, inputSize>(wIn, bIn, dHid1, 0, 0, eta);
+    backward_layer<outputSize, hidden2Size>(wHid2, bHid2, out, dOut, &dHid2, actFuncDeriv, eta);
+    backward_layer<hidden2Size, hidden1Size>(wHid1, bHid1, toHid2, dHid2, &dHid1, actFuncDeriv, eta);
+    backward_layer<hidden1Size, inputSize>(wIn, bIn, toHid1, dHid1, 0, 0, eta);
   }
 };
 
