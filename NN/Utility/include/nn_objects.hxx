@@ -1,7 +1,10 @@
+#pragma once
+
 #include <cmath>
 #include <type_traits>
 #include <vector>
 
+namespace NN {
 #define TEMPLATE_FLOAT template <typename FP, typename = std::enable_if_t<std::is_floating_point_v<FP>>>
 
 TEMPLATE_FLOAT
@@ -10,13 +13,14 @@ struct WeightBias {
   FP b;
 };
 
-TEMPLATE_FLOAT struct Layers {
+TEMPLATE_FLOAT struct Layer {
   size_t size;
   ACTIVATION_TYPE act_func_t;
 };
 
-enum ACTIVATION_TYPE { sigmoid, ReLU, tanh };
+enum ACTIVATION_TYPE { sigmoid, ReLU, tanh, NONE };
 enum LOSS_TYPE { MAE, MSE, cross_entropy };
+enum COMPUTE_MODE { CPU, GPU };
 
 #define TEMPLATE_FUNC_FLOAT \
   template <typename FP>    \
@@ -51,3 +55,4 @@ TEMPLATE_FUNC_FLOAT MSE_deriv(FP ypred, FP y) { return ypred - y; }
 TEMPLATE_FUNC_FLOAT cross_entropy(FP ypred, FP y, FP epsilon) { return -y * std::log(ypred + epsilon) - (1 - y) * std::log(1 - ypred + epsilon); }
 // Cross Entropy dericative function
 TEMPLATE_FUNC_FLOAT cross_entropy_deriv(FP ypred, FP y, FP epsilon) { return (ypred - y) / ((ypred + epsilon) * (1 - ypred + epsilon)); }
+}  // namespace NN

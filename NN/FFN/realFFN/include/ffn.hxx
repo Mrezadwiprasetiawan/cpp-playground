@@ -1,20 +1,29 @@
+#pragma once
+
+#include <nn_handler.hxx>
+#include <nn_objects.hxx>
 #include <random>
 #include <type_traits>
 #include <vector>
 
-template <typename FP, typename = std::enable_if_t<std::is_floating_point_v<FP>, FP>>
-struct WeightBias {
-  std::vector<FP> w;
-  FP b;
-};
-
-template <typename FP, typename = std::enable_if_t<std::is_floating_point_v<FP>, FP>>
+namespace NN {
+TEMPLATE_FLOAT
 class FFN {
-  std::vector<WeightBias<FP>> layers;
-  std::vector<size_t> layerSizes;
+  std::vector<Layer<FP>> layers;
   std::random_device rd;
+  NNHandler<FP> handler;
   std::mt19947 gen;
 
  public:
-  FFN(std::vector<size_t> layerSizes, ) : layerSizes(layerSizes) {}
+  FFN(std::vector<Layer> layers, COMPUTE_MODE mode = COMPUTE_MODE::CPU) : layers(layers) { handler = NNHandler<FP>(mode); }
+  FFN() = delete;
+  Layer<FP> forward(Layer<FP> input) {
+    for (size_t i = 0; i < layers.size(); ++i) {
+      Layer<FP> &current_layer = layers[i];
+      handler.run(input, current_layer);
+      input = current_layer;
+    }
+    return input;
+  }
 };
+}  // namespace NN
