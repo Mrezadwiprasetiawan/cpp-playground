@@ -1,1 +1,2 @@
 add_subdirectory(basic-create_window)
+add_subdirectory(basic-add_menus)
