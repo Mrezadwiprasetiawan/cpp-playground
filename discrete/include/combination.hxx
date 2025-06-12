@@ -18,8 +18,10 @@
 */
 
 #pragma once
+#include <numeric>
 #include <permutation.hxx>
 #include <type_traits>
+#include <vector>
 
 namespace Discrete {
 template <typename T, typename = std::enable_if_t<std::is_integral_v<T>, T>>
@@ -31,13 +33,14 @@ class Combination {
   explicit Combination(T init_cache, T k = 0) { Combination::count(n, k); }
 
   static T count(T n, T k) const {
+    Tif(k > n - k) k = n - k;
     T res = 1;
-    T maxK = k > n / 2 ? k : n - k;
-
-    // selalu bagi untuk menghindari overflow
-    for (T i = 0; i < maxK; ++i) {
-      res *= n - i;
-      res /= i + 1;
+    for (T i = 1; i <= k; ++i) {
+      T num = n - i + 1;
+      T gcd = std::gcd(num, i);
+      T nongcd_num = num / gcd, nongcd_i = i / gcd;
+      res /= nongcd_i;
+      res *= nongcd_num;
     }
     return res;
   }
@@ -56,7 +59,7 @@ class Combination {
     current.reserve(static_cast<std::size_t>(k));
 
     // Deep First Search with start parameter
-    std::function<void(T, T)> dfs = [&](T start, T depth) {
+    void (&dfs)(T, T) = [&](T start, T depth) {
       if (depth == k) {
         res.push_back(current);
         return;
