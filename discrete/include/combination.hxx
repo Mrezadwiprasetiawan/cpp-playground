@@ -33,7 +33,7 @@ class Combination {
   explicit Combination(T init_cache, T k = 0) { Combination::count(n, k); }
 
   static T count(T n, T k) const {
-    Tif(k > n - k) k = n - k;
+    if (k > n - k) k = n - k;
     T res = 1;
     for (T i = 1; i <= k; ++i) {
       T num = n - i + 1;
