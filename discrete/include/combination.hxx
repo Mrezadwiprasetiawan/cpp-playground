@@ -32,14 +32,13 @@ class Combination {
 
   static T count(T n, T k) const {
     T res = 1;
-    T minK = k < n / 2 ? k : n - k;
+    T maxK = k > n / 2 ? k : n - k;
 
     // selalu bagi untuk menghindari overflow
-    for (T i = 0; i < minK; ++i) {
+    for (T i = 0; i < maxK; ++i) {
       res *= n - i;
       res /= i + 1;
     }
-    for (T i = minK; i > 1; --i) res /= i;
     return res;
   }
 
