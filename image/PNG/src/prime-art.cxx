@@ -106,8 +106,8 @@ int main(int argc, const char *argv[]) {
     uint64_t y = uint64_t(cy + dy);
     uint64_t n = y * WIDTH + x;
     uint64_t base = (n) * 3;
-    data[base + 0] = 255;
-    data[base + 1] = 255;
+    data[base + 0] = 0;
+    data[base + 1] = 0;
     data[base + 2] = 255;
   }
 
@@ -128,8 +128,8 @@ int main(int argc, const char *argv[]) {
     uint64_t y = uint64_t(cy + dy);
     uint64_t n = y * WIDTH + x;
     uint64_t base = (n) * 3;
-    data2[base + 0] = 255;
-    data2[base + 1] = 255;
+    data2[base + 0] = 0;
+    data2[base + 1] = 0;
     data2[base + 2] = 255;
   }
 

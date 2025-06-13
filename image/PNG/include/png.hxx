@@ -103,7 +103,7 @@ class PNG {
       infoPtr = nullptr;
     }
 
-    output.open(fileName, std::ios::binary);
+    output.open(fileName, std::ios::binary | std::ios::out | std::ios::trunc);
     if (!output) return false;
     int rowBytes = imageWidth * get_channel_count();
     if (imageBuffer.size() != static_cast<size_t>(imageHeight * rowBytes)) imageBuffer.resize(imageHeight * rowBytes);

@@ -94,7 +94,7 @@ class NNHandler {
     return static_cast<GPU_MODE>(gpu_mode);
   }
 
-  void set_layer(const Layer::FP &layer) { this->layer = layer; }
+  void set_layer(const Layer<FP> &layer) { this->layer = layer; }
   bool set_mode(COMPUTE_MODE m) {}
 
   /* this method is used to set the GPU mode
@@ -118,6 +118,7 @@ class NNHandler {
       // CUDA mode, implement cuda kernel here
       // This is just a placeholder, you need to implement the actual cuda kernel
       // and launch it with the inputs and outputs
+      return;
     }
 
     // vulkan priority is 2 since cuda more powerfull
@@ -141,9 +142,8 @@ class NNHandler {
         auto queueFamProp =
             find_if(queueFamProps.begin(), queueFamProps.end(), [](QueueFamilyProperties &qFProp) { return qFProp.queueFlags & ::QueueFlagBits::eCompute; });
         computeQueueFamilyIndex = std::distance(queueFamProps.begin(), queueFamProp);
-        uint32_t queueFamIndex = ::distance(queueFamProps.begin(), queueFamProp);
         const float priorities = 1.0;
-        DeviceQueueCreateInfo devQueueInfo(DeviceQueueCreateFlags(), queueFamIndex, 1, &priorities);
+        DeviceQueueCreateInfo devQueueInfo(DeviceQueueCreateFlags(), computeQueueFamilyIndex, 1, &priorities);
         DeviceCreateInfo devInfo(DeviceCreateFlags(), devQueueInfo);
         Device dev = physDev.createDevice(devInfo);
       }
@@ -162,6 +162,8 @@ class NNHandler {
       compute_shader = shaderstream.str();
       // call create vulkan shader method
       create_vulkan_shader();
+
+      return;
     }
 
     // the last doesnt need if for checking
