@@ -17,25 +17,69 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #pragma once
 
+#include <algorithm>
+#include <cassert>
+#include <optional>
+#include <sstream>
+#include <string>
 #include <vector>
+#include <vulkan/vulkan_raii.hpp>
 
 #include "nn_objects.hxx"
 
 // currently just a placeholder
 namespace NN {
-enum GPU_MODE { vulkan = 1, cuda = 2, opencl = 4, metal = 8, NONE = 0 };
+enum GPU_MODE { cuda = 1, vulkan = 2, opencl = 4, metal = 8, NONE = 0 };
 TEMPLATE_FLOAT
 class NNHandler {
-  Layer layer;
-  std::string shader_compute;
+  inline const std::string engineName = "NO ENGINE", appName = "Neural Network Compute Layer";
+  Layer<FP> layer;
+  std::string compute_shader;
+  uint32_t *vulkan_spir_v;
   COMPUTE_MODE mode;
   int gpu_mode;
 
-  // check availabily driver for the api, unimplemented yet
-  int validate_gpu_mode() const { return GPU_MODE::NONE; }
+  // vulkan section
+  vk::raii::Context context;
+  std::optional<vk::raii::Instance> instance;
+  std::optional<vk::raii::DebugUtilsMessengerEXT> debugMessenger;
+
+  vk::PhysicalDevice physicalDevice{nullptr};
+  std::optional<vk::raii::Device> device;
+  vk::Queue computeQueue{nullptr};
+  uint32_t computeQueueFamilyIndex = 0;
+
+  std::optional<vk::raii::CommandPool> commandPool;
+  std::vector<vk::CommandBuffer> commandBuffers;
+
+  std::optional<vk::raii::PipelineLayout> pipelineLayout;
+  std::optional<vk::raii::Pipeline> computePipeline;
+
+  std::optional<vk::raii::DescriptorSetLayout> descriptorSetLayout;
+  std::optional<vk::raii::DescriptorPool> descriptorPool;
+  std::vector<vk::DescriptorSet> descriptorSets;
+
+  std::optional<vk::raii::Buffer> inputBuffer;
+  std::optional<vk::raii::DeviceMemory> inputBufferMemory;
+
+  std::optional<vk::raii::Buffer> outputBuffer;
+  std::optional<vk::raii::DeviceMemory> outputBufferMemory;
+
+  std::optional<vk::raii::Fence> computeFence;
+
+  // check availabily driver for the api, unimplemented yet other than vulkan
+  int validate_gpu_mode() const {
+    int res = 0;
+
+    // check if vulkan is available
+    if (vk::raii::Context::getGlobalContext().isVulkanAvailable()) res |= GPU_MODE::vulkan;
+
+    return res;
+  }
+
+  void create_vulkan_shader() {}
 
  public:
   explicit NNHandler(COMPUTE_MODE mode) : mode(mode) {
@@ -49,8 +93,8 @@ class NNHandler {
     if (mode == COMPUTE_MODE::CPU) return GPU_MODE::NONE;
     return static_cast<GPU_MODE>(gpu_mode);
   }
-  void set_shader_compute(const std::string& shader) { shader_compute = shader; }
-  void set_layer(const Layer& l) { layer = l; }
+
+  void set_layer(const Layer::FP &layer) { this->layer = layer; }
   bool set_mode(COMPUTE_MODE m) {}
 
   /* this method is used to set the GPU mode
@@ -60,7 +104,67 @@ class NNHandler {
     if (mode == COMPUTE_MODE::CPU || !(get_gpu_mode() & mode)) return;
     gpu_mode = mode;
   }
+
   // run compute for each layer, unimplemented yet
-  void run(Layer prevLayer, Layer<FP> nextLayer) {}
+  void run() {
+    // if on the cpu mode, just return outputs = w.x + b overloaded by class matrix and custom overload vector
+    if (mode == COMPUTE_MODE::CPU) {
+      layer.outputs = layer.w * layer.inputs + layer.b;
+      return;
+    }
+
+    // cuda priority is 1
+    if (gpu_mode & GPU_MODE::cuda) {
+      // CUDA mode, implement cuda kernel here
+      // This is just a placeholder, you need to implement the actual cuda kernel
+      // and launch it with the inputs and outputs
+    }
+
+    // vulkan priority is 2 since cuda more powerfull
+    if (gpu_mode & GPU_MODE::vulkan) {
+      if (!instance.has_value()) {
+        // for safety using default available api version
+        const uint32_t apiVers = enumerateInstanceVersion();
+        vk::ApplicationInfo appInfo{engineName, 1, appName, apiVers};
+        instance.emplace(vk::createInstance(context, appInfo));
+      }
+
+      if (!physicalDevice) {
+        vector<physicalDevice> physicalDevices = instance->enumeratePhysicalDevices();
+        assert(!physicalDevices.empty());
+        physicalDevice = physicalDevices[0];
+      }
+
+      // create device
+      if (!device.has_value()) {
+        vector<::QueueFamilyProperties> queueFamProps = physDev.getQueueFamilyProperties();
+        auto queueFamProp =
+            find_if(queueFamProps.begin(), queueFamProps.end(), [](QueueFamilyProperties &qFProp) { return qFProp.queueFlags & ::QueueFlagBits::eCompute; });
+        computeQueueFamilyIndex = std::distance(queueFamProps.begin(), queueFamProp);
+        uint32_t queueFamIndex = ::distance(queueFamProps.begin(), queueFamProp);
+        const float priorities = 1.0;
+        DeviceQueueCreateInfo devQueueInfo(DeviceQueueCreateFlags(), queueFamIndex, 1, &priorities);
+        DeviceCreateInfo devInfo(DeviceCreateFlags(), devQueueInfo);
+        Device dev = physDev.createDevice(devInfo);
+      }
+
+      // create buffer and fill
+      if (!inputBuffer.has_value()) {}
+      if (!inputBufferMemory.has_value()) {}
+      if (!outputBuffer.has_value()) {}
+      if (!outputBufferMemory.has_value()) {}
+
+      std::stringstream shaderstream;
+
+      // unimplemented yet
+      shaderstream << "" << std::endl;
+
+      compute_shader = shaderstream.str();
+      // call create vulkan shader method
+      create_vulkan_shader();
+    }
+
+    // the last doesnt need if for checking
+  }
 };
 }  // namespace NN

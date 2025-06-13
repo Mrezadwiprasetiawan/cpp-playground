@@ -78,7 +78,7 @@ class Mat {
         else vals[row * N + col] = 0;
   }
 
-  void set_element(size_t i, T valsue) { vals[i] = valsue; }
+  void set_element(size_t i, T valu) { vals[i] = val; }
 
   template <typename U>
   Mat operator*(U fp) const {
