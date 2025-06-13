@@ -1,3 +1,3 @@
 add_subdirectory(FFN)
 
-find_package(Vulkan CONFIG QUITE)
+find_package(vulkan REQUIRED true)
