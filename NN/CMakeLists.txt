@@ -1,3 +1,3 @@
 add_subdirectory(FFN)
 
-find_package(vulkan REQUIRED true)
+find_package(Vulkan MODULE   REQUIRED)          # paksa cari via FindVulkan.cmake

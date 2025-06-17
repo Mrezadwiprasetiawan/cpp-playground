@@ -1,11 +1,11 @@
 #pragma once
 #include <omp.h>
 
+#include <nn_objects.hxx>
 #include <random>
 #include <type_traits>
 #include <vector>
 
-#include "nn_objects.hxx"
 
 namespace NN {
 

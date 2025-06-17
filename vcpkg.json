@@ -1,7 +1,17 @@
 {
+  "name": "cpp-playground",
+  "version": "0.1.0",
   "dependencies": [
     "libpng",
     "zlib",
-    "vulkan"
+    "vulkan",
+    {
+      "name": "llvm",
+      "features": [
+        "clang",
+        "lld",
+        "openmp"
+      ]
+    }
   ]
 }
