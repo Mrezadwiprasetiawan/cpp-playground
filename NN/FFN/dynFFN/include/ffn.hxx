@@ -6,7 +6,6 @@
 #include <type_traits>
 #include <vector>
 
-
 namespace NN {
 
 template <typename FP, typename = std::enable_if_t<std::is_floating_point_v<FP>>>

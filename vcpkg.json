@@ -2,16 +2,9 @@
   "name": "cpp-playground",
   "version": "0.1.0",
   "dependencies": [
+    "vulkan-loader",
+    "vulkan-headers",
     "libpng",
-    "zlib",
-    "vulkan",
-    {
-      "name": "llvm",
-      "features": [
-        "clang",
-        "lld",
-        "openmp"
-      ]
-    }
+    "zlib"
   ]
 }

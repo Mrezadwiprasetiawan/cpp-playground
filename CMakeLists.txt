@@ -26,4 +26,13 @@ add_subdirectory(3D)
 add_subdirectory(image)
 add_subdirectory(discrete)
 add_subdirectory(NN)
-find_package(OpenMP REQUIRED)
+if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(OpenMP_CXX_FLAGS "-fopenmp")
+    set(OpenMP_CXX_LIB_NAMES "libomp")
+    find_library(OpenMP_libomp_LIBRARY
+      NAMES libomp
+      PATHS "C:/Program Files/LLVM/lib"
+      NO_DEFAULT_PATH)
+endif()
+
+find_package(OpenMP REQUIRED COMPONENTS CXX)
