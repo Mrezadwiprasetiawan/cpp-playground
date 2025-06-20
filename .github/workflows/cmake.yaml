@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-# ──────────────── GLOBAL MATRIX ────────────────
-#  ▸ host‑os  : linux  /  windows
-#  ▸ target   : native / android
 jobs:
   build:
     name: ${{ matrix.os }}‑${{ matrix.target }}
@@ -16,94 +13,102 @@ jobs:
     strategy:
       matrix:
         include:
-          # native builds
-          - os: ubuntu-latest   # linux‑native
+          - os: ubuntu-latest
             target: native
-          - os: windows-latest  # windows‑native
+          - os: windows-latest
             target: native
-
-          # android build (hosted on ubuntu)
           - os: ubuntu-latest
             target: android
 
     steps:
-    # ───────── checkout ─────────
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # ───────── install Vulkan SDK (all targets) ─────────
-    - name: Install Vulkan SDK
-      uses: jakoch/install-vulkan-sdk-action@v1
-      with:
-        vulkan_version: 1.3.280.0
-        cache: true
-        install_lavapipe: true
+      # Vulkan SDK (for all targets)
+      - name: Install Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: 1.3.280.0
+          cache: true
+          install_lavapipe: true
 
-    # ───────── host‑OS‑specific dependencies ─────────
-    - name: Setup deps (Linux native & Android)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y clang ninja-build libomp-dev libpng-dev libx11-dev
+      # Host-specific dependencies
+      - name: Setup deps (Linux native & Android)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang ninja-build libomp-dev libpng-dev libx11-dev
 
-    - name: Setup deps (Windows native)
-      if: matrix.os == 'windows-latest'
-      run: |
-        choco install llvm ninja cmake -y
-        echo "VULKAN_SDK=$Env:VULKAN_SDK" >> $env:GITHUB_ENV
-        echo "PATH=$Env:VULKAN_SDK\Bin;$Env:PATH" >> $env:GITHUB_ENV
+      - name: Setup deps (Windows native)
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install llvm ninja cmake -y
+          echo "VULKAN_SDK=$Env:VULKAN_SDK" >> $env:GITHUB_ENV
+          echo "PATH=$Env:VULKAN_SDK\\Bin;$Env:PATH" >> $env:GITHUB_ENV
 
-    # ───────── Android toolchain (only target=android) ─────────
-    - name: Set up Android NDK
-      if: matrix.target == 'android'
-      uses: nhiroki/setup-android@v3
-      with:
-        ndk-version: 26.2.11394342          # newest stable
-        accept-licenses: true
+      # Android NDK Setup
+      - name: Set up Android NDK
+        if: matrix.target == 'android'
+        uses: nhiroki/setup-android@v4
+        with:
+          ndk-version: 26.2.11394342
+          accept-licenses: true
 
-    # ───────── cache CMake build dir per‑host‑target ─────────
-    - uses: actions/cache@v4
-      with:
-        path: build
-        key: build-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/CMakeLists.txt', '**/*.cpp', '**/*.h') }}
-        restore-keys: build-${{ runner.os }}-${{ matrix.target }}-
+      # Cache build directory
+      - uses: actions/cache@v4
+        with:
+          path: build
+          key: build-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/CMakeLists.txt', '**/*.cpp', '**/*.h') }}
+          restore-keys: |
+            build-${{ runner.os }}-${{ matrix.target }}-
 
-    # ───────── configure phase ─────────
-    - name: Configure (Linux native)
-      if: matrix.target == 'native' && matrix.os == 'ubuntu-latest'
-      run: |
-        cmake -S . -B build -G Ninja \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++ \
-          -DVULKAN_SDK="$VULKAN_SDK"
+      # Configure CMake
+      - name: Configure (Linux native)
+        if: matrix.target == 'native' && matrix.os == 'ubuntu-latest'
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DVULKAN_SDK="$VULKAN_SDK"
 
-    - name: Configure (Windows native)
-      if: matrix.target == 'native' && matrix.os == 'windows-latest'
-      shell: pwsh
-      run: |
-        cmake -S . -B build -G Ninja `
-          -DCMAKE_BUILD_TYPE=Release `
-          -DCMAKE_C_COMPILER="clang.exe" `
-          -DCMAKE_CXX_COMPILER="clang++.exe" `
-          -DVULKAN_SDK="$Env:VULKAN_SDK"
+      - name: Configure (Windows native)
+        if: matrix.target == 'native' && matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_C_COMPILER="clang.exe" `
+            -DCMAKE_CXX_COMPILER="clang++.exe" `
+            -DVULKAN_SDK="$Env:VULKAN_SDK"
 
-    - name: Configure (Android arm64‑v8a)
-      if: matrix.target == 'android'
-      env:
-        ANDROID_NDK: ${{ env.ANDROID_NDK_HOME }}
-      run: |
-        cmake -S . -B build -G Ninja \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" \
-          -DANDROID_ABI=arm64-v8a \
-          -DANDROID_PLATFORM=android-24 \
-          -DVULKAN_SDK="$VULKAN_SDK"
+      - name: Configure (Android arm64‑v8a)
+        if: matrix.target == 'android'
+        env:
+          ANDROID_NDK: ${{ env.ANDROID_NDK_HOME }}
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-24 \
+            -DVULKAN_SDK="$VULKAN_SDK"
 
-    # ───────── build & test ─────────
-    - name: Build
-      run: cmake --build build --config Release
+      # Build
+      - name: Build
+        run: cmake --build build --config Release
 
-    - name: Run tests (native targets only)
-      if: matrix.target == 'native'
-      working-directory: build
-      run: ctest --output-on-failure
+      # Test only for native
+      - name: Run tests (Linux native)
+        if: matrix.target == 'native' && matrix.os == 'ubuntu-latest'
+        working-directory: build
+        run: ctest --output-on-failure
+
+      - name: Run tests (Windows native)
+        if: matrix.target == 'native' && matrix.os == 'windows-latest'
+        working-directory: build
+        run: ctest -C Release --output-on-failure
+
+      - name: Skip tests (Android target)
+        if: matrix.target == 'android'
+        run: echo "Skipping tests for Android target."
