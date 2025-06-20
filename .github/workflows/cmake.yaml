@@ -46,13 +46,12 @@ jobs:
           echo "VULKAN_SDK=$Env:VULKAN_SDK" >> $env:GITHUB_ENV
           echo "PATH=$Env:VULKAN_SDK\\Bin;$Env:PATH" >> $env:GITHUB_ENV
 
-      # Android NDK Setup
       - name: Set up Android NDK
         if: matrix.target == 'android'
-        uses: nhiroki/setup-android@v4
+        uses: android-actions/setup-android@v3      # ← ganti slug
         with:
-          ndk-version: 26.2.11394342
-          accept-licenses: true
+          ndk-version: "26.2.11394342"              # string agar YAML tidak jadi float
+          components: platform-tools                # opsional, tambah paket lain
 
       # Cache build directory
       - uses: actions/cache@v4
