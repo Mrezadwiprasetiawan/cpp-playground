@@ -27,9 +27,7 @@
 namespace l3d {
 using namespace Linear;
 // FP = floating point I = integer
-template <std::floating_point FP, typename I>
-  requires(std::integral<I> && !std::is_same_v<I, bool>)
-class Obj3D {
+template <std::floating_point FP = float, typename I = short> requires(std::integral<I> && !std::is_same_v<I, bool>) class Obj3D {
   Mat<FP, 3> modelMat;
   Mat<FP, 3> QcurrMat;
   Vec3<FP> pos;

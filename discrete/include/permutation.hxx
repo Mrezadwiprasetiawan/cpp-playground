@@ -26,9 +26,7 @@
 #include <vector>
 
 namespace Discrete {
-template <typename T>
-  requires(std::integral<T> && !std::is_same_v<T, bool>)
-class Permutation {
+template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) class Permutation {
   static std::vector<T> caches;
 
  public:
@@ -43,8 +41,7 @@ class Permutation {
   }
 
   // All sources permutation with the length k
-  template <typename U>
-  std::vector<std::vector<U>> permute(const std::vector<U>& sources, T k = 0) {
+  template <typename U> std::vector<std::vector<U>> permute(const std::vector<U>& sources, T k = 0) {
     if (k < 0) throw std::runtime_error("k must be non-negative");
     T n = static_cast<T>(sources.size());
     if (k == 0) return {{}};
@@ -78,6 +75,5 @@ class Permutation {
   }
 };
 
-template <typename T>
-std::enable_if_t<std::is_integral_v<T>, T> (*factorial)(T n) = Permutation<T>::calc(n);
+template <typename T> std::enable_if_t<std::is_integral_v<T>, T> (*factorial)(T n) = Permutation<T>::calc(n);
 }  // namespace Discrete

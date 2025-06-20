@@ -10,9 +10,7 @@
 
 namespace Discrete {
 
-template <typename T>
-  requires(std::integral<T> && !std::is_same_v<T, bool>)
-class Derangement {
+template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) class Derangement {
   static inline std::vector<T> cache = {1, 0};  // !0 = 1, !1 = 0
 
   // Compute cutoff based on k_min ≈ log_phi((3√5 / 5) * n)
@@ -51,8 +49,7 @@ class Derangement {
  public:
   static T calc(T n) { return (n > min_k_pie_faster(n)) ? pie_calc(n) : recursive_calc(n); }
 
-  template <typename U>
-  std::vector<std::vector<U>> derange(const std::vector<U> &src) {
+  template <typename U> std::vector<std::vector<U>> derange(const std::vector<U> &src) {
     std::vector<std::vector<U>> result;
     std::vector<U> current(src.size());
     std::vector<bool> used(src.size(), false);

@@ -35,8 +35,7 @@ enum LOSS_TYPE { MAE, MSE, CROSS_ENTROPY };
 enum ACTIVATION_TYPE { RELU, SIGMOID, TANH };
 
 // perlu dimasukan ke parameter template karena semua array di dalamnya statis
-template <std::floating_point FP, size_t inputSize, size_t hidden1Size, size_t hidden2Size, size_t outputSize>
-class BasicFFN {
+template <std::floating_point FP, size_t inputSize, size_t hidden1Size, size_t hidden2Size, size_t outputSize> class BasicFFN {
   ACTIVATION_TYPE act_t;
   LOSS_TYPE loss_t;
   FP wIn[inputSize][hidden1Size], wHid1[hidden1Size][hidden2Size], wHid2[hidden2Size][outputSize];
@@ -52,8 +51,7 @@ class BasicFFN {
   FP (*adaptive_eta_func)(FP, FP);
 
   // setiap layer punya distribusi yang berbeda
-  template <size_t inSize, size_t outSize>
-  void init_layer(FP k, FP (&w)[inSize][outSize], FP (&b)[outSize]) {
+  template <size_t inSize, size_t outSize> void init_layer(FP k, FP (&w)[inSize][outSize], FP (&b)[outSize]) {
     // setup normal distribution
     std::normal_distribution<FP> dis(0, std::sqrt(k));
 
@@ -110,9 +108,8 @@ class BasicFFN {
   @param outSize parameter template untuk ukuran layer keluar (dari belakang)
   @param actFuncDeriv pointer ke turunan fungsi aktivasi
    */
-  template <size_t inSize, size_t outSize>
-  void backward_layer(FP (&w)[outSize][inSize], FP (&b)[inSize], FP (&dataIn)[inSize], FP (&deltaIn)[inSize], FP (*deltaOut)[outSize], FP (*actFuncDeriv)(FP),
-                      FP eta) {
+  template <size_t inSize, size_t outSize> void backward_layer(FP (&w)[outSize][inSize], FP (&b)[inSize], FP (&dataIn)[inSize], FP (&deltaIn)[inSize],
+                                                               FP (*deltaOut)[outSize], FP (*actFuncDeriv)(FP), FP eta) {
     // update bobot dan bias berdasarkan delta in
     for (size_t i = 0; i < inSize; ++i) {
       for (size_t j = 0; j < outSize; ++j) w[j][i] -= eta * deltaIn[i] * dataIn[i];

@@ -27,9 +27,7 @@
 #include <vector>
 
 namespace Discrete {
-template <typename T>
-  requires(std::integral<T> || std::floating_point<T> && std::is_same_v<bool, T>)
-class Prime {
+template <typename T> requires(std::integral<T> || std::floating_point<T> && std::is_same_v<bool, T>) class Prime {
  private:
   std::vector<T> lastResults;
   T lastLimit = 0;

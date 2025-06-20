@@ -23,8 +23,7 @@
 #include <big_int.hxx>
 #include <string>
 
-template <typename T, typename = std::enable_if<std::is_integral_v<T> or std::is_same_v<T, Big_int>, T>>
-std::string to_string(T val, int base) {
+template <typename T> requires(std::integral<T> or std::is_same_v<T, Big_int>) std::string to_string(T val, int base) {
   string res;
   while (val) {
     res += (val % base) + '0';

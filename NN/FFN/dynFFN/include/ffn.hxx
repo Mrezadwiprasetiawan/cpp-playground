@@ -7,8 +7,7 @@
 
 namespace NN {
 
-template <std::floating_point FP>
-class FFN {
+template <std::floating_point FP> class FFN {
   std::vector<std::vector<FP>> win, wh1, wh2;
   std::vector<FP> bin, bh1, bh2;
   ACTIVATION_TYPE act_s[3];

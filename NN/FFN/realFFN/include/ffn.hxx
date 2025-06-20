@@ -26,8 +26,7 @@
 #include <vector>
 
 namespace NN {
-template <std::floating_point FP>
-class FFN {
+template <std::floating_point FP> class FFN {
   std::vector<Layer<FP>> layers;
   std::random_device rd;
   NNHandler<FP> handler;

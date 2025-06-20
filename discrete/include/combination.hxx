@@ -24,9 +24,7 @@
 #include <vector>
 
 namespace Discrete {
-template <typename T>
-  requires(std::integral<T> && !std::is_same_v<T, bool>)
-class Combination {
+template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) class Combination {
   T n, k;
 
  public:
@@ -46,8 +44,7 @@ class Combination {
     return res;
   }
 
-  template <typename U>
-  std::vector<std::vector<U>> choose(const std::vector<U> &sources, T k) const {
+  template <typename U> std::vector<std::vector<U>> choose(const std::vector<U> &sources, T k) const {
     T n = static_cast<T>(sources.size());
     if (k < 0) throw std::runtime_error("k must be non-negative");
     if (k == 0) return {{}};

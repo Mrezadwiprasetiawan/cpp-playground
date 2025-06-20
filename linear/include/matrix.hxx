@@ -32,8 +32,7 @@
 namespace Linear {
 
 // example usage Mat<double,4> Matrix 4 * 4 with double element type
-template <std::floating_point T, int N>
-class Mat {
+template <std::floating_point T, int N> class Mat {
  private:
   T vals[N * N];
 
@@ -80,9 +79,7 @@ class Mat {
 
   void set_element(size_t i, T val) { vals[i] = val; }
 
-  template <typename U>
-    requires(std::integral<T> || std::floating_point<T>)
-  Mat operator*(U c) const {
+  template <typename U> requires(std::integral<T> || std::floating_point<T>) Mat operator*(U c) const {
     T vals_cp[N * N];
     for (int i = 0; i < N * N; ++i) vals_cp[i] = vals[i] * c;
     return Mat(vals_cp);
@@ -96,8 +93,7 @@ class Mat {
     return res;
   }
 
-  template <typename U>
-  Mat operator*(const Mat<U, N> &m) const {
+  template <typename U> Mat operator*(const Mat<U, N> &m) const {
     T vals_res[N * N]{};
     // k ini faktor untuk ngurusin perkaliannya
     // sedangkan row dan col untuk indeks hasil akhirnya
@@ -108,26 +104,21 @@ class Mat {
     return Mat(vals_res);
   }
 
-  template <typename U>
-  Mat operator+(const Mat<U, N> &m) const {
+  template <typename U> Mat operator+(const Mat<U, N> &m) const {
     T vals_res[N * N]{};
     for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] + static_cast<T>(m[i / N][i % N]);
     return Mat(vals_res);
   }
 
-  template <typename U>
-  Mat operator-(const Mat<U, N> &m) const {
+  template <typename U> Mat operator-(const Mat<U, N> &m) const {
     T vals_res[N * N]{};
     for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] - static_cast<T>(m[i / N][i % N]);
     return Mat(vals_res);
   }
 
   // overload juga penugasannya agar lebih mudah
-#define OV_ASSIGNMENT_OP(op)                \
-  template <typename U>                     \
-  Mat &operator op##=(const Mat<U, N> &m) { \
-    return *this = *this op m;              \
-  }
+#define OV_ASSIGNMENT_OP(op) \
+  template <typename U> Mat &operator op##=(const Mat<U, N> &m) { return *this = *this op m; }
 
   /* nambah ; sebenernya ga perlu tapi karena vim indentnya bakal ga sejajar
    * lagi jadi ditambahin ;
@@ -215,10 +206,8 @@ class Mat {
 };
 
 // usage Mat3<double> or Mat3<float>
-template <typename T>
-using Mat3 = Mat<T, 3>;
-template <typename T>
-using Mat4 = Mat<T, 4>;
+template <typename T> using Mat3 = Mat<T, 3>;
+template <typename T> using Mat4 = Mat<T, 4>;
 
 using Mat3f = Mat<float, 3>;
 using Mat4f = Mat<float, 4>;
@@ -226,14 +215,10 @@ using Mat3d = Mat<double, 3>;
 using Mat4d = Mat<double, 4>;
 
 // agar komutatif
-template <typename T, int N>
-Mat<T, N> operator*(const T fp, const Mat<T, N> &m) {
-  return m * fp;
-}
+template <typename T, int N> Mat<T, N> operator*(const T fp, const Mat<T, N> &m) { return m * fp; }
 
 // untuk mengubah matriks 3×3 ke 4×4
-template <typename T>
-Mat<T, 4> mat3_to_mat4(const Mat<T, 3> &m) {
+template <typename T> Mat<T, 4> mat3_to_mat4(const Mat<T, 3> &m) {
   T res_arr[4 * 4];
   for (int i = 0; i < 16; ++i) {
     if ((i & 3) == 3 || (i >> 2) == 3) res_arr[i] = (i == 15) ? 1 : 0;
@@ -245,16 +230,10 @@ Mat<T, 4> mat3_to_mat4(const Mat<T, 3> &m) {
 /*operasi matriks 4×4 * 3×3
  * rubah dulu yang 3×3 ke 4×4 dengan menambahkan komponen w
  */
-template <typename T>
-Mat<T, 4> operator*(const Mat<T, 4> &a, const Mat<T, 3> &b) {
-  return a * mat3_to_mat4<T>(b);
-}
+template <typename T> Mat<T, 4> operator*(const Mat<T, 4> &a, const Mat<T, 3> &b) { return a * mat3_to_mat4<T>(b); }
 
 // agar berlaku sebaliknya juga
-template <typename T>
-Mat<T, 4> operator*(const Mat<T, 3> &a, const Mat<T, 4> &b) {
-  return mat3_to_mat4<T>(a) * b;
-}
+template <typename T> Mat<T, 4> operator*(const Mat<T, 3> &a, const Mat<T, 4> &b) { return mat3_to_mat4<T>(a) * b; }
 
 // bakal berguna nanti buat kelas kelas seperti kamera objek atau proyeksi
 enum MATRIX_ROTATION_TYPE { EULER, QUATERNION };
@@ -264,8 +243,7 @@ enum MATRIX_PROJECTION_TYPE { PERSPECTIVE, ORTHOGRAPHIC, FRUSTUM };
 enum EULER_ROTATION_TYPE { ZYX, ZXY, YXZ, YZX, XZY, XYZ };
 
 // View matrix
-template <typename T>
-Mat<T, 4> VIEW_MATRIX(const Vec3<T> &eye, const Vec3<T> &center, const Vec3<T> &up = {0, 1, 0}, const Vec3<T> &t = {0, 0, 0}) {
+template <typename T> Mat<T, 4> VIEW_MATRIX(const Vec3<T> &eye, const Vec3<T> &center, const Vec3<T> &up = {0, 1, 0}, const Vec3<T> &t = {0, 0, 0}) {
   // Forward, Right, dan Up vector
   Vec3<T> f = normalize(center - eye);  // forward vector
   Vec3<T> r = normalize(cross(f, up));  // right vector
@@ -276,33 +254,29 @@ Mat<T, 4> VIEW_MATRIX(const Vec3<T> &eye, const Vec3<T> &center, const Vec3<T> &
 }
 
 // Perspective Matrix
-template <typename T>
-Mat<T, 4> PERSPECTIVE_MATRIX(T Fov, T a, T n, T f) {
+template <typename T> Mat<T, 4> PERSPECTIVE_MATRIX(T Fov, T a, T n, T f) {
   T tan_half_fov = std::tan(Fov / 2);
   return Mat<T, 4>({1 / (tan_half_fov * a), 0, 0, 0, 0, 1 / tan_half_fov, 0, 0, 0, 0, (f + n) / (f - n), 2 * f * n / (f - n), 0, 0, -1, 0});
 }
 
 // Orthographic Matrix
-template <typename T>
-Mat<T, 4> ORTHOGRAPHIC_MATRIX(T l, T r, T t, T b, T n, T f) {
+template <typename T> Mat<T, 4> ORTHOGRAPHIC_MATRIX(T l, T r, T t, T b, T n, T f) {
   return Mat<T, 4>({2 / (r - l), 0, 0, -(r + l) / (r - l), 0, 2 / (t - b), 0, -(t + b) / (t - b), 0, 0, -2 / (f - n), -(f + n) / (f - n), 0, 0, 0, 1});
 }
 
 // Frustum Matrix
-template <typename T>
-Mat<T, 4> FRUSTUM_MATRIX(T l, T r, T t, T b, T n, T f) {
+template <typename T> Mat<T, 4> FRUSTUM_MATRIX(T l, T r, T t, T b, T n, T f) {
   return Mat<T, 4>(
       {(2 * n) / (r - l), 0, (r + l) / (r - l), 0, 0, (2 * n) / (t - b), (t + b) / (t - b), 0, 0, 0, (f + n) / (f - n), (2 * f * n) / (f - n), 0, 0, -1, 0});
 }
 
-template <typename T>
-Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad, const EULER_ROTATION_TYPE &rt) {
+template <typename T> Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad, const EULER_ROTATION_TYPE &rt) {
   // semua rotasi bergantung pada global axis
   // Urutan terbalik karena Matrix selalu lhs terhadap objek
   // rotasi di sumbu x
-  T cos_x = std::cos(rad.x()), sin_x = std::sin(rad.x());
-  T cos_y = std::cos(rad.y()), sin_y = std::sin(rad.y());
-  T cos_z = std::cos(rad.z()), sin_z = std::sin(rad.z());
+  T cos_x = std::cos<T>(rad.x()), sin_x = std::sin<T>(rad.x());
+  T cos_y = std::cos<T>(rad.y()), sin_y = std::sin<T>(rad.y());
+  T cos_z = std::cos<T>(rad.z()), sin_z = std::sin<T>(rad.z());
 
   Mat<T, 3> Rx{1, 0, 0, 0, cos_x, -sin_x, 0, sin_x, cos_x};
   // rotasi di sumbu y
@@ -319,8 +293,7 @@ Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad, const EULER_ROTATION_TYPE &r
   }
 }
 
-template <typename T>
-Mat<T, 3> QUATERNION_MATRIX(const Vec3<T> &v, T rad) {
+template <typename T> Mat<T, 3> QUATERNION_MATRIX(const Vec3<T> &v, T rad) {
   T s = static_cast<T>(sin(rad / 2)), c = static_cast<T>(cos(rad / 2)), x = v.x() * s, y = v.y() * s, z = v.z() * s;
 
   // Matriks quaternion dihitung
