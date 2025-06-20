@@ -20,13 +20,15 @@
 #pragma once
 
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <thread>
 #include <type_traits>
 #include <vector>
 
 namespace Discrete {
-template <typename T, typename = std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, T>>
+template <typename T>
+  requires(std::integral<T> || std::floating_point<T> && std::is_same_v<bool, T>)
 class Prime {
  private:
   std::vector<T> lastResults;

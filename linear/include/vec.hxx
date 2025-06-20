@@ -21,12 +21,13 @@
 
 #include <cassert>
 #include <cmath>
+#include <concepts>
 #include <initializer_list>
-#include <type_traits>
 
 namespace Linear {
 
 template <typename T, int N>
+  requires(std::integral<T> || std::floating_point<T>)
 class Vec {
  private:
   T val[N];
@@ -44,12 +45,12 @@ class Vec {
     for (int i = 0; i < N; ++i) val[i] = arr[i];
   }
 
-#define VEC_BASE_OPERATOR(op)                             \
-  template <typename U>                                   \
-  Vec operator op(const Vec<U, N> &vn) const {            \
-    Vec<T, N> res;                                        \
-    for (int i = 0; i < N; ++i) res[i] = val[i] op vn[i]; \
-    return res;                                           \
+#define VEC_BASE_OPERATOR(op)                                            \
+  template <typename U>                                                  \
+  Vec operator op(const Vec<U, N> &vn) const {                           \
+    Vec<T, N> res;                                                       \
+    for (int i = 0; i < N; ++i) res[i] = val[i] op static_cast<T> vn[i]; \
+    return res;                                                          \
   }
 
   VEC_BASE_OPERATOR(+)
@@ -70,27 +71,22 @@ class Vec {
   VEC_OV_ASSIGNMENT(/);
 #undef VEC_OV_ASSIGNMENT
 
-#define GETTER_XYZ(type, index)                \
-  template <typename U = T>                    \
-  std::enable_if_t<(N >= 3), U> type() const { \
-    return val[index];                         \
-  }
+#define GETTER_XYZ(type, index) \
+  std::enable_if_t<N >= 3> type() const { return val[index]; }
 
   GETTER_XYZ(x, 0);
   GETTER_XYZ(y, 1);
   GETTER_XYZ(z, 2);
 #undef GETTER_XYZ
-  template <typename U = T>
-  std::enable_if_t<(N >= 4), U> w() {
-    return val[3];
-  }
+  std::enable_if_t<N >= 4> w() { return val[3]; }
 
   T &operator[](std::size_t i) { return val[i]; }
   const T &operator[](std::size_t i) const { return val[i]; }
   T *data() { return val; }
 };
 
-template <typename T, int N, typename = std::enable_if<std::is_floating_point_v<T>, T>>
+template <typename T, int N>
+  requires(std::floating_point<T>)
 Vec<T, N> normalize(Vec<T, N> target) {
   T length = 0;
   for (int i = 0; i < N; ++i) length += target[i] * target[i];
@@ -99,14 +95,16 @@ Vec<T, N> normalize(Vec<T, N> target) {
   return target;
 }
 
-template <typename T, int N, typename = std::enable_if<std::is_floating_point_v<T>, T>>
+template <typename T, int N>
+  requires(std::floating_point<T>)
 T dot(const Vec<T, N> &a, const Vec<T, N> &b) {
   T res = 0;
   for (int i = 0; i < N; ++i) res += a[i] * b[i];
   return res;
 }
 
-template <typename T, typename = std::enable_if<std::is_floating_point_v<T>, T>>
+template <typename T>
+  requires(std::floating_point<T>)
 Vec<T, 3> cross(const Vec<T, 3> &a, const Vec<T, 3> &b) {
   return {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};
 }

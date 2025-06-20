@@ -3,12 +3,11 @@
 
 #include <nn_objects.hxx>
 #include <random>
-#include <type_traits>
 #include <vector>
 
 namespace NN {
 
-template <typename FP, typename = std::enable_if_t<std::is_floating_point_v<FP>>>
+template <std::floating_point FP>
 class FFN {
   std::vector<std::vector<FP>> win, wh1, wh2;
   std::vector<FP> bin, bh1, bh2;

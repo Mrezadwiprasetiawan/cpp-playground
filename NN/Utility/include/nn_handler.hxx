@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <concepts>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -29,10 +30,11 @@
 
 #include "nn_objects.hxx"
 
+
 // currently just a placeholder
 namespace NN {
 enum GPU_MODE { cuda = 1, vulkan = 2, opencl = 4, metal = 8, NONE = 0 };
-TEMPLATE_FLOAT
+template <std::floating_point FP>
 class NNHandler {
   inline const std::string engineName = "NO ENGINE", appName = "Neural Network Compute Layer";
   Layer<FP> layer;

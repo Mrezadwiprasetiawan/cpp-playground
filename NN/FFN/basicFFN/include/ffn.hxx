@@ -21,10 +21,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <random>
 #include <thread>
-#include <type_traits>
 
 namespace NN {
 
@@ -35,7 +35,7 @@ enum LOSS_TYPE { MAE, MSE, CROSS_ENTROPY };
 enum ACTIVATION_TYPE { RELU, SIGMOID, TANH };
 
 // perlu dimasukan ke parameter template karena semua array di dalamnya statis
-template <typename FP, size_t inputSize, size_t hidden1Size, size_t hidden2Size, size_t outputSize, typename = std::enable_if_t<std::is_floating_point_v<FP>>>
+template <std::floating_point FP, size_t inputSize, size_t hidden1Size, size_t hidden2Size, size_t outputSize>
 class BasicFFN {
   ACTIVATION_TYPE act_t;
   LOSS_TYPE loss_t;

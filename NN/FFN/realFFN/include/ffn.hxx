@@ -17,17 +17,16 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #pragma once
 
+#include <concepts>
 #include <nn_handler.hxx>
 #include <nn_objects.hxx>
 #include <random>
-#include <type_traits>
 #include <vector>
 
 namespace NN {
-TEMPLATE_FLOAT
+template <std::floating_point FP>
 class FFN {
   std::vector<Layer<FP>> layers;
   std::random_device rd;

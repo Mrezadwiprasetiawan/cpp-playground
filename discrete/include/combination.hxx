@@ -24,7 +24,8 @@
 #include <vector>
 
 namespace Discrete {
-template <typename T, typename = std::enable_if_t<std::is_integral_v<T>, T>>
+template <typename T>
+  requires(std::integral<T> && !std::is_same_v<T, bool>)
 class Combination {
   T n, k;
 

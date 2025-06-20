@@ -21,10 +21,10 @@
 
 #include <cassert>
 #include <cmath>
+#include <concepts>
 #include <cstdlib>
 #include <initializer_list>
 #include <stdexcept>
-#include <type_traits>
 #include <vector>
 
 #include "vec.hxx"
@@ -32,7 +32,7 @@
 namespace Linear {
 
 // example usage Mat<double,4> Matrix 4 * 4 with double element type
-template <typename T, int N, typename = std::enable_if_t<std::is_floating_point_v<T>, T>>
+template <std::floating_point T, int N>
 class Mat {
  private:
   T vals[N * N];
@@ -81,16 +81,18 @@ class Mat {
   void set_element(size_t i, T val) { vals[i] = val; }
 
   template <typename U>
-  Mat operator*(U fp) const {
+    requires(std::integral<T> || std::floating_point<T>)
+  Mat operator*(U c) const {
     T vals_cp[N * N];
-    for (int i = 0; i < N * N; ++i) vals_cp[i] = vals[i] * fp;
+    for (int i = 0; i < N * N; ++i) vals_cp[i] = vals[i] * c;
     return Mat(vals_cp);
   }
 
-  Vec<T, N> operator*(const Vec<T, N> &vn) const {
+  template <typename U>  // all of the number type are accept, but doesnt need to check the value is number or not since the vec class already handle it
+  Vec<T, N> operator*(const Vec<U, N> &vn) const {
     Vec<T, N> res;
     for (int row = 0; row < N; ++row)
-      for (int col = 0; col < N; ++col) res[row] += vals[row * N + col] * vn[col];
+      for (int col = 0; col < N; ++col) res[row] += vals[row * N + col] * static_cast<T>(vn[col]);
     return res;
   }
 
@@ -101,7 +103,7 @@ class Mat {
     // sedangkan row dan col untuk indeks hasil akhirnya
     for (int row = 0; row < N; ++row)
       for (int col = 0; col < N; ++col)
-        for (int k = 0; k < N; ++k) vals_res[row * N + col] += vals[row * N + k] * m[k][col];
+        for (int k = 0; k < N; ++k) vals_res[row * N + col] += vals[row * N + k] * static_cast<T>(m[k][col]);
 
     return Mat(vals_res);
   }
@@ -109,14 +111,14 @@ class Mat {
   template <typename U>
   Mat operator+(const Mat<U, N> &m) const {
     T vals_res[N * N]{};
-    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] + m[i / N][i % N];
+    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] + static_cast<T>(m[i / N][i % N]);
     return Mat(vals_res);
   }
 
   template <typename U>
   Mat operator-(const Mat<U, N> &m) const {
     T vals_res[N * N]{};
-    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] - m[i / N][i % N];
+    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] - static_cast<T>(m[i / N][i % N]);
     return Mat(vals_res);
   }
 
@@ -135,13 +137,6 @@ class Mat {
   OV_ASSIGNMENT_OP(+);
   OV_ASSIGNMENT_OP(-);
 #undef OV_ASSIGNMENT_OP
-
-  // row
-  Vec<T, N> operator[](size_t index) const {
-    T arr[N];
-    for (int i = 0; i < N; ++i) arr[i] = vals[index * N + i];
-    return Vec<T, N>(arr);
-  }
 
   // eliminasi gauss
   T determinant() const {
@@ -269,7 +264,7 @@ enum MATRIX_PROJECTION_TYPE { PERSPECTIVE, ORTHOGRAPHIC, FRUSTUM };
 enum EULER_ROTATION_TYPE { ZYX, ZXY, YXZ, YZX, XZY, XYZ };
 
 // View matrix
-template <typename T, typename = std::enable_if_t<std::is_floating_point_v<T>, float>>
+template <typename T>
 Mat<T, 4> VIEW_MATRIX(const Vec3<T> &eye, const Vec3<T> &center, const Vec3<T> &up = {0, 1, 0}, const Vec3<T> &t = {0, 0, 0}) {
   // Forward, Right, dan Up vector
   Vec3<T> f = normalize(center - eye);  // forward vector

@@ -23,15 +23,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 // temporary not used
 // #include "big_int.hxx"
 
-// Template type traits dengan pengecekan ketat
-template <typename T, typename Ret = T>
-using enable_if_integral = typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, Ret>::type;
 namespace Discrete {
 class Fibonacci {
  private:

@@ -17,6 +17,8 @@
 */
 
 #pragma once
+
+#include <concepts>
 #include <cstdint>
 #include <functional>
 #include <stdexcept>
@@ -24,7 +26,8 @@
 #include <vector>
 
 namespace Discrete {
-template <typename T, typename = std::enable_if<std::is_integral_v<T>, T>>
+template <typename T>
+  requires(std::integral<T> && !std::is_same_v<T, bool>)
 class Permutation {
   static std::vector<T> caches;
 
