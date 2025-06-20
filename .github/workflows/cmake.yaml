@@ -51,11 +51,12 @@ jobs:
         "LIB=$Env:VULKAN_SDK\Lib;$Env:LIB"   | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
 
     # ───────── Host‑specific deps ─────────
-    - name: Deps (Ubuntu)
+    - name: Setup deps (Linux native & Android)
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang ninja-build libomp-dev libpng-dev libx11-dev
+        sudo apt-get install -y clang ninja-build libomp-dev \
+        libpng-dev libx11-dev libvulkan-dev     # ← tambahkan ini
 
     - name: Deps (Windows)
       if: matrix.os == 'windows-latest'
