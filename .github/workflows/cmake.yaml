@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.os }}‑${{ matrix.target }}
+    name: ${{ matrix.os }}-${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -20,11 +20,20 @@ jobs:
           - os: ubuntu-latest
             target: android
 
+    env:
+      VULKAN_SDK: ${{ env.VULKAN_SDK }}
+      LD_LIBRARY_PATH: ${{ env.VULKAN_SDK }}/lib:${{ env.LD_LIBRARY_PATH }}
+      LIB: |
+        ${{ env.VULKAN_SDK }}\Lib
+        ${{ env.LIB }}
+      PATH: |
+        ${{ env.VULKAN_SDK }}\Bin
+        ${{ env.PATH }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Vulkan SDK (for all targets)
       - name: Install Vulkan SDK
         uses: jakoch/install-vulkan-sdk-action@v1
         with:
@@ -32,36 +41,32 @@ jobs:
           cache: true
           install_lavapipe: true
 
-      # Host-specific dependencies
-      - name: Setup deps (Linux native & Android)
+      - name: Setup dependencies (Linux + Android)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y clang ninja-build libomp-dev libpng-dev libx11-dev
 
-      - name: Setup deps (Windows native)
+      - name: Setup dependencies (Windows)
         if: matrix.os == 'windows-latest'
-        run: |
-          choco install llvm ninja cmake -y
-          echo "VULKAN_SDK=$Env:VULKAN_SDK" >> $env:GITHUB_ENV
-          echo "PATH=$Env:VULKAN_SDK\\Bin;$Env:PATH" >> $env:GITHUB_ENV
+        run: choco install llvm ninja cmake -y
 
       - name: Set up Android NDK
         if: matrix.target == 'android'
-        uses: android-actions/setup-android@v3      # ← ganti slug
+        uses: android-actions/setup-android@v3
         with:
-          ndk-version: "26.2.11394342"              # string agar YAML tidak jadi float
-          components: platform-tools                # opsional, tambah paket lain
+          ndk-version: "26.2.11394342"
+          components: platform-tools
 
-      # Cache build directory
-      - uses: actions/cache@v4
+      - name: Cache CMake build directory
+        uses: actions/cache@v4
         with:
           path: build
           key: build-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/CMakeLists.txt', '**/*.cpp', '**/*.h') }}
           restore-keys: |
             build-${{ runner.os }}-${{ matrix.target }}-
 
-      # Configure CMake
+      # Configure step
       - name: Configure (Linux native)
         if: matrix.target == 'native' && matrix.os == 'ubuntu-latest'
         run: |
@@ -69,7 +74,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
-            -DVULKAN_SDK="$VULKAN_SDK"
+            -DVULKAN_SDK="$VULKAN_SDK" \
+            -DCMAKE_PREFIX_PATH="$VULKAN_SDK"
 
       - name: Configure (Windows native)
         if: matrix.target == 'native' && matrix.os == 'windows-latest'
@@ -79,9 +85,10 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_C_COMPILER="clang.exe" `
             -DCMAKE_CXX_COMPILER="clang++.exe" `
-            -DVULKAN_SDK="$Env:VULKAN_SDK"
+            -DVULKAN_SDK="$Env:VULKAN_SDK" `
+            -DCMAKE_PREFIX_PATH="$Env:VULKAN_SDK"
 
-      - name: Configure (Android arm64‑v8a)
+      - name: Configure (Android arm64-v8a)
         if: matrix.target == 'android'
         env:
           ANDROID_NDK: ${{ env.ANDROID_NDK_HOME }}
@@ -97,17 +104,17 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      # Test only for native
-      - name: Run tests (Linux native)
+      # Run tests for native only
+      - name: Run tests (Linux)
         if: matrix.target == 'native' && matrix.os == 'ubuntu-latest'
         working-directory: build
         run: ctest --output-on-failure
 
-      - name: Run tests (Windows native)
+      - name: Run tests (Windows)
         if: matrix.target == 'native' && matrix.os == 'windows-latest'
         working-directory: build
         run: ctest -C Release --output-on-failure
 
-      - name: Skip tests (Android target)
+      - name: Skip tests (Android)
         if: matrix.target == 'android'
-        run: echo "Skipping tests for Android target."
+        run: echo "Skipping tests for Android target"
