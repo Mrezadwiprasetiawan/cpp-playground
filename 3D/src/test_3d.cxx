@@ -72,6 +72,7 @@ int main() {
 
   cout << "hasil m3 * v3\t:" << endl;
   Linear::Vec3f mul_m3_v3 = m3 * v3;
+  print(mul_m3_v3, 1);
 
   cout << "elemen m3_2:" << endl;
   print(m3_2, 1);

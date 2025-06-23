@@ -85,6 +85,13 @@ template <std::floating_point T, int N> class Mat {
     return Mat(vals_cp);
   }
 
+  Vec<T, N> operator[](int row) const {
+    assert(row >= 0 && row < N);
+    Vec<T, N> res;
+    for (int col = 0; col < N; ++col) res[col] = vals[row * N + col];
+    return res;
+  }
+
   template <typename U>  // all of the number type are accept, but doesnt need to check the value is number or not since the vec class already handle it
   Vec<T, N> operator*(const Vec<U, N> &vn) const {
     Vec<T, N> res;
@@ -274,9 +281,9 @@ template <typename T> Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad, const 
   // semua rotasi bergantung pada global axis
   // Urutan terbalik karena Matrix selalu lhs terhadap objek
   // rotasi di sumbu x
-  T cos_x = std::cos<T>(rad.x()), sin_x = std::sin<T>(rad.x());
-  T cos_y = std::cos<T>(rad.y()), sin_y = std::sin<T>(rad.y());
-  T cos_z = std::cos<T>(rad.z()), sin_z = std::sin<T>(rad.z());
+  T cos_x = std::cos(rad.x()), sin_x = std::sin(rad.x());
+  T cos_y = std::cos(rad.y()), sin_y = std::sin(rad.y());
+  T cos_z = std::cos(rad.z()), sin_z = std::sin(rad.z());
 
   Mat<T, 3> Rx{1, 0, 0, 0, cos_x, -sin_x, 0, sin_x, cos_x};
   // rotasi di sumbu y

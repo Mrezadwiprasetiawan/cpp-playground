@@ -39,7 +39,7 @@ template <std::floating_point FP = float, typename I = short> requires(std::inte
   // update vertices
   void update_vertices() {
     for (size_t i = 0; i < faceIndices.size(); ++i) {
-      Vec3<FP> f_i = faceIndices[i];
+      Vec3<I> f_i = faceIndices[i];
       assert(f_i.x() >= 0 && f_i.x() < vertices.size());
       assert(f_i.y() >= 0 && f_i.y() < vertices.size());
       assert(f_i.z() >= 0 && f_i.z() < vertices.size());

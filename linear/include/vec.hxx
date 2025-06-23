@@ -43,11 +43,11 @@ template <typename T, int N> requires(std::integral<T> || std::floating_point<T>
     for (int i = 0; i < N; ++i) val[i] = arr[i];
   }
 
-#define VEC_BASE_OPERATOR(op)                                            \
-  template <typename U> Vec operator op(const Vec<U, N> &vn) const {     \
-    Vec<T, N> res;                                                       \
-    for (int i = 0; i < N; ++i) res[i] = val[i] op static_cast<T> vn[i]; \
-    return res;                                                          \
+#define VEC_BASE_OPERATOR(op)                                             \
+  template <typename U> Vec operator op(const Vec<U, N> &vn) const {      \
+    Vec<T, N> res;                                                        \
+    for (int i = 0; i < N; ++i) res[i] = val[i] op static_cast<T>(vn[i]); \
+    return res;                                                           \
   }
 
   VEC_BASE_OPERATOR(+)

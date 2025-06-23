@@ -31,7 +31,7 @@ template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) cla
   explicit Combination() {}
   explicit Combination(T init_cache, T k = 0) { Combination::count(n, k); }
 
-  static T count(T n, T k) const {
+  static T count(T n, T k) {
     if (k > n - k) k = n - k;
     T res = 1;
     for (T i = 1; i <= k; ++i) {
