@@ -58,6 +58,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: pwsh
       run: |
+        $env:VCPKG_ROOT = "$env:USERPROFILE\vcpkg"
         git clone https://github.com/microsoft/vcpkg $env:VCPKG_ROOT
         & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
         & "$env:VCPKG_ROOT\vcpkg.exe" install libpng zlib
