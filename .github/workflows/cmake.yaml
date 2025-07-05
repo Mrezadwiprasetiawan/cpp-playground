@@ -62,7 +62,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: pwsh
       run: |
-        choco install llvm ninja cmake python -y
+        choco install llvm ninja cmake python visualstudio2022buildtools -y
         pip install aqtinstall
 
         # Buat direktori target untuk Qt
