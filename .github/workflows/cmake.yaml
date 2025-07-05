@@ -60,7 +60,22 @@ jobs:
 
     - name: Deps (Windows)
       if: matrix.os == 'windows-latest'
-      run: choco install llvm ninja cmake qt6* -y 
+      shell: pwsh
+      run: |
+        choco install llvm ninja cmake python -y
+        pip install aqtinstall
+
+        # Buat direktori target untuk Qt
+        $QtDir = "$env:USERPROFILE\Qt"
+        mkdir $QtDir
+
+        # Install Qt 6.6.1 (atau versi lain sesuai kebutuhan)
+        aqt install-qt windows desktop 6.6.1 win64_msvc2019_64 -O $QtDir
+
+        # Simpan lokasi Qt ke ENV agar bisa dipakai nanti
+        echo "QT_ROOT=$QtDir\6.6.1\msvc2019_64" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+        echo "CMAKE_PREFIX_PATH=$QtDir\6.6.1\msvc2019_64" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+
 
     # # ───────── Android NDK ─────────
     # - name: Install Android NDK manually
