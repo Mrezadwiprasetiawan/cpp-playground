@@ -119,7 +119,7 @@ jobs:
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++ \
           -DCMAKE_PREFIX_PATH="$VULKAN_SDK" \
-          -DVULKAN_SDK="$VULKAN_SDK"
+          -DVULKAN_SDK="$VULKAN_SDK" \
 
     # ───────── Configure (Windows native) ─────────
     - name: Configure (Windows native)
@@ -131,7 +131,9 @@ jobs:
           -DCMAKE_C_COMPILER="clang.exe" `
           -DCMAKE_CXX_COMPILER="clang++.exe" `
           -DCMAKE_PREFIX_PATH="$Env:VULKAN_SDK" `
-          -DVULKAN_SDK="$Env:VULKAN_SDK"
+          -DVULKAN_SDK="$Env:VULKAN_SDK" `
+          -DCMAKE_TOOLCHAIN_FILE="$Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+
 
 #    # ───────── Configure (Android) ─────────
 #    - name: Configure (Android arm64‑v8a)
