@@ -20,16 +20,17 @@
 #include <iomanip>
 #include <ios>
 #include <iostream>
-#include <linear/include/matrix.hxx>
-#include <linear/include/vec.hxx>
+#include <matrix.hxx>
 #include <obj3d.hxx>
 #include <type_traits>
+#include <vec.hxx>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-template <typename T, int N> void print(const Linear::Vec<T, N> &vn, int n_indent) {
+template <typename T, int N>
+void print(const Linear::Vec<T, N> &vn, int n_indent) {
   using namespace std;
   std::string indent = "";
   for (int i = 0; i < n_indent; ++i) indent += "\t";
@@ -37,7 +38,8 @@ template <typename T, int N> void print(const Linear::Vec<T, N> &vn, int n_inden
   for (int i = 0; i < N; ++i) cout << vn[i] << " ";
   cout << endl;
 }
-template <typename T, int N> void print(const Linear::Mat<T, N> &m, int n_indent) {
+template <typename T, int N>
+void print(const Linear::Mat<T, N> &m, int n_indent) {
   using namespace std;
   bool is_float = std::is_same_v<T, float>;
   ios oldState(nullptr);
