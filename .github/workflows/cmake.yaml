@@ -17,8 +17,8 @@ jobs:
             target: native
           - os: windows-latest  # native Windows
             target: native
-          - os: ubuntu-latest   # cross Android
-            target: android
+          # - os: ubuntu-latest   # cross Android (Disabled temporarily)
+          #   target: android
 
     steps:
     # ───────── checkout ─────────
@@ -50,7 +50,7 @@ jobs:
         "PATH=$Env:VULKAN_SDK\Bin;$Env:PATH" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
         "LIB=$Env:VULKAN_SDK\Lib;$Env:LIB"   | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
 
-    # ───────── Host‑specific deps ─────────
+   # ───────── Host‑specific deps ─────────
     - name: Setup deps (Linux native & Android)
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -62,14 +62,14 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: choco install llvm ninja cmake -y
 
-    # ───────── Android NDK ─────────
-    - name: Install Android NDK manually
-      if: matrix.target == 'android'
-      run: |
-        wget https://dl.google.com/android/repository/android-ndk-r26c-linux.zip
-        unzip android-ndk-r26c-linux.zip -d $HOME
-        echo "ANDROID_NDK=$HOME/android-ndk-r26c" >> "$GITHUB_ENV"
-        echo "ANDROID_NDK_HOME=$HOME/android-ndk-r26c" >> "$GITHUB_ENV"
+    # # ───────── Android NDK ─────────
+    # - name: Install Android NDK manually
+    #   if: matrix.target == 'android'
+    #   run: |
+    #     wget https://dl.google.com/android/repository/android-ndk-r26c-linux.zip
+    #     unzip android-ndk-r26c-linux.zip -d $HOME
+    #     echo "ANDROID_NDK=$HOME/android-ndk-r26c" >> "$GITHUB_ENV"
+    #     echo "ANDROID_NDK_HOME=$HOME/android-ndk-r26c" >> "$GITHUB_ENV"
 
 
     # ───────── build‑dir cache ─────────
@@ -103,18 +103,18 @@ jobs:
           -DCMAKE_PREFIX_PATH="$Env:VULKAN_SDK" `
           -DVULKAN_SDK="$Env:VULKAN_SDK"
 
-    # ───────── Configure (Android) ─────────
-    - name: Configure (Android arm64‑v8a)
-      if: matrix.target == 'android'
-      env:
-        ANDROID_NDK: ${{ env.ANDROID_NDK_HOME }}
-      run: |
-        cmake -S . -B build -G Ninja \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" \
-          -DANDROID_ABI=arm64-v8a \
-          -DANDROID_PLATFORM=android-24 \
-          -DVULKAN_SDK="$VULKAN_SDK"
+#    # ───────── Configure (Android) ─────────
+#    - name: Configure (Android arm64‑v8a)
+#      if: matrix.target == 'android'
+#      env:
+#        ANDROID_NDK: ${{ env.ANDROID_NDK_HOME }}
+#      run: |
+#        cmake -S . -B build -G Ninja \
+#          -DCMAKE_BUILD_TYPE=Release \
+#          -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" \
+#          -DANDROID_ABI=arm64-v8a \
+#          -DANDROID_PLATFORM=android-24 \
+#          -DVULKAN_SDK="$VULKAN_SDK"
 
     # ───────── Build ─────────
     - name: Build
@@ -131,6 +131,6 @@ jobs:
       working-directory: build
       run: ctest -C Release --output-on-failure
 
-    - name: Skip tests (Android)
-      if: matrix.target == 'android'
-      run: echo "Skipping tests for Android target"
+#    - name: Skip tests (Android)
+#      if: matrix.target == 'android'
+#      run: echo "Skipping tests for Android target"

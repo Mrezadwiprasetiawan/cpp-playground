@@ -1,0 +1,5 @@
+find_package(Qt6 REQUIRED COMPONENTS Widgets OpenGLWidgets)
+qt_standard_project_setup()
+include_directories(${CMAKE_SOURCE_DIR}/3D/include ${CMAKE_SOURCE_DIR}/linear/include)
+add_executable(GLqt main.cxx GLwidget.hxx)
+target_link_libraries(GLqt PRIVATE Qt6::OpenGLWidgets)

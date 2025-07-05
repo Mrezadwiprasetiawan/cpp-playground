@@ -21,13 +21,14 @@
 
 #include <cassert>
 #include <concepts>
-#include <linear/include/matrix.hxx>
-#include <linear/include/vec.hxx>
+#include <matrix.hxx>
+#include <vec.hxx>
 
 namespace l3d {
 using namespace Linear;
 // FP = floating point I = integer
-template <std::floating_point FP = float, typename I = short> requires(std::integral<I> && !std::is_same_v<I, bool>) class Obj3D {
+template <std::floating_point FP = float, std::integral I = short>
+class Obj3D {
   Mat<FP, 3> modelMat;
   Mat<FP, 3> QcurrMat;
   Vec3<FP> pos;
@@ -38,6 +39,7 @@ template <std::floating_point FP = float, typename I = short> requires(std::inte
 
   // update vertices
   void update_vertices() {
+    newVertices.clear();  // clear biar ga menumpuk
     for (size_t i = 0; i < faceIndices.size(); ++i) {
       Vec3<I> f_i = faceIndices[i];
       assert(f_i.x() >= 0 && f_i.x() < vertices.size());
@@ -50,6 +52,8 @@ template <std::floating_point FP = float, typename I = short> requires(std::inte
   }
 
  public:
+  // menghindari copy constructor
+  Obj3D(const Obj3D&) = delete;
   /*
    * otomatis memperbarui vertices tapi originalnya tidak dihapus agar lebih
    * mudah diambil nanti
@@ -83,7 +87,7 @@ template <std::floating_point FP = float, typename I = short> requires(std::inte
   Vec3<FP> get_translation() { return pos; }
   Mat3<FP> get_rotation_matrix() { return QcurrMat; }
   Mat4<FP> get_model_matrix() {
-    Mat4<FP> res = mat3_to_mat4(QcurrMat * modelMat * QcurrMat.inverse());
+    Mat4<FP> res = mat3_to_mat4(QcurrMat * modelMat);
     res.set_element(3, pos.x());
     res.set_element(7, pos.y());
     res.set_element(11, pos.z());
