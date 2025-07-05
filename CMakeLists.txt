@@ -37,8 +37,8 @@ if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       NAMES libomp
       PATHS "C:/Program Files/LLVM/lib"
       NO_DEFAULT_PATH)
+else()
+  add_subdirectory(web-server)
 endif()
-
-add_subdirectory(web-server)
 
 find_package(OpenMP REQUIRED COMPONENTS CXX)
