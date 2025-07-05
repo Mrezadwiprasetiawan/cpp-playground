@@ -26,18 +26,16 @@ add_subdirectory(number_system)
 add_subdirectory(3D)
 add_subdirectory(image)
 add_subdirectory(discrete)
-add_subdirectory(qt)
-add_subdirectory(OpenGL)
+
 # temporary exclude these subprojects theres so much error XD
 # add_subdirectory(NN)
 if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(OpenMP_CXX_FLAGS "-fopenmp")
-    set(OpenMP_CXX_LIB_NAMES "libomp")
-    find_library(OpenMP_libomp_LIBRARY
-      NAMES libomp
-      PATHS "C:/Program Files/LLVM/lib"
-      NO_DEFAULT_PATH)
+  set(OpenMP_CXX_FLAGS "-fopenmp")
+  set(OpenMP_CXX_LIB_NAMES "libomp")
+  find_library(OpenMP_libomp_LIBRARY NAMES libomp PATHS "C:/Program Files/LLVM/lib" NO_DEFAULT_PATH)
 else()
+  add_subdirectory(qt)
+  add_subdirectory(OpenGL)
   add_subdirectory(web-server)
 endif()
 
