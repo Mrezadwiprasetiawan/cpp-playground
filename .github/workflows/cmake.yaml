@@ -54,6 +54,15 @@ jobs:
       if: matrix.os == 'windows-latest'
       uses: ilammy/msvc-dev-cmd@v1
 
+    - name: Install vcpkg dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: |
+        git clone https://github.com/microsoft/vcpkg $env:VCPKG_ROOT
+        & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+        & "$env:VCPKG_ROOT\vcpkg.exe" install libpng zlib
+
+
 
    # ───────── Host‑specific deps ─────────
     - name: Setup deps (Linux native & Android)
