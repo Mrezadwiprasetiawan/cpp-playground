@@ -56,11 +56,11 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y clang ninja-build libomp-dev \
-        libpng-dev libx11-dev libvulkan-dev     # ← tambahkan ini
+        libpng-dev libx11-dev libvulkan-dev qt6* #i want to use all qt6 to practice more deeply later
 
     - name: Deps (Windows)
       if: matrix.os == 'windows-latest'
-      run: choco install llvm ninja cmake -y
+      run: choco install llvm ninja cmake qt6* -y 
 
     # # ───────── Android NDK ─────────
     # - name: Install Android NDK manually
