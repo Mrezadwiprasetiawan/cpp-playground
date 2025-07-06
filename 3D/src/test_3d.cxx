@@ -42,7 +42,7 @@ template <typename T, int N>
 void print(const Linear::Mat<T, N> &m, int n_indent) {
   using namespace std;
   bool is_float = std::is_same_v<T, float>;
-  ios oldState(nullptr);
+  ios  oldState(nullptr);
   oldState.copyfmt(cout);
   cout << fixed << setprecision(is_float ? 6 : 15) << endl;
   std::string indent = "";
@@ -109,9 +109,9 @@ int main() {
   print(l3d::QUATERNION_MATRIX<float>({0, 1, 0}, M_PI), 1);
 
   cout << "Test obj3d\t:" << endl;
-  vector<Linear::Vec3f> pos{{-1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+  vector<Linear::Vec3f>       pos{{-1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   vector<Linear::Vec3<short>> face{{0, 1, 2}};
-  l3d::Obj3D obj(pos, face);
+  l3d::Obj3D                  obj(pos, face);
   // rotasi pertama sebenernya ga ada bedanya global dan lokal
   obj.rotate_global({0, 1, 0}, M_PI / 2);
   obj.translate_local({0, 0, 1});

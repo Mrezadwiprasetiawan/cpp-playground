@@ -24,7 +24,8 @@
 #include <vector>
 
 namespace Discrete {
-template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) class Combination {
+template <typename T>
+requires(std::integral<T> && !std::is_same_v<T, bool>) class Combination {
   T n, k;
 
  public:
@@ -35,8 +36,8 @@ template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) cla
     if (k > n - k) k = n - k;
     T res = 1;
     for (T i = 1; i <= k; ++i) {
-      T num = n - i + 1;
-      T gcd = std::gcd(num, i);
+      T num        = n - i + 1;
+      T gcd        = std::gcd(num, i);
       T nongcd_num = num / gcd, nongcd_i = i / gcd;
       res /= nongcd_i;
       res *= nongcd_num;
@@ -44,7 +45,8 @@ template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) cla
     return res;
   }
 
-  template <typename U> std::vector<std::vector<U>> choose(const std::vector<U> &sources, T k) const {
+  template <typename U>
+  std::vector<std::vector<U>> choose(const std::vector<U> &sources, T k) const {
     T n = static_cast<T>(sources.size());
     if (k < 0) throw std::runtime_error("k must be non-negative");
     if (k == 0) return {{}};

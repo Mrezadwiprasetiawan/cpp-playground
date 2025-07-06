@@ -29,8 +29,8 @@ class Big_int {
  private:
   std::vector<uint64_t> values;
   // mutable = non logic state
-  mutable std::string values_str;
-  bool negative = false;
+  mutable std::string   values_str;
+  bool                  negative = false;
   const static uint16_t max_thread;
 
   // For positive only
@@ -64,10 +64,10 @@ class Big_int {
       size_t rev_i = val.size() - 1 - i;
       for (size_t j = 0; j < Big_int::two_pow_64.size(); ++j) {
         size_t rev_j = Big_int::two_pow_64.size() - 1 - j;
-        int mul = (val[rev_i] - '0') * (Big_int::two_pow_64[rev_j] - '0');
+        int    mul   = (val[rev_i] - '0') * (Big_int::two_pow_64[rev_j] - '0');
         size_t p1 = rev_i + rev_j, p2 = p1 + 1;
-        int sum = tmpres[p2] + mul;
-        tmpres[p2] = sum % 10;
+        int    sum  = tmpres[p2] + mul;
+        tmpres[p2]  = sum % 10;
         tmpres[p1] += sum / 10;
       }
     }
@@ -75,22 +75,22 @@ class Big_int {
     if (!other) return;
 
     // add the other
-    std::string b = uint64_to_string(other);
-    int carry = 0;
+    std::string b     = uint64_to_string(other);
+    int         carry = 0;
 
     for (size_t i = 0; i < b.size(); ++i) {
-      size_t rev_i = tmpres.size() - 1 - i;
-      size_t rev_i_b = b.size() - 1 - i;
-      int sum = b[rev_i_b] - '0' + tmpres[rev_i];
-      sum += carry;
-      carry = sum / 10;
-      tmpres[rev_i] = sum % 10;
+      size_t rev_i    = tmpres.size() - 1 - i;
+      size_t rev_i_b  = b.size() - 1 - i;
+      int    sum      = b[rev_i_b] - '0' + tmpres[rev_i];
+      sum            += carry;
+      carry           = sum / 10;
+      tmpres[rev_i]   = sum % 10;
     }
 
     for (int i = 0; carry && i < tmpres.size(); ++i) {
-      int sum = tmpres[tmpres.size() - i - 1] + carry;
+      int sum                       = tmpres[tmpres.size() - i - 1] + carry;
       tmpres[tmpres.size() - i - 1] = sum % 10;
-      carry = sum / 10;
+      carry                         = sum / 10;
     }
 
     if (carry) tmpres.insert(tmpres.begin(), 1, carry);
@@ -110,13 +110,13 @@ class Big_int {
       return;
     }
     std::vector<int> sub_res(val.size(), 0);
-    size_t offset = val.size() - Big_int::two_pow_64.size();
-    uint64_t div_res = 0;
-    bool greater_equal = true;
-    bool carry = 0;
+    size_t           offset        = val.size() - Big_int::two_pow_64.size();
+    uint64_t         div_res       = 0;
+    bool             greater_equal = true;
+    bool             carry         = 0;
     while (greater_equal) {
       for (size_t i = 0; i < val.size(); ++i) {
-        size_t rev_val_i = val.size() - 1 - i;
+        size_t rev_val_i  = val.size() - 1 - i;
         size_t rev_2_64_i = rev_val_i - offset;
       }
     }
@@ -130,13 +130,13 @@ class Big_int {
   Big_int(uint64_t value) {
     if (value < (1ULL << 63)) values = {value};
     else {
-      values = {~value + 1};
+      values         = {~value + 1};
       this->negative = true;
     }
   }
 
   Big_int(std::string value) {
-    std::string rem = "0";
+    std::string           rem = "0";
     std::vector<uint64_t> chunks;
     while (!value.empty()) {
       div_mod_2_64(value, &rem);
@@ -162,17 +162,17 @@ class Big_int {
 
     // inverse bit and add 1 for negative
     if (this->negative != other.negative) {
-      negative = true;
+      negative   = true;
       bool carry = 1;
       if (this->negative) {
         for (size_t i = 0; i < this_copy.size(); ++i) {
           this_copy[i] = ~this_copy[i] + carry;
-          carry = this_copy[i] == 0;
+          carry        = this_copy[i] == 0;
         }
       } else {
         for (size_t i = 0; i < this_copy.size(); ++i) {
           other_copy[i] = ~other_copy[i] + carry;
-          carry = other_copy[i] == 0;
+          carry         = other_copy[i] == 0;
         }
       }
     }
@@ -231,7 +231,7 @@ class Big_int {
   // special case
   Big_int operator++(int) { return add(Big_int(1)); }
   Big_int operator--(int) { return min(Big_int(1)); }
-  bool operator!() { return (values.size() == 1 && values[0] == 0) || values.empty(); }
+  bool    operator!() { return (values.size() == 1 && values[0] == 0) || values.empty(); }
 
 #define BITWISE(op) Big_int operator op(const Big_int &other) const
 
@@ -257,13 +257,13 @@ class Big_int {
     assert((k >> 6) + res_values.size() > res_values.size());
     if (k >> 6) res_values.insert(res_values.end(), k >> 6, 0);
     uint64_t carry = 0;
-    uint64_t bits = (k & 63ULL);
+    uint64_t bits  = (k & 63ULL);
     // mencegah shifting 64 kali jika k kelipatan 64 karena 64-0 dilewatkan
     if (bits) {
       for (auto it = res_values.rbegin(); it != res_values.rend(); ++it) {
         uint64_t tmp = *it << bits | carry;
-        carry = *it >> (64ULL - bits);
-        *it = tmp;
+        carry        = *it >> (64ULL - bits);
+        *it          = tmp;
       }
     }
     return Big_int(res_values, this->negative);
@@ -277,12 +277,12 @@ class Big_int {
     if (k >> 6 >= res_values.size()) return Big_int({0}, this->negative);
     if (k >> 6) res_values.resize(res_values.size() - (k >> 6));
     uint64_t carry = 0;
-    uint64_t bits = (k & 63ULL);
+    uint64_t bits  = (k & 63ULL);
     if (bits) {
       for (auto it = res_values.begin(); it != res_values.end(); ++it) {
         uint64_t tmp = *it >> bits | carry;
-        carry = *it << (64ULL - bits);
-        *it = tmp;
+        carry        = *it << (64ULL - bits);
+        *it          = tmp;
       }
     }
     while (res_values.size() > 1 && !res_values.back()) res_values.pop_back();

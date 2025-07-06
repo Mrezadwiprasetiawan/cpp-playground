@@ -17,7 +17,6 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
@@ -29,8 +28,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     case WM_DESTROY: PostQuitMessage(0); return 0;
     case WM_PAINT: {
       PAINTSTRUCT ps;
-      HDC hdc = BeginPaint(hwnd, &ps);
-      RECT rect;
+      HDC         hdc = BeginPaint(hwnd, &ps);
+      RECT        rect;
       GetClientRect(hwnd, &rect);  // ambil ukuran area dalam window (tanpa border/titlebar)
       HBRUSH blackBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
       FillRect(hdc, &rect, blackBrush);
@@ -48,11 +47,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
   const wchar_t CLASS_NAME[] = L"MyWindowClass";
 
-  WNDCLASS wc = {};
+  WNDCLASS wc      = {};
   wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
-  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wc.lpfnWndProc = WindowProc;
-  wc.hInstance = hInstance;
+  wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+  wc.lpfnWndProc   = WindowProc;
+  wc.hInstance     = hInstance;
   wc.lpszClassName = CLASS_NAME;
 
   RegisterClass(&wc);

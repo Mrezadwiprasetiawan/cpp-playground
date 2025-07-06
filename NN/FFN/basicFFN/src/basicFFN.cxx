@@ -17,7 +17,6 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #include <cmath>
 #include <ffn.hxx>
 #include <iostream>
@@ -37,7 +36,7 @@ int main() {
   for (int e = 0; e < 100; ++e) {
     x = 0;
     for (int i = 0; i < 100; x += 1e-2, ++i) {
-      input[i][0] = x;
+      input[i][0]   = x;
       double sinx[] = {std::sin(x)};
       cout << "train ke" << i << endl;
       ffn.backward(input[i], sinx);

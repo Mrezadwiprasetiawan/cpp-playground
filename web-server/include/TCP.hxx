@@ -8,6 +8,6 @@
 namespace WS {
 class TCP {
   std::string hostname;
-  uint8_t port;
+  uint8_t     port;
 };
 }  // namespace WS

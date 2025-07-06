@@ -9,6 +9,6 @@ compile_commands.json
 
 #swap file from vim
 **/*.sw*
-
+%
 #vscode file
 .vscode/

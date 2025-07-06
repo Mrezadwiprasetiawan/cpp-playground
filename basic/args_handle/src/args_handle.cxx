@@ -24,7 +24,7 @@
 
 int main(int argc, char *argv[]) {
   std::map<std::string, std::string> options;
-  std::vector<std::string> positional_args;
+  std::vector<std::string>           positional_args;
 
   // Parsing command-line arguments
   for (int i = 1; i < argc; ++i) {

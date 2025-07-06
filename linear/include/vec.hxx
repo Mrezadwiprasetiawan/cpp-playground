@@ -26,7 +26,8 @@
 
 namespace Linear {
 
-template <typename T, int N> requires(std::integral<T> || std::floating_point<T>) class Vec {
+template <typename T, int N>
+requires(std::integral<T> || std::floating_point<T>) class Vec {
  private:
   T val[N];
 
@@ -44,7 +45,8 @@ template <typename T, int N> requires(std::integral<T> || std::floating_point<T>
   }
 
 #define VEC_BASE_OPERATOR(op)                                             \
-  template <typename U> Vec operator op(const Vec<U, N> &vn) const {      \
+  template <typename U>                                                   \
+  Vec operator op(const Vec<U, N> &vn) const {                            \
     Vec<T, N> res;                                                        \
     for (int i = 0; i < N; ++i) res[i] = val[i] op static_cast<T>(vn[i]); \
     return res;                                                           \
@@ -56,8 +58,11 @@ template <typename T, int N> requires(std::integral<T> || std::floating_point<T>
   VEC_BASE_OPERATOR(/)
 #undef VEC_BASE_OPERATOR
 
-#define VEC_OV_ASSIGNMENT(op) \
-  template <typename U> Vec &operator op##=(const Vec<U, N> &vn) { return *this = *this op vn; }
+#define VEC_OV_ASSIGNMENT(op)                \
+  template <typename U>                      \
+  Vec &operator op##=(const Vec<U, N> &vn) { \
+    return *this = *this op vn;              \
+  }
 
   VEC_OV_ASSIGNMENT(+);
   VEC_OV_ASSIGNMENT(-);
@@ -72,12 +77,13 @@ template <typename T, int N> requires(std::integral<T> || std::floating_point<T>
   auto y() const requires(N >= 2) { return val[1]; }
   auto z() const requires(N >= 3) { return val[2]; }
 
-  T &operator[](std::size_t i) { return val[i]; }
+  T       &operator[](std::size_t i) { return val[i]; }
   const T &operator[](std::size_t i) const { return val[i]; }
-  T *data() { return val; }
+  T       *data() { return val; }
 };
 
-template <typename T, int N> requires(std::floating_point<T>) Vec<T, N> normalize(Vec<T, N> target) {
+template <typename T, int N>
+requires(std::floating_point<T>) Vec<T, N> normalize(Vec<T, N> target) {
   T length = 0;
   for (int i = 0; i < N; ++i) length += target[i] * target[i];
   length = std::sqrt(length);
@@ -85,18 +91,22 @@ template <typename T, int N> requires(std::floating_point<T>) Vec<T, N> normaliz
   return target;
 }
 
-template <typename T, int N> requires(std::floating_point<T>) T dot(const Vec<T, N> &a, const Vec<T, N> &b) {
+template <typename T, int N>
+requires(std::floating_point<T>) T dot(const Vec<T, N> &a, const Vec<T, N> &b) {
   T res = 0;
   for (int i = 0; i < N; ++i) res += a[i] * b[i];
   return res;
 }
 
-template <typename T> requires(std::floating_point<T>) Vec<T, 3> cross(const Vec<T, 3> &a, const Vec<T, 3> &b) {
+template <typename T>
+requires(std::floating_point<T>) Vec<T, 3> cross(const Vec<T, 3> &a, const Vec<T, 3> &b) {
   return {a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};
 }
 
-template <typename T> using Vec3 = Vec<T, 3>;
-template <typename T> using Vec4 = Vec<T, 4>;
+template <typename T>
+using Vec3 = Vec<T, 3>;
+template <typename T>
+using Vec4  = Vec<T, 4>;
 using Vec3f = Vec3<float>;
 using Vec3d = Vec3<double>;
 using Vec4f = Vec4<float>;

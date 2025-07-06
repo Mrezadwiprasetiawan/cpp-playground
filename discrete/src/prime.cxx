@@ -27,7 +27,7 @@
 
 uint64_t to_number_with_suffix(const char *str) {
   using namespace std;
-  size_t len = strlen(str);
+  size_t   len = strlen(str);
   uint64_t num = 0;
 
   for (int i = 0; i < len; ++i) {
@@ -90,7 +90,7 @@ void do_n(uint64_t value) {
 void do_i(size_t index) {
   using namespace std;
   using namespace Discrete;
-  Prime<uint64_t> prime;
+  Prime<uint64_t>  prime;
   vector<uint64_t> primes = prime.from_size(index + 1);
   if (index < primes.size()) {
     cout << "Prime #" << index << ": " << primes[index] << endl;
@@ -108,11 +108,11 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  vector<string> main_args = {"-h", "-l", "-s", "-n", "-i"};
+  vector<string> main_args  = {"-h", "-l", "-s", "-n", "-i"};
   vector<string> alter_args = {"-help", "-limit", "-size", "-isprime", "-index"};
 
   int found_index = -1;
-  int arg_pos = -1;
+  int arg_pos     = -1;
 
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
           return 1;
         }
         found_index = j;
-        arg_pos = i;
+        arg_pos     = i;
       }
     }
   }

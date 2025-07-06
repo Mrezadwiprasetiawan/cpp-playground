@@ -27,9 +27,9 @@ int main() {
   setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
   sockaddr_in addr{};
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(9000);        // port 9000
-  addr.sin_addr.s_addr = INADDR_ANY;  // 0.0.0.0
+  addr.sin_family      = AF_INET;
+  addr.sin_port        = htons(9000);  // port 9000
+  addr.sin_addr.s_addr = INADDR_ANY;   // 0.0.0.0
 
   if (bind(server_fd, (sockaddr*)&addr, sizeof(addr)) < 0) {
     perror("bind");
@@ -44,15 +44,15 @@ int main() {
   std::cout << "Server listening on port 9000...\n";
 
   sockaddr_in client_addr;
-  socklen_t client_len = sizeof(client_addr);
-  int client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
+  socklen_t   client_len = sizeof(client_addr);
+  int         client_fd  = accept(server_fd, (sockaddr*)&client_addr, &client_len);
   if (client_fd < 0) {
     perror("accept");
     return 1;
   }
 
   char buffer[1024] = {};
-  int bytes = read(client_fd, buffer, sizeof(buffer) - 1);
+  int  bytes        = read(client_fd, buffer, sizeof(buffer) - 1);
   if (bytes > 0) {
     std::cout << "Received from client: " << buffer << "\n";
 

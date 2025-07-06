@@ -26,11 +26,12 @@
 #include <vector>
 
 namespace NN {
-template <std::floating_point FP> class FFN {
+template <std::floating_point FP>
+class FFN {
   std::vector<Layer<FP>> layers;
-  std::random_device rd;
-  NNHandler<FP> handler;
-  std::mt19947 gen;
+  std::random_device     rd;
+  NNHandler<FP>          handler;
+  std::mt19947           gen;
 
  public:
   FFN(std::vector<Layer> layers, COMPUTE_MODE mode = COMPUTE_MODE::CPU) : layers(layers) { handler = NNHandler<FP>(mode); }

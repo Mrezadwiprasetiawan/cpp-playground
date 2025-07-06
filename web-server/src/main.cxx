@@ -13,9 +13,9 @@ int main() {
   }
 
   sockaddr_in addr{};
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(8080);        // port 8080
-  addr.sin_addr.s_addr = INADDR_ANY;  // 0.0.0.0
+  addr.sin_family      = AF_INET;
+  addr.sin_port        = htons(8080);  // port 8080
+  addr.sin_addr.s_addr = INADDR_ANY;   // 0.0.0.0
 
   if (bind(server_fd, (sockaddr*)&addr, sizeof(addr)) < 0) {
     perror("bind failed");
@@ -30,8 +30,8 @@ int main() {
   std::cout << "Server ready on port 8080\n";
 
   sockaddr_in client_addr;
-  socklen_t client_len = sizeof(client_addr);
-  int client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
+  socklen_t   client_len = sizeof(client_addr);
+  int         client_fd  = accept(server_fd, (sockaddr*)&client_addr, &client_len);
   if (client_fd < 0) {
     perror("accept failed");
     return 1;

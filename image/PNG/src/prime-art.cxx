@@ -29,7 +29,7 @@ uint64_t WIDTH, HEIGHT, AREA;
 
 uint64_t to_number_with_suffix(const char *str) {
   using namespace std;
-  size_t len = strlen(str);
+  size_t   len = strlen(str);
   uint64_t num = 0;
 
   for (uint64_t i = 0; i < len; ++i) {
@@ -60,10 +60,10 @@ int main(int argc, const char *argv[]) {
   if (argc >= 2) WIDTH = to_number_with_suffix(argv[1]);
   if (argc == 3) HEIGHT = to_number_with_suffix(argv[2]);
   else HEIGHT = WIDTH;
-  AREA = WIDTH * HEIGHT;
-  std::string filename = "prime-uniform-" + std::to_string(WIDTH) + "-" + std::to_string(HEIGHT) + ".png";
+  AREA                  = WIDTH * HEIGHT;
+  std::string filename  = "prime-uniform-" + std::to_string(WIDTH) + "-" + std::to_string(HEIGHT) + ".png";
   std::string filename2 = "prime-spiral-" + std::to_string(WIDTH) + "-" + std::to_string(HEIGHT) + ".png";
-  PNG writer(filename);
+  PNG         writer(filename);
   writer.set_width(WIDTH);
   writer.set_height(HEIGHT);
   writer.set_color_type(PNG_COLOR_TYPE_RGB);
@@ -91,21 +91,21 @@ int main(int argc, const char *argv[]) {
    * dTheta = 2/sqrt(2) * sqrt(i)
    */
 
-  float dR = 0.5 * std::sqrt(2.0f);
+  float          dR = 0.5 * std::sqrt(2.0f);
   const uint64_t cx = WIDTH / 2;
   const uint64_t cy = HEIGHT / 2;
 
   for (uint32_t i : prime.from_range_limit(AREA)) {
-    const float dTheta = 2 / std::sqrt(2 * i);
-    const float r = dR * std::sqrt(i);
-    const float theta = dTheta * i;
-    const int64_t dx = r * std::cos(theta);
-    const int64_t dy = r * std::sin(theta);
+    const float   dTheta = 2 / std::sqrt(2 * i);
+    const float   r      = dR * std::sqrt(i);
+    const float   theta  = dTheta * i;
+    const int64_t dx     = r * std::cos(theta);
+    const int64_t dy     = r * std::sin(theta);
     if (std::abs(dx) > WIDTH / 2 || std::abs(dy) > HEIGHT / 2) continue;
-    uint64_t x = uint64_t(cx + dx);
-    uint64_t y = uint64_t(cy + dy);
-    uint64_t n = y * WIDTH + x;
-    uint64_t base = (n) * 3;
+    uint64_t x     = uint64_t(cx + dx);
+    uint64_t y     = uint64_t(cy + dy);
+    uint64_t n     = y * WIDTH + x;
+    uint64_t base  = (n) * 3;
     data[base + 0] = 0;
     data[base + 1] = 0;
     data[base + 2] = 255;
@@ -119,15 +119,15 @@ int main(int argc, const char *argv[]) {
   // https://en.wikipedia.org/wiki/Logarithmic_spiral
   const float dTheta = std::log(dR);
   for (uint32_t i : prime.from_range_limit(AREA)) {
-    float r = dR * std::sqrt(i);
-    float theta = dTheta * i;
-    const int64_t dx = r * std::cos(theta);
-    const int64_t dy = r * std::sin(theta);
+    float         r     = dR * std::sqrt(i);
+    float         theta = dTheta * i;
+    const int64_t dx    = r * std::cos(theta);
+    const int64_t dy    = r * std::sin(theta);
     if (std::abs(dx) > WIDTH / 2 || std::abs(dy) > HEIGHT / 2) continue;
-    uint64_t x = uint64_t(cx + dx);
-    uint64_t y = uint64_t(cy + dy);
-    uint64_t n = y * WIDTH + x;
-    uint64_t base = (n) * 3;
+    uint64_t x      = uint64_t(cx + dx);
+    uint64_t y      = uint64_t(cy + dy);
+    uint64_t n      = y * WIDTH + x;
+    uint64_t base   = (n) * 3;
     data2[base + 0] = 0;
     data2[base + 1] = 0;
     data2[base + 2] = 255;

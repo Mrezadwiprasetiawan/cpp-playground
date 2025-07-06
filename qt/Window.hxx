@@ -6,18 +6,18 @@
 
 class Window : public QMainWindow {
   Q_OBJECT
-  QLabel *label;
+  QLabel      *label;
   QPushButton *button;
 
  public:
   Window(QWidget *parent = nullptr) : QMainWindow(parent) {
     // Inisialisasi widget
-    label = new QLabel("Halo Qt", this);
+    label  = new QLabel("Halo Qt", this);
     button = new QPushButton("Klik Saya", this);
 
     // Layout
-    QWidget *central = new QWidget(this);
-    QVBoxLayout *layout = new QVBoxLayout(central);
+    QWidget     *central = new QWidget(this);
+    QVBoxLayout *layout  = new QVBoxLayout(central);
     layout->addWidget(label);
     layout->addWidget(button);
     central->setLayout(layout);

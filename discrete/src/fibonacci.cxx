@@ -26,7 +26,7 @@ std::string argname[] = {"-h", "-help", "-l", "-limit", "-i", "-index"};
 uint64_t to_number(char *number) {
   using std::runtime_error;
   uint64_t result = 0;
-  size_t len = strlen(number);
+  size_t   len    = strlen(number);
   for (size_t i = 0; i < len; ++i) {
     char c = number[i];
     if (!std::isdigit(c)) { throw runtime_error("Invalid character '" + std::string(1, c) + "' in number."); }

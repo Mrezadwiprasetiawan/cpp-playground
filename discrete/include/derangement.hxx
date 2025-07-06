@@ -10,7 +10,8 @@
 
 namespace Discrete {
 
-template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) class Derangement {
+template <typename T>
+requires(std::integral<T> && !std::is_same_v<T, bool>) class Derangement {
   static inline std::vector<T> cache = {1, 0};  // !0 = 1, !1 = 0
 
   // Compute cutoff based on k_min ≈ log_phi((3√5 / 5) * n)
@@ -25,14 +26,14 @@ template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) cla
     T k_max = min_k_pie_faster(n);
     if (k_max > n) k_max = n;
 
-    T term = 1;
-    T sum = 1;
+    T   term = 1;
+    T   sum  = 1;
     int sign = -1;
 
     for (T i = 1; i <= k_max; ++i) {
       term *= (n - i + 1);  // P(n,i)
-      sum += sign * term;
-      sign = -sign;
+      sum  += sign * term;
+      sign  = -sign;
     }
 
     if ((k_max == n) && (n & 1)) sum = -sum;
@@ -49,10 +50,11 @@ template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) cla
  public:
   static T calc(T n) { return (n > min_k_pie_faster(n)) ? pie_calc(n) : recursive_calc(n); }
 
-  template <typename U> std::vector<std::vector<U>> derange(const std::vector<U> &src) {
+  template <typename U>
+  std::vector<std::vector<U>> derange(const std::vector<U> &src) {
     std::vector<std::vector<U>> result;
-    std::vector<U> current(src.size());
-    std::vector<bool> used(src.size(), false);
+    std::vector<U>              current(src.size());
+    std::vector<bool>           used(src.size(), false);
 
     std::function<void(size_t)> dfs = [&](size_t i) {
       if (i == src.size()) {
@@ -61,7 +63,7 @@ template <typename T> requires(std::integral<T> && !std::is_same_v<T, bool>) cla
       }
       for (size_t j = 0; j < src.size(); ++j) {
         if (used[j] || j == i) continue;
-        used[j] = true;
+        used[j]    = true;
         current[i] = src[j];
         dfs(i + 1);
         used[j] = false;

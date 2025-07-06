@@ -28,12 +28,12 @@ namespace NN {
 template <std::floating_point FP>
 struct WeightBias {
   std::vector<FP> w;
-  FP b;
+  FP              b;
 };
 
 template <std::floating_point FP>
 struct Layer {
-  size_t size;
+  size_t          size;
   ACTIVATION_TYPE act_func_t;
 };
 

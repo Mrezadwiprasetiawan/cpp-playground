@@ -26,7 +26,7 @@ class Suara {
 
  public:
   Suara(std::string value) : value(value) {}
-  void bunyikan() { std::cout << value << std::endl; }
+  void                 bunyikan() { std::cout << value << std::endl; }
   friend std::ostream& operator<<(std::ostream& a, const Suara& b);
 };
 
@@ -37,7 +37,7 @@ class Animal {
  public:
   Animal() : suara("rrawww") {}
   Animal(std::string s) : suara(s) {}
-  void berkata() { std::cout << suara << std::endl; }
+  void         berkata() { std::cout << suara << std::endl; }
   friend Suara operator<<(const Animal& a, const Animal& b);
 };
 class Cat : public Animal {

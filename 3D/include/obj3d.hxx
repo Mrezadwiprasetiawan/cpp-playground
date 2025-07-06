@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <concepts>
+#include <initializer_list>
 #include <matrix.hxx>
 #include <vec.hxx>
 
@@ -29,11 +30,11 @@ using namespace Linear;
 // FP = floating point I = integer
 template <std::floating_point FP = float, std::integral I = short>
 class Obj3D {
-  Mat<FP, 3> modelMat;
-  Mat<FP, 3> QcurrMat;
-  Vec3<FP> pos;
+  Mat<FP, 3>            modelMat;
+  Mat<FP, 3>            QcurrMat;
+  Vec3<FP>              pos;
   std::vector<Vec3<FP>> vertices;
-  std::vector<Vec3<I>> faceIndices;
+  std::vector<Vec3<I>>  faceIndices;
   std::vector<Vec3<FP>> newVertices;
   std::vector<Vec3<FP>> normals;
 
@@ -53,15 +54,49 @@ class Obj3D {
 
  public:
   // menghindari copy constructor
-  Obj3D(const Obj3D&) = delete;
+  explicit Obj3D(const Obj3D&) = delete;
   /*
    * otomatis memperbarui vertices tapi originalnya tidak dihapus agar lebih
    * mudah diambil nanti
    */
-  Obj3D(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> faceIndices) : vertices(vertices), faceIndices(faceIndices) {
+  explicit Obj3D(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> faceIndices) : vertices(vertices), faceIndices(faceIndices) {
     update_vertices();
     QcurrMat.set_identity();
     modelMat.set_identity();
+  }
+
+  explicit Obj3D(std::vector<Vec3<FP>> vertices) noexcept : vertices(vertices) {
+    QcurrMat.set_identity();
+    modelMat.set_identity();
+  }
+
+  explicit Obj3D(const std::initializer_list<FP>& vertices) {
+    assert(vertices.size() % 3 == 0);
+    for (auto it = vertices.begin(); it != vertices.end(); it += 3) this->vertices.push_back({*it, *(it + 1), *(it + 2)});
+  }
+
+  // move
+  explicit Obj3D(Obj3D&& other) noexcept
+      : modelMat(std::move(other.modelMat)),
+        QcurrMat(std::move(other.QcurrMat)),
+        pos(std::move(other.pos)),
+        vertices(std::move(other.vertices)),
+        faceIndices(std::move(other.faceIndices)),
+        newVertices(std::move(other.newVertices)),
+        normals(std::move(other.normals)) {}
+
+  // move assignment
+  Obj3D& operator=(Obj3D&& other) noexcept {
+    if (this != &other) {
+      modelMat    = std::move(other.modelMat);
+      QcurrMat    = std::move(other.QcurrMat);
+      pos         = std::move(other.pos);
+      vertices    = std::move(other.vertices);
+      faceIndices = std::move(other.faceIndices);
+      newVertices = std::move(other.newVertices);
+      normals     = std::move(other.normals);
+    }
+    return *this;
   }
 
   // ===== Fungsional ======
@@ -69,24 +104,24 @@ class Obj3D {
   /* Hanya merubah matriks Quaternion agar matriks model tidak perlu dihitung
    * trus menerus setiap kali set rotasi
    */
-  void rotate_local(Vec3<FP> xyz, FP rad) {
-    Mat3<FP> Qnew = QUATERNION_MATRIX(xyz, rad);
-    QcurrMat *= Qnew;
+  void rotate_local(Vec3<FP> xyz, FP rad) noexcept {
+    Mat3<FP> Qnew  = QUATERNION_MATRIX(xyz, rad);
+    QcurrMat      *= Qnew;
   }
 
-  void rotate_global(Vec3<FP> xyz, FP rad) {
+  void rotate_global(Vec3<FP> xyz, FP rad) noexcept {
     Mat3<FP> Qnew = QUATERNION_MATRIX(xyz, rad);
-    QcurrMat = Qnew * QcurrMat;
+    QcurrMat      = Qnew * QcurrMat;
   }
 
-  void translate_local(Vec3<FP> xyz) { pos += QcurrMat * xyz; }
-  void translate_global(Vec3<FP> xyz) { pos += xyz; }
+  void translate_local(Vec3<FP> xyz) noexcept { pos += QcurrMat * xyz; }
+  void translate_global(Vec3<FP> xyz) noexcept { pos += xyz; }
 
   // ===== Getter and Setter =====
   // getter
-  Vec3<FP> get_translation() { return pos; }
-  Mat3<FP> get_rotation_matrix() { return QcurrMat; }
-  Mat4<FP> get_model_matrix() {
+  Vec3<FP> get_translation() const { return pos; }
+  Mat3<FP> get_rotation_matrix() const { return QcurrMat; }
+  Mat4<FP> get_model_matrix() const {
     Mat4<FP> res = mat3_to_mat4(QcurrMat * modelMat);
     res.set_element(3, pos.x());
     res.set_element(7, pos.y());
@@ -94,9 +129,21 @@ class Obj3D {
     return res;
   }
 
-  std::vector<Vec3<I>> get_face_index() const { return faceIndices; }
+  std::vector<Vec3<I>>  get_face_indices() const { return faceIndices; }
   std::vector<Vec3<FP>> get_default_vertices() const { return vertices; }
   std::vector<Vec3<FP>> get_processed_vertices() const { return newVertices; }
+  std::vector<Vec3<FP>> get_normals() {
+    if (normals.empty()) {
+      if (newVertices.empty()) {
+        assert(vertices.size() % 3 == 0 &&
+               "cant use vertices if count != 0 (mod3), needed for build triangles.\nupdate vertices, or setup indices if you want use vertices again");
+        for (size_t i = 0; i < vertices.size(); i += 3) normals.push_back(normalize(cross(vertices[i + 2] - vertices[i], vertices[i + 1], vertices[i])));
+      } else
+        for (size_t i = 0; i < newVertices.size(); i += 3)
+          normals.push_back(normalize(cross(newVertices[i + 2] - newVertices[i], newVertices[i + 1], newVertices[i])));
+    }
+    return normals;
+  }
   // setter
   void update_vertices(std::vector<Vec3<FP>> vertices) {
     this->vertices = vertices;
@@ -107,9 +154,12 @@ class Obj3D {
     update_vertices();
   }
   void update_face_vertices(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> faceIndices) {
-    this->vertices = vertices;
+    this->vertices    = vertices;
     this->faceIndices = faceIndices;
     update_vertices();
   }
+
+ protected:
+  void set_model_matrix(const Mat3<FP> modelMat) { this->modelMat = modelMat; }
 };
 }  // namespace l3d

@@ -27,13 +27,13 @@
 
 class PNG {
  private:
-  std::string fileName;
-  std::ifstream input;
-  std::ofstream output;
-  png_structp pngPtr = nullptr;
-  png_infop infoPtr = nullptr;
-  int imageWidth = 0, imageHeight = 0;
-  png_byte imageColorType = 0, imageBitDepth = 8;
+  std::string           fileName;
+  std::ifstream         input;
+  std::ofstream         output;
+  png_structp           pngPtr     = nullptr;
+  png_infop             infoPtr    = nullptr;
+  int                   imageWidth = 0, imageHeight = 0;
+  png_byte              imageColorType = 0, imageBitDepth = 8;
   std::vector<png_byte> imageBuffer;
 
   static void png_write_callback(png_structp png, png_bytep data, png_size_t length) {
@@ -80,10 +80,10 @@ class PNG {
     png_set_read_fn(pngPtr, static_cast<void *>(&input), png_read_callback);
     png_read_info(pngPtr, infoPtr);
 
-    imageWidth = png_get_image_width(pngPtr, infoPtr);
-    imageHeight = png_get_image_height(pngPtr, infoPtr);
+    imageWidth     = png_get_image_width(pngPtr, infoPtr);
+    imageHeight    = png_get_image_height(pngPtr, infoPtr);
     imageColorType = png_get_color_type(pngPtr, infoPtr);
-    imageBitDepth = png_get_bit_depth(pngPtr, infoPtr);
+    imageBitDepth  = png_get_bit_depth(pngPtr, infoPtr);
 
     png_read_update_info(pngPtr, infoPtr);
 
@@ -99,7 +99,7 @@ class PNG {
   bool write() {
     if (pngPtr && infoPtr) {
       png_destroy_write_struct(&pngPtr, &infoPtr);
-      pngPtr = nullptr;
+      pngPtr  = nullptr;
       infoPtr = nullptr;
     }
 
@@ -129,10 +129,10 @@ class PNG {
   png_byte &pixel(int x, int y, int channel = 0) { return imageBuffer[(y * imageWidth + x) * get_channel_count() + channel]; }
 
   // Getters
-  int get_width() const { return imageWidth; }
-  int get_height() const { return imageHeight; }
-  png_byte get_color_type() const { return imageColorType; }
-  png_byte get_bit_depth() const { return imageBitDepth; }
+  int                          get_width() const { return imageWidth; }
+  int                          get_height() const { return imageHeight; }
+  png_byte                     get_color_type() const { return imageColorType; }
+  png_byte                     get_bit_depth() const { return imageBitDepth; }
   const std::vector<png_byte> &get_buffer() const { return imageBuffer; }
 
   // Setters

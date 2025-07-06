@@ -17,13 +17,11 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #define UNICODE
 #define _UNICODE
 
 #include <windows.h>
 #include <windowsx.h>
-
 
 void add_menus(HWND hwnd) {
   HMENU parrentMenus = CreateMenu();
@@ -41,11 +39,11 @@ LRESULT CALLBACK w_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
   const wchar_t CLASS_NAME[] = L"MyWindowClass";
 
-  WNDCLASS wc = {};
+  WNDCLASS wc      = {};
   wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
-  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wc.lpfnWndProc = w_proc;
-  wc.hInstance = hInstance;
+  wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+  wc.lpfnWndProc   = w_proc;
+  wc.hInstance     = hInstance;
   wc.lpszClassName = CLASS_NAME;
 
   RegisterClass(&wc);

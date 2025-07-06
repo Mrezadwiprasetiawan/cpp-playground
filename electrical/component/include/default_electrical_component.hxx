@@ -28,35 +28,33 @@
 namespace elc {
 template <typename T>
 struct node {
-  size_t n;
+  size_t                          n;
   std::vector<std::shared_ptr<T>> data, muatan, impedansi;
-  double timestep;
+  double                          timestep;
 
-  node(size_t n, double timestep = 1e-7)
-      : n(n), data(n), muatan(n), impedansi(n), timestep(timestep) {
+  node(size_t n, double timestep = 1e-7) : n(n), data(n), muatan(n), impedansi(n), timestep(timestep) {
     for (size_t i = 0; i < n; ++i) {
-      data[i] = std::make_shared<T>(0);
-      muatan[i] = std::make_shared<T>(0);
+      data[i]      = std::make_shared<T>(0);
+      muatan[i]    = std::make_shared<T>(0);
       impedansi[i] = std::make_shared<T>(1);
     }
   }
 
   virtual ~node() = default;
 
-  T& operator[](size_t i) { return this->data[i]; }
+  T&       operator[](size_t i) { return this->data[i]; }
   const T& operator[](size_t i) const { return this->data[i]; }
-  T& q(size_t i) { return *muatan[i]; }
+  T&       q(size_t i) { return *muatan[i]; }
   const T& q(size_t i) const { return *muatan[i]; }
 
   virtual void update_tegangan() {
-    for (size_t i = 0; i < n; ++i)
-      this->data[i] = (*muatan[i]) * (*impedansi[i]);
+    for (size_t i = 0; i < n; ++i) this->data[i] = (*muatan[i]) * (*impedansi[i]);
   }
 
   void connect(node<T>& other, size_t pin_this, size_t pin_other) {
     if (pin_this >= n || pin_other >= other.n) return;
-    data[pin_this] = other.data[pin_other];
-    muatan[pin_this] = other.muatan[pin_other];
+    data[pin_this]      = other.data[pin_other];
+    muatan[pin_this]    = other.muatan[pin_other];
     impedansi[pin_this] = other.impedansi[pin_other];
   }
 
@@ -66,31 +64,29 @@ struct node {
     for (size_t i = 0; i < iterations; ++i) {
       auto start = std::chrono::high_resolution_clock::now();
       update_tegangan();
-      auto end = std::chrono::high_resolution_clock::now();
-      double dur = std::chrono::duration<double>(end - start).count();
+      auto   end        = std::chrono::high_resolution_clock::now();
+      double dur        = std::chrono::duration<double>(end - start).count();
       double sleep_time = timestep - dur;
-      if (sleep_time > 0)
-        std::this_thread::sleep_for(std::chrono::duration<double>(sleep_time));
+      if (sleep_time > 0) std::this_thread::sleep_for(std::chrono::duration<double>(sleep_time));
     }
   }
 };
 
 template <typename T>
 struct kapasitor : node<T> {
-  T c;
+  T      c;
   double dt;
-  T i;
-  kapasitor(T c, double dt, double ts = 1e-7)
-      : node<T>(2, ts), c(c), dt(dt), i(0) {}
+  T      i;
+  kapasitor(T c, double dt, double ts = 1e-7) : node<T>(2, ts), c(c), dt(dt), i(0) {}
 
   void alirkan_arus(T iin) {
-    i = iin;
+    i           = iin;
     this->q(0) += i * dt;
     this->q(1) -= i * dt;
   }
 
   void update_tegangan() override {
-    T v = (this->q(0) - this->q(1)) / c;
+    T v           = (this->q(0) - this->q(1)) / c;
     this->data[0] = v;
     this->data[1] = -v;
   }
@@ -98,11 +94,10 @@ struct kapasitor : node<T> {
 
 template <typename T>
 struct induktor : node<T> {
-  T l;
+  T      l;
   double dt;
-  T i;
-  induktor(T l, double dt, double ts = 1e-7)
-      : node<T>(2, ts), l(l), dt(dt), i(0) {}
+  T      i;
+  induktor(T l, double dt, double ts = 1e-7) : node<T>(2, ts), l(l), dt(dt), i(0) {}
 
   void terapkan_tegangan(T v) { i += (v / l) * dt; }
 
@@ -118,7 +113,7 @@ struct resistor : node<T> {
   resistor(T r, double ts = 1e-7) : node<T>(2, ts), r(r) {}
 
   void update_tegangan() override {
-    T v = this->q(0) * r;
+    T v           = this->q(0) * r;
     this->data[0] = v;
     this->data[1] = 0;
   }
@@ -127,14 +122,13 @@ struct resistor : node<T> {
 template <typename T>
 struct transistor : node<T> {
   T beta, vth;
-  transistor(T beta, T vth, double ts = 1e-7)
-      : node<T>(3, ts), beta(beta), vth(vth) {}
+  transistor(T beta, T vth, double ts = 1e-7) : node<T>(3, ts), beta(beta), vth(vth) {}
 
   void update_tegangan() override {
-    T vbe = (this->data[1] - this->data[2]);
-    T ic = vbe > vth ? beta * (vbe - vth) : 0;
-    this->q(0) = ic;
-    this->q(2) = -ic;
+    T vbe         = (this->data[1] - this->data[2]);
+    T ic          = vbe > vth ? beta * (vbe - vth) : 0;
+    this->q(0)    = ic;
+    this->q(2)    = -ic;
     this->data[0] = ic;
     this->data[1] = vbe;
     this->data[2] = 0;
@@ -147,7 +141,7 @@ struct memristor : node<T> {
   memristor(T m, double ts = 1e-7) : node<T>(2, ts), m(m) {}
 
   void update_tegangan() override {
-    T v = m * this->q(0);
+    T v           = m * this->q(0);
     this->data[0] = v;
     this->data[1] = -v;
   }
@@ -159,8 +153,8 @@ struct dioda : node<T> {
   dioda(T i0, T vt, double ts = 1e-7) : node<T>(2, ts), i0(i0), vt(vt) {}
 
   void update_tegangan() override {
-    T iin = this->q(0);
-    T v = iin > 0 ? vt * std::log(iin / i0) : 0;
+    T iin         = this->q(0);
+    T v           = iin > 0 ? vt * std::log(iin / i0) : 0;
     this->data[0] = v;
     this->data[1] = 0;
   }

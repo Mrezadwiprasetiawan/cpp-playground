@@ -7,18 +7,19 @@
 
 namespace NN {
 
-template <std::floating_point FP> class FFN {
+template <std::floating_point FP>
+class FFN {
   std::vector<std::vector<FP>> win, wh1, wh2;
-  std::vector<FP> bin, bh1, bh2;
-  ACTIVATION_TYPE act_s[3];
-  LOSS_TYPE loss_t;
+  std::vector<FP>              bin, bh1, bh2;
+  ACTIVATION_TYPE              act_s[3];
+  LOSS_TYPE                    loss_t;
 
   FP epsilon = FP(1e-6);
-  FP eta = FP(1e-2);
-  FP loss = FP(0);
+  FP eta     = FP(1e-2);
+  FP loss    = FP(0);
 
-  std::random_device dev;
-  std::mt19937_64 gen;
+  std::random_device           dev;
+  std::mt19937_64              gen;
   std::normal_distribution<FP> dis;
 
   static inline FP activate(FP x, ACTIVATION_TYPE t) {
@@ -92,13 +93,13 @@ template <std::floating_point FP> class FFN {
     std::vector<std::vector<FP>> gWin(win.size(), std::vector<FP>(win[0].size(), FP(0)));
     std::vector<std::vector<FP>> gWh1(wh1.size(), std::vector<FP>(wh1[0].size(), FP(0)));
     std::vector<std::vector<FP>> gWh2(wh2.size(), std::vector<FP>(wh2[0].size(), FP(0)));
-    std::vector<FP> gBin(bin.size(), FP(0)), gBh1(bh1.size(), FP(0)), gBh2(bh2.size(), FP(0));
+    std::vector<FP>              gBin(bin.size(), FP(0)), gBh1(bh1.size(), FP(0)), gBh2(bh2.size(), FP(0));
 
     FP loss_sum = FP(0);
 
 #pragma omp parallel for reduction(+ : loss_sum)
     for (size_t b = 0; b < B; ++b) {
-      const auto& input = inputs[b];
+      const auto& input  = inputs[b];
       const auto& target = targets[b];
 
       std::vector<FP> h1(wh1.size());
@@ -128,8 +129,8 @@ template <std::floating_point FP> class FFN {
 
       std::vector<FP> delta_out(out.size());
       for (size_t i = 0; i < out.size(); ++i) {
-        FP dL = d_loss(loss_t, out[i], target[i], epsilon);
-        FP dact = d_activate(out[i], act_s[2], epsilon);
+        FP dL        = d_loss(loss_t, out[i], target[i], epsilon);
+        FP dact      = d_activate(out[i], act_s[2], epsilon);
         delta_out[i] = dL * dact;
       }
 
@@ -214,12 +215,12 @@ template <std::floating_point FP> class FFN {
     bh2.assign(ls[3], epsilon);
   }
 
-  FP get_loss() const { return loss; }
+  FP   get_loss() const { return loss; }
   void set_eta(FP lr) { eta = lr; }
   void set_epsilon(FP eps) { epsilon = eps; }
   void set_loss_type(LOSS_TYPE lt) { loss_t = lt; }
 
-  void train_batch(const std::vector<std::vector<FP>>& X, const std::vector<std::vector<FP>>& Y) { backward(X, Y); }
+  void            train_batch(const std::vector<std::vector<FP>>& X, const std::vector<std::vector<FP>>& Y) { backward(X, Y); }
   std::vector<FP> predict(const std::vector<FP>& x) { return forward(x); }
 };
 

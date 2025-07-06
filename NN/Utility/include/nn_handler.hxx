@@ -30,43 +30,42 @@
 
 #include "nn_objects.hxx"
 
-
 // currently just a placeholder
 namespace NN {
 enum GPU_MODE { cuda = 1, vulkan = 2, opencl = 4, metal = 8, NONE = 0 };
 template <std::floating_point FP>
 class NNHandler {
   inline const std::string engineName = "NO ENGINE", appName = "Neural Network Compute Layer";
-  Layer<FP> layer;
-  std::string compute_shader;
-  uint32_t *vulkan_spir_v;
-  COMPUTE_MODE mode;
-  int gpu_mode;
+  Layer<FP>                layer;
+  std::string              compute_shader;
+  uint32_t                *vulkan_spir_v;
+  COMPUTE_MODE             mode;
+  int                      gpu_mode;
 
   // vulkan section
-  vk::raii::Context context;
-  std::optional<vk::raii::Instance> instance;
+  vk::raii::Context                               context;
+  std::optional<vk::raii::Instance>               instance;
   std::optional<vk::raii::DebugUtilsMessengerEXT> debugMessenger;
 
-  vk::PhysicalDevice physicalDevice{nullptr};
+  vk::PhysicalDevice              physicalDevice{nullptr};
   std::optional<vk::raii::Device> device;
-  vk::Queue computeQueue{nullptr};
-  uint32_t computeQueueFamilyIndex = 0;
+  vk::Queue                       computeQueue{nullptr};
+  uint32_t                        computeQueueFamilyIndex = 0;
 
   std::optional<vk::raii::CommandPool> commandPool;
-  std::vector<vk::CommandBuffer> commandBuffers;
+  std::vector<vk::CommandBuffer>       commandBuffers;
 
   std::optional<vk::raii::PipelineLayout> pipelineLayout;
-  std::optional<vk::raii::Pipeline> computePipeline;
+  std::optional<vk::raii::Pipeline>       computePipeline;
 
   std::optional<vk::raii::DescriptorSetLayout> descriptorSetLayout;
-  std::optional<vk::raii::DescriptorPool> descriptorPool;
-  std::vector<vk::DescriptorSet> descriptorSets;
+  std::optional<vk::raii::DescriptorPool>      descriptorPool;
+  std::vector<vk::DescriptorSet>               descriptorSets;
 
-  std::optional<vk::raii::Buffer> inputBuffer;
+  std::optional<vk::raii::Buffer>       inputBuffer;
   std::optional<vk::raii::DeviceMemory> inputBufferMemory;
 
-  std::optional<vk::raii::Buffer> outputBuffer;
+  std::optional<vk::raii::Buffer>       outputBuffer;
   std::optional<vk::raii::DeviceMemory> outputBufferMemory;
 
   std::optional<vk::raii::Fence> computeFence;
@@ -127,7 +126,7 @@ class NNHandler {
     if (gpu_mode & GPU_MODE::vulkan) {
       if (!instance.has_value()) {
         // for safety using default available api version
-        const uint32_t apiVers = enumerateInstanceVersion();
+        const uint32_t      apiVers = enumerateInstanceVersion();
         vk::ApplicationInfo appInfo{engineName, 1, appName, apiVers};
         instance.emplace(vk::createInstance(context, appInfo));
       }
@@ -141,13 +140,13 @@ class NNHandler {
       // create device
       if (!device.has_value()) {
         vector<::QueueFamilyProperties> queueFamProps = physDev.getQueueFamilyProperties();
-        auto queueFamProp =
+        auto                            queueFamProp =
             find_if(queueFamProps.begin(), queueFamProps.end(), [](QueueFamilyProperties &qFProp) { return qFProp.queueFlags & ::QueueFlagBits::eCompute; });
-        computeQueueFamilyIndex = std::distance(queueFamProps.begin(), queueFamProp);
-        const float priorities = 1.0;
+        computeQueueFamilyIndex          = std::distance(queueFamProps.begin(), queueFamProp);
+        const float           priorities = 1.0;
         DeviceQueueCreateInfo devQueueInfo(DeviceQueueCreateFlags(), computeQueueFamilyIndex, 1, &priorities);
-        DeviceCreateInfo devInfo(DeviceCreateFlags(), devQueueInfo);
-        Device dev = physDev.createDevice(devInfo);
+        DeviceCreateInfo      devInfo(DeviceCreateFlags(), devQueueInfo);
+        Device                dev = physDev.createDevice(devInfo);
       }
 
       // create buffer and fill

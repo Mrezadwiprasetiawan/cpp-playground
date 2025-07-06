@@ -13,9 +13,9 @@ int main(int argc, char** argv) {
   QSurfaceFormat::setDefaultFormat(fmt);
 
   // Ambil ukuran layar utama
-  QScreen* screen = QGuiApplication::primaryScreen();
-  int screenWidth = screen->geometry().width();
-  int screenHeight = screen->geometry().height();
+  QScreen* screen       = QGuiApplication::primaryScreen();
+  int      screenWidth  = screen->geometry().width();
+  int      screenHeight = screen->geometry().height();
 
   // Buat window dengan ukuran full screen (atau bisa ¾ layar)
   GLwidget w;
