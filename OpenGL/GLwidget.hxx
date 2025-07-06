@@ -1,12 +1,11 @@
 #pragma once
-#include <qquaternion.h>
-#include <qtimer.h>
-#include <qvectornd.h>
-
 #include <QMatrix4x4>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
+#include <QQuaternion>
+#include <QTimer>
+#include <QVector>
 
 // this is just template from my past android gles java playground converted to qt cpp playgrond, i need to remember how exactly the calculation work
 class GLwidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
