@@ -21,7 +21,7 @@
 #include <ios>
 #include <iostream>
 #include <matrix.hxx>
-#include <obj3d.hxx>
+#include <object.hxx>
 #include <type_traits>
 #include <vec.hxx>
 
@@ -104,14 +104,14 @@ int main() {
   cout << "test mat3 ke mat 4 dari m3\t:" << endl;
   print(mat3_to_mat4(m3), 1);
   cout << "Matrix euler dengan 0,1,0\t:" << endl;
-  print(l3d::EULER_ROTATION_MATRIX<float>({0, 1, 0}, l3d::EULER_ROTATION_TYPE::XYZ), 1);
+  print(Linear::EULER_ROTATION_MATRIX<float>({0, 1, 0}, l3d::EULER_ROTATION_TYPE::XYZ), 1);
   cout << "Matrix quaternion dengan 0,1,0 dan degree = pi \t:" << endl;
-  print(l3d::QUATERNION_MATRIX<float>({0, 1, 0}, M_PI), 1);
+  print(Linear::QUATERNION_MATRIX<float>({0, 1, 0}, M_PI), 1);
 
   cout << "Test obj3d\t:" << endl;
   vector<Linear::Vec3f>       pos{{-1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   vector<Linear::Vec3<short>> face{{0, 1, 2}};
-  l3d::Obj3D                  obj(pos, face);
+  l3d::Object3D               obj(pos, face);
   // rotasi pertama sebenernya ga ada bedanya global dan lokal
   obj.rotate_global({0, 1, 0}, M_PI / 2);
   obj.translate_local({0, 0, 1});

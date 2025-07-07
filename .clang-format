@@ -23,7 +23,7 @@ AlignConsecutiveDeclarations:
   AcrossComments: false
   AlignCompound: true
   AlignFunctionPointers: true
-  PadOperators: false
+  PadOperators: true
 AlignConsecutiveMacros:
   Enabled: true
   AcrossEmptyLines: false

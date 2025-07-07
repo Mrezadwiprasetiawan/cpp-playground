@@ -248,6 +248,17 @@ Mat<T, 4> mat3_to_mat4(const Mat<T, 3> &m) {
   return Mat<T, 4>(res_arr);
 }
 
+// untuk trim matrix 4×4 ke 3×3
+template <typename T>
+Mat<T, 3> mat4_to_mat3(const Mat<T, 4> &m) {
+  T res_arr[3 * 3];
+  for (int i = 0; i < 9; ++i) {
+    if ((i & 3) == 2 || (i >> 2) == 2) res_arr[i] = 0;  // menghilangkan kolom dan baris ke-3
+    else res_arr[i] = m[i >> 2][i & 3];
+  }
+  return Mat<T, 3>(res_arr);
+}
+
 /*operasi matriks 4×4 * 3×3
  * rubah dulu yang 3×3 ke 4×4 dengan menambahkan komponen w
  */
