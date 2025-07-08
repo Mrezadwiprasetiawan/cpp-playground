@@ -101,9 +101,8 @@ class AbstractObject {
     assert(src.size() % 3 == 0 && "Need a multiple of 3 vertices to build triangles.");
     if (!normals.empty() || normals.size() == src.size()) return normals;
     normals.clear();
-    Mat3<FP> normalMat = QCurrentRotationMatrix;
     for (size_t i = 0; i < src.size(); i += 3) {
-      Vec3<FP> n = normalize(normalMat * cross(src[i + 1] - src[i], src[i + 2] - src[i]));
+      Vec3<FP> n = normalize(cross(src[i + 1] - src[i], src[i + 2] - src[i]));
       normals.push_back(n);
       normals.push_back(n);
       normals.push_back(n);
