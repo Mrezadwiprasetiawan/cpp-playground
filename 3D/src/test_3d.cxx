@@ -48,11 +48,13 @@ void print(const Linear::Mat<T, N> &m, int n_indent) {
   cout << fixed << setprecision(is_float ? 6 : 15) << endl;
   std::string indent = "";
   for (int i = 0; i < n_indent; ++i) indent += "\t";
-  for (int i = 0; i < N; ++i) {
+
+  for (int row = 0; row < N; ++row) {
     cout << indent;
-    for (int j = 0; j < N; ++j) cout << m[j][i] << "\t";
+    for (int col = 0; col < N; ++col) cout << m[row][col] << "\t";
     cout << endl;
   }
+
   cout.copyfmt(oldState);
   cout << endl;
 }

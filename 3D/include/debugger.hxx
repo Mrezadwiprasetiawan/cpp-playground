@@ -27,22 +27,22 @@ class Debugger {
       std::cout << "== Object Name: " << name << " ==\n";
 
       std::cout << "Vertices:\n";
-      for (const auto& vertex : obj.get_default_vertices()) std::cout << "\t" << vertex.x() << ", " << vertex.y() << ", " << vertex.z() << "\n";
+      for (const auto& vertex : obj.get_default_vertices()) std::cout << "\t" << vertex.x() << "\t" << vertex.y() << "\t" << vertex.z() << "\n";
 
       std::cout << "Processed Vertices:\n";
-      for (const auto& vertex : obj.get_processed_vertices()) std::cout << "\t" << vertex.x() << ", " << vertex.y() << ", " << vertex.z() << "\n";
+      for (const auto& vertex : obj.get_processed_vertices()) std::cout << "\t" << vertex.x() << "\t" << vertex.y() << "\t" << vertex.z() << "\n";
 
       std::cout << "Face Indices:\n";
-      for (const auto& face : obj.get_face_indices()) std::cout << "\t" << face.x() << ", " << face.y() << ", " << face.z() << "\n";
+      for (const auto& face : obj.get_face_indices()) std::cout << "\t" << face.x() << "\t" << face.y() << "\t" << face.z() << "\n";
 
       std::cout << "Normals:\n";
-      for (const auto& normal : obj.get_normals()) std::cout << "\t" << normal.x() << ", " << normal.y() << ", " << normal.z() << "\n";
+      for (const auto& normal : obj.get_normals()) std::cout << "\t" << normal.x() << "\t" << normal.y() << "\t" << normal.z() << "\n";
 
       std::cout << "Rotation Matrix:\n";
       for (int i = 0; i < 3; ++i) {
         std::cout << "\t";
         Vec3<FP> row = obj.get_rotation_matrix()[i];
-        std::cout << row.x() << ", " << row.y() << ", " << row.z() << "\n";
+        std::cout << row.x() << "\t" << row.y() << "\t" << row.z() << "\n";
       }
 
       std::cout << "Model Matrix:\n";
@@ -50,7 +50,7 @@ class Debugger {
       for (int i = 0; i < 4; ++i) {
         std::cout << "\t";
         Vec4<FP> row = model[i];
-        std::cout << row.x() << ", " << row.y() << ", " << row.z() << ", " << row.w() << "\n";
+        std::cout << row.x() << "\t" << row.y() << "\t" << row.z() << "\t" << row.w() << "\n";
       }
 
       std::cout << "\n========================================\n";

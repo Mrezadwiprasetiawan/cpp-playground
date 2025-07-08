@@ -97,14 +97,16 @@ class AbstractObject {
   std::vector<Vec3<FP>> get_processed_vertices() const { return newVertices; }
   // @return normals of the processed vertices, if not setted, will be calculated from processed vertices
   std::vector<Vec3<FP>> get_normals() const {
-    if (normals.empty()) {
-      if (newVertices.empty()) {
-        assert(vertices.size() % 3 == 0 &&
-               "cant use vertices if count != 0 (mod3), needed for build triangles.\nupdate vertices, or setup indices if you want use vertices again");
-        for (size_t i = 0; i < vertices.size(); i += 3) normals.push_back(normalize(cross(vertices[i + 2] - vertices[i], vertices[i + 1] - vertices[i])));
-      } else
-        for (size_t i = 0; i < newVertices.size(); i += 3)
-          normals.push_back(normalize(cross(newVertices[i + 2] - newVertices[i], newVertices[i + 1] - newVertices[i])));
+    const auto& src = newVertices.empty() ? vertices : newVertices;
+    assert(src.size() % 3 == 0 && "Need a multiple of 3 vertices to build triangles.");
+    if (!normals.empty() || normals.size() == src.size()) return normals;
+    normals.clear();
+    Mat3<FP> normalMat = QCurrentRotationMatrix;
+    for (size_t i = 0; i < src.size(); i += 3) {
+      Vec3<FP> n = normalize(normalMat * cross(src[i + 1] - src[i], src[i + 2] - src[i]));
+      normals.push_back(n);
+      normals.push_back(n);
+      normals.push_back(n);
     }
     return normals;
   }
