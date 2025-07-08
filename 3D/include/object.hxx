@@ -1,12 +1,16 @@
 #pragma once
 
 #include <concepts>
+#include <cstddef>
 #include <matrix.hxx>
 #include <vec.hxx>
 
 namespace l3d {
 using namespace Linear;
 #define TEMPLATE_OBJ template <std::floating_point FP, std::integral I>
+
+TEMPLATE_OBJ
+class Debugger;  // forward declaration
 
 /** Template class for an Interface of 3D Object
  * This class is used to represent an object in 3D space, with translation and rotation capabilities.
@@ -16,10 +20,12 @@ using namespace Linear;
  */
 TEMPLATE_OBJ
 class AbstractObject {
-  Mat<FP, 3>            modelMat, QCurrentRotationMatrix;
-  Vec3<FP>              pos;
-  std::vector<Vec3<FP>> vertices, newVertices, normals;
-  std::vector<Vec3<I>>  faceIndices;
+  Mat<FP, 3>                    modelMat, QCurrentRotationMatrix;
+  Vec3<FP>                      pos;
+  std::vector<Vec3<FP>>         vertices, newVertices, texture;
+  mutable std::vector<Vec3<FP>> normals;  // i want this can be evaluated after this method call
+  std::vector<Vec3<I>>          faceIndices;
+  friend class Debugger<FP, I>;
 
   // update vertices
   void update_vertices() {
@@ -90,18 +96,19 @@ class AbstractObject {
   // @return processed vertices, vertices that has been processed by faceIndices
   std::vector<Vec3<FP>> get_processed_vertices() const { return newVertices; }
   // @return normals of the processed vertices, if not setted, will be calculated from processed vertices
-  std::vector<Vec3<FP>> get_normals() {
+  std::vector<Vec3<FP>> get_normals() const {
     if (normals.empty()) {
       if (newVertices.empty()) {
         assert(vertices.size() % 3 == 0 &&
                "cant use vertices if count != 0 (mod3), needed for build triangles.\nupdate vertices, or setup indices if you want use vertices again");
-        for (size_t i = 0; i < vertices.size(); i += 3) normals.push_back(normalize(cross(vertices[i + 2] - vertices[i], vertices[i + 1], vertices[i])));
+        for (size_t i = 0; i < vertices.size(); i += 3) normals.push_back(normalize(cross(vertices[i + 2] - vertices[i], vertices[i + 1] - vertices[i])));
       } else
         for (size_t i = 0; i < newVertices.size(); i += 3)
-          normals.push_back(normalize(cross(newVertices[i + 2] - newVertices[i], newVertices[i + 1], newVertices[i])));
+          normals.push_back(normalize(cross(newVertices[i + 2] - newVertices[i], newVertices[i + 1] - newVertices[i])));
     }
     return normals;
   }
+
   /** set vertices and face indices
    * @param vertices vector of vertices that you want to set
    * @note this will update the vertices and face indices, and also update the processed vertices
@@ -133,11 +140,15 @@ class AbstractObject {
     update_vertices();
   }
 
-  ~AbstractObject() = default;
+  // this function just a starting point cause i dont implement other support
+  void set_texture(std::vector<Vec3<FP>> texture) { this->texture = texture; }
+
+  AbstractObject()                                        = default;
+  AbstractObject(const AbstractObject<FP, I>&)            = default;
+  AbstractObject& operator=(const AbstractObject<FP, I>&) = default;
+  ~AbstractObject()                                       = default;
 
  protected:
-  // menghindari copy constructor
-  explicit AbstractObject(const AbstractObject&) = delete;
   /**
    * otomatis memperbarui vertices tapi originalnya tidak dihapus agar lebih
    * mudah diambil nanti
@@ -171,6 +182,8 @@ class AbstractObject {
     for (auto it = vertices.begin(); it != vertices.end(); it += 3) this->vertices.push_back({*it, *(it + 1), *(it + 2)});
   }
   void set_model_matrix(const Mat3<FP> modelMat) { this->modelMat = modelMat; }
+
+  std::vector<Vec3<FP>>& get_texture() { return this->texture; }
 
  public:
   // move constuctor
@@ -221,8 +234,18 @@ class Camera {
     center += offset;
   }
 
+  /* this function will move the focus of the camera
+   * @param offset offset to move the focus, in global coordinates
+   * @note this will not change the eye position, only the center position
+   * @note this is useful for moving the focus of the camera without changing the eye position
+   */
   void move_focus_global(const Vec3<FP>& offset) { center += offset; }
 
+  /** Move the focus of the camera in local coordinates
+   * @param offset offset to move the focus, in local coordinates
+   * @note this will not change the eye position, only the center position
+   * @note this is useful for moving the focus of the camera without changing the eye position
+   */
   void move_focus_local(const Vec3<FP>& offset) {
     Vec3<FP> dir   = normalize(center - eye);       // forward
     Vec3<FP> right = normalize(cross(dir, up));     // right
@@ -281,27 +304,35 @@ class Object2D : public AbstractObject<FP, I> {
 
  public:
   Object2D()                = delete;
-  Object2D(const Object2D&) = delete;
-  explicit Object2D(FP pos, FP width, FP height)
+  Object2D(const Object2D&) = default;
+  /* pos at left top*/
+  explicit Object2D(Vec3<FP> pos, FP width, FP height)
       : AbstractObject<FP, I>({{0, 0, 0}, {width, 0, 0}, {width, height, 0}, {0, height, 0}}, {{0, 1, 2}, {2, 3, 0}}) {
-    AbstractObject<FP, I>::translate_global({pos, pos, 0});
+    AbstractObject<FP, I>::translate_global({pos[0], pos[1], 0});
   }
 
+  /* bind to the camera so the object will not be moving while camera moved
+   * @param camera Camera object that will be used to bind the object
+   * @note this will set the model matrix to the inverse of the camera view matrix multiplied by the current model matrix
+   * @note this is useful for 2D objects that should not move while the camera is moving, like UI elements
+   */
   void bind_to_camera(const Camera<FP, I>& camera) {
     AbstractObject<FP, I>::set_model_matrix(camera.get_view_matrix().inverse() * AbstractObject<FP, I>::get_model_matrix());
   }
 };
 
+/* This is the main class for 3D object
+ */
 TEMPLATE_OBJ
 class Object3D : public AbstractObject<FP, I> {
  public:
-  Object3D()                = delete;
-  Object3D(const Object3D&) = delete;
+  Object3D()                = default;
+  Object3D(const Object3D&) = default;
   explicit Object3D(std::vector<Vec3<FP>> vertices, std::vector<Vec3<I>> faceIndices) : AbstractObject<FP, I>(vertices, faceIndices) {}
   explicit Object3D(std::vector<Vec3<FP>> vertices) : AbstractObject<FP, I>(vertices) {}
   explicit Object3D(const std::initializer_list<FP>& vertices) : AbstractObject<FP, I>(vertices) {}
-  explicit Object3D(Object3D&& other) noexcept : AbstractObject<FP, I>(std::move(other)) {}
 
+  explicit Object3D(Object3D&& other) noexcept : AbstractObject<FP, I>(std::move(other)) {}
   Object3D& operator=(Object3D&& other) noexcept {
     AbstractObject<FP, I>::operator=(std::move(other));
     return *this;

@@ -40,10 +40,13 @@ class Mat {
  public:
   Mat() : vals() {}
 
+  // copy constructor so that we can copy the matrix dirrectly
+  Mat(const Mat &other) = default;
+  // copy with assigment operator so that we can copy the matrix without explicitly loopi through the data
+  Mat &operator=(const Mat &other) = default;
+
   Mat(T (&v)[N * N]) { set_elements(v); }
-
   Mat(const std::initializer_list<T> &v) { set_elements(v); }
-
   Mat(T (&v)[N][N]) {
     for (int i = 0; i < N; ++i)
       for (int j = 0; j < N; ++j) vals[N * i + j] = v[i][j];

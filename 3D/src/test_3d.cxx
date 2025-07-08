@@ -17,6 +17,7 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <debugger.hxx>
 #include <iomanip>
 #include <ios>
 #include <iostream>
@@ -111,16 +112,13 @@ int main() {
   cout << "Test obj3d\t:" << endl;
   vector<Linear::Vec3f>       pos{{-1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   vector<Linear::Vec3<short>> face{{0, 1, 2}};
-  l3d::Object3D               obj(pos, face);
+  l3d::Object3D<float, short> obj(pos, face);
   // rotasi pertama sebenernya ga ada bedanya global dan lokal
   obj.rotate_global({0, 1, 0}, M_PI / 2);
   obj.translate_local({0, 0, 1});
-  cout << "\ttranslation\t:" << endl;
-  print(obj.get_translation(), 2);
-  cout << "\trotation Matrix\t:";
-  print(obj.get_rotation_matrix(), 2);
-  cout << "position object\t:";
-  print(obj.get_model_matrix(), 2);
+  l3d::Debugger<float, short> debugger;
+  debugger.add_object("obj1", obj);
+  debugger.run();
 
   return 0;
 }

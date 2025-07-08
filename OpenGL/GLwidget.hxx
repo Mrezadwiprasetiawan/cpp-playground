@@ -149,7 +149,7 @@ class GLwidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
     shader.setUniformValue("LightPos", QVector3D(0, 0, 3.0f));
     shader.setUniformValue("ViewPos", QVector3D(1.5f, 1.5f, 2.0f));
     shader.setUniformValue("LightCol", QVector3D(0.8f, 0.8f, 0.8f));
-    shader.setUniformValue("ObjectCol", QVector3D(0.5, 0.5f, 0.31f));  // coklat oranye
+    shader.setUniformValue("ObjectCol", QVector3D(1, 0.5f, 0.31f));
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
