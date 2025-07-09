@@ -27,6 +27,7 @@ int main() {
   BasicFFN<double, 1, 1024, 1024, 1> ffn;
   ffn.set_learning_rate(1e-3);
   ffn.set_epsilon(1e-12);
+  ffn.set_debug_mode(true);
   std::cout << std::fixed << std::setprecision(32) << std::endl;
   double inputcond[1]{(double)rand() / RAND_MAX};
   double targetcond[1]{std::sin(inputcond[0])};
