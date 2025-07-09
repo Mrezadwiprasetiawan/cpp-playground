@@ -24,12 +24,12 @@
 int main() {
   using namespace NN;
   using namespace std;
-  BasicFFN<double, 1, 12, 12, 1> ffn;
+  BasicFFN<double, 1, 1024, 1024, 1> ffn;
   ffn.set_learning_rate(1e-3);
   ffn.set_epsilon(1e-12);
   std::cout << std::fixed << std::setprecision(32) << std::endl;
-  double inputcond[2]{(double)rand() / RAND_MAX, (double)rand() / RAND_MAX};
-  double targetcond[1]{inputcond[0] * inputcond[1]};
+  double inputcond[1]{(double)rand() / RAND_MAX};
+  double targetcond[1]{std::sin(inputcond[0])};
   while (std::abs(ffn.forward(inputcond)[0] - targetcond[0]) > 1e-3) {
     double inputData[1]{(rand() / (double)RAND_MAX)};
     double targetData[1]{std::sin(inputData[0])};
@@ -39,8 +39,8 @@ int main() {
     std::cout << "realforward\t" << *ffn.forward(inputData) << "\n\n";
   }
   double input[2]{rand() / (double)RAND_MAX, rand() / (double)RAND_MAX};
-  std::cout << "inputcond\t" << inputcond[0] << "\t" << inputcond[1] << std::endl;
-  std::cout << "targetcond\t" << inputcond[0] * inputcond[1] << std::endl;
+  std::cout << "inputcond\t" << inputcond[0] << std::endl;
+  std::cout << "targetcond\t" << targetcond[0] << std::endl;
   std::cout << "realforwardcond\t" << ffn.forward(inputcond)[0] << std::endl;
   std::cout << "input\t" << input[0] << "\t" << input[1] << std::endl;
   std::cout << "target\t" << input[0] * input[1] << std::endl;
