@@ -28,7 +28,7 @@ add_subdirectory(image)
 add_subdirectory(discrete)
 
 # temporary exclude these subprojects theres so much error XD
-# add_subdirectory(NN)
+add_subdirectory(NN)
 if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(OpenMP_CXX_FLAGS "-fopenmp")
   set(OpenMP_CXX_LIB_NAMES "libomp")

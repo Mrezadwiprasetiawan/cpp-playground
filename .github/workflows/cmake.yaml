@@ -163,6 +163,9 @@ jobs:
       working-directory: build
       run: ctest -C Release --output-on-failure
 
+    - name: run basicFFN
+      run: ./bin/basicFFN
+
 #    - name: Skip tests (Android)
 #      if: matrix.target == 'android'
 #      run: echo "Skipping tests for Android target"

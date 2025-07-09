@@ -20,34 +20,30 @@
 #include <cmath>
 #include <ffn.hxx>
 #include <iostream>
-#include <numbers>
 
 int main() {
   using namespace NN;
   using namespace std;
-  BasicFFN<double, 1, 64, 64, 1> ffn;
-  // ffn.set_learning_rate(1e-4);
-
-  // ffn.set_epsilon(1e-12) recommended for double
-
-  double input[100][1];
-  double x = 0.0f;
-  cout << "init data" << endl;
-  for (int e = 0; e < 100; ++e) {
-    x = 0;
-    for (int i = 0; i < 100; x += 1e-2, ++i) {
-      input[i][0]   = x;
-      double sinx[] = {std::sin(x)};
-      cout << "train ke" << i << endl;
-      ffn.backward(input[i], sinx);
-    }
+  BasicFFN<double, 1, 12, 12, 1> ffn;
+  ffn.set_learning_rate(1e-3);
+  ffn.set_epsilon(1e-12);
+  std::cout << std::fixed << std::setprecision(32) << std::endl;
+  double inputcond[2]{(double)rand() / RAND_MAX, (double)rand() / RAND_MAX};
+  double targetcond[1]{inputcond[0] * inputcond[1]};
+  while (std::abs(ffn.forward(inputcond)[0] - targetcond[0]) > 1e-3) {
+    double inputData[1]{(rand() / (double)RAND_MAX)};
+    double targetData[1]{std::sin(inputData[0])};
+    ffn.backward(inputData, targetData);
+    std::cout << "inputData\t" << inputData[0] << std::endl;
+    std::cout << "targetData\t" << targetData[0] << std::endl;
+    std::cout << "realforward\t" << *ffn.forward(inputData) << "\n\n";
   }
-
-  cout << "after trains" << endl;
-
-  for (int i = 0; i < 100; ++i) {
-    cout << "Result for input " << input[i][0] << " = " << ffn.forward(input[i])[0] << endl;
-    cout << "Real result = " << std::sin(input[i][0]) << endl;
-  }
+  double input[2]{rand() / (double)RAND_MAX, rand() / (double)RAND_MAX};
+  std::cout << "inputcond\t" << inputcond[0] << "\t" << inputcond[1] << std::endl;
+  std::cout << "targetcond\t" << inputcond[0] * inputcond[1] << std::endl;
+  std::cout << "realforwardcond\t" << ffn.forward(inputcond)[0] << std::endl;
+  std::cout << "input\t" << input[0] << "\t" << input[1] << std::endl;
+  std::cout << "target\t" << input[0] * input[1] << std::endl;
+  std::cout << *ffn.forward(input) << std::endl;
   return 0;
 }

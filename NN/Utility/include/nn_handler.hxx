@@ -35,12 +35,12 @@ namespace NN {
 enum GPU_MODE { cuda = 1, vulkan = 2, opencl = 4, metal = 8, NONE = 0 };
 template <std::floating_point FP>
 class NNHandler {
-  inline const std::string engineName = "NO ENGINE", appName = "Neural Network Compute Layer";
-  Layer<FP>                layer;
-  std::string              compute_shader;
-  uint32_t                *vulkan_spir_v;
-  COMPUTE_MODE             mode;
-  int                      gpu_mode;
+  const std::string engineName = "NO ENGINE", appName = "Neural Network Compute Layer";
+  Layer<FP>         layer;
+  std::string       compute_shader;
+  uint32_t         *vulkan_spir_v;
+  COMPUTE_MODE      mode;
+  int               gpu_mode;
 
   // vulkan section
   vk::raii::Context                               context;
@@ -84,7 +84,7 @@ class NNHandler {
 
  public:
   explicit NNHandler(COMPUTE_MODE mode) : mode(mode) {
-    if (mode == COMPUTE_CPU) return;
+    if (mode == COMPUTE_MODE::COMPUTE_CPU) return;
     gpu_mode = validate_gpu_mode();
     assert(gpu_mode != GPU_MODE::NONE && "No GPU mode available, please check your drivers or use CPU mode.");
   }

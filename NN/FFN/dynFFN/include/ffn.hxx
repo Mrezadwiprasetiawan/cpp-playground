@@ -14,9 +14,9 @@ class FFN {
   ACTIVATION_TYPE              act_s[3];
   LOSS_TYPE                    loss_t;
 
-  FP epsilon = FP(1e-6);
-  FP eta     = FP(1e-2);
-  FP loss    = FP(0);
+  inline static FP epsilon = FP(1e-6);
+  FP               eta     = FP(1e-2);
+  FP               loss_   = FP(0);
 
   std::random_device           dev;
   std::mt19937_64              gen;
@@ -185,13 +185,13 @@ class FFN {
 #pragma omp parallel for
     for (size_t j = 0; j < bh2.size(); ++j) bh2[j] -= eta * gBh2[j] * invB;
 
-    loss = loss_sum * invB;
+    loss_ = loss_sum * invB;
   }
 
  public:
   FFN(size_t (&ls)[4], ACTIVATION_TYPE (&acts)[3], LOSS_TYPE lt = LOSS_TYPE::MSE) : loss_t(lt) {
-    std::copy_n(acts, 3, act_s);
-    gen.seed(dev);
+    std::copy(acts, acts + 2, act_s);
+    gen.seed(dev.entropy());
 
     dis.param({0, std::sqrt(ls[0])});
     win.resize(ls[0], std::vector<FP>(ls[1]));
@@ -215,7 +215,7 @@ class FFN {
     bh2.assign(ls[3], epsilon);
   }
 
-  FP   get_loss() const { return loss; }
+  FP   get_loss() const { return loss_; }
   void set_eta(FP lr) { eta = lr; }
   void set_epsilon(FP eps) { epsilon = eps; }
   void set_loss_type(LOSS_TYPE lt) { loss_t = lt; }
