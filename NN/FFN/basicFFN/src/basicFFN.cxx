@@ -45,12 +45,12 @@ int main(int argc, const char **argv) {
     std::cout << "realforward\t" << *ffn.forward(inputData) << "\n\n";
     ffn.save_weights();
   }
-  double input[2]{rand() / (double)RAND_MAX, rand() / (double)RAND_MAX};
+  double input[]{rand() / (double)RAND_MAX};
   std::cout << "inputcond\t" << inputcond[0] << std::endl;
   std::cout << "targetcond\t" << targetcond[0] << std::endl;
   std::cout << "realforwardcond\t" << ffn.forward(inputcond)[0] << std::endl;
-  std::cout << "input\t" << input[0] << "\t" << input[1] << std::endl;
-  std::cout << "target\t" << input[0] * input[1] << std::endl;
+  std::cout << "input\t" << input[0] << std::endl;
+  std::cout << "target\t" << std::sin(input[0]) << std::endl;
   std::cout << *ffn.forward(input) << std::endl;
   return 0;
 }
