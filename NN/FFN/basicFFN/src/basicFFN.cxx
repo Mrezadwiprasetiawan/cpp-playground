@@ -19,9 +19,9 @@
 
 #include <cmath>
 #include <cstring>
+#include <ctime>
 #include <ffn.hxx>
 #include <iostream>
-#include <map>
 #include <string>
 
 int main(int argc, const char **argv) {
@@ -33,6 +33,7 @@ int main(int argc, const char **argv) {
   ffn.set_weights_filename("wb.bin");
   // ffn.set_debug_mode(true);
   std::cout << std::fixed << std::setprecision(32) << std::endl;
+  srand(time(0));
   double inputcond[1]{(double)rand() / RAND_MAX};
   double targetcond[1]{std::sin(inputcond[0])};
   while (std::abs(ffn.forward(inputcond)[0] - targetcond[0]) > 1e-3) {
