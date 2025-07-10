@@ -63,7 +63,7 @@ class BasicFFN {
   template <size_t inSize, size_t outSize>
   void init_layer(FP k, FP **w, FP *b) {
     // setup normal distribution
-    std::uniform_real_distribution<FP> dis(-1, 1);
+    std::normal_distribution<FP> dis(0, std::sqrt(2 / k));
 
     for (size_t i = 0; i < outSize; ++i) {
       for (size_t j = 0; j < inSize; ++j) w[j][i] = dis(gen);

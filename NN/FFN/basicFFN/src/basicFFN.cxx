@@ -18,16 +18,20 @@
 */
 
 #include <cmath>
+#include <cstring>
 #include <ffn.hxx>
 #include <iostream>
+#include <map>
+#include <string>
 
-int main() {
+int main(int argc, const char **argv) {
   using namespace NN;
   using namespace std;
   BasicFFN<double, 1, 1024, 1024, 1> ffn;
   ffn.set_learning_rate(1e-3);
   ffn.set_epsilon(1e-12);
-  ffn.set_debug_mode(true);
+  ffn.set_weights_filename("wb.bin");
+  // ffn.set_debug_mode(true);
   std::cout << std::fixed << std::setprecision(32) << std::endl;
   double inputcond[1]{(double)rand() / RAND_MAX};
   double targetcond[1]{std::sin(inputcond[0])};
@@ -38,6 +42,7 @@ int main() {
     std::cout << "inputData\t" << inputData[0] << std::endl;
     std::cout << "targetData\t" << targetData[0] << std::endl;
     std::cout << "realforward\t" << *ffn.forward(inputData) << "\n\n";
+    ffn.save_weights();
   }
   double input[2]{rand() / (double)RAND_MAX, rand() / (double)RAND_MAX};
   std::cout << "inputcond\t" << inputcond[0] << std::endl;
