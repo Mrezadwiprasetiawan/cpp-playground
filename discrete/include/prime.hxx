@@ -124,8 +124,8 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
 
   void clear_cache() noexcept {
     lastResults.clear();
-    limit      = 0;
-    lastLimit  = 0;
+    lastSize  = 0;
+    lastLimit = 0;
   }
 };
 }  // namespace Discrete
