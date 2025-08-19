@@ -121,5 +121,11 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
   }
 
   static int max_thread() noexcept { return Prime::maxThread; }
+
+  void clear_cache() noexcept {
+    lastResults.clear();
+    limit      = 0;
+    lastLimit  = 0;
+  }
 };
 }  // namespace Discrete
