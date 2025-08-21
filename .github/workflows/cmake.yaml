@@ -163,6 +163,9 @@ jobs:
       working-directory: build
       run: ctest -C Release --output-on-failure
 
+
+    - name: run test collatz matrices(3d XD)
+      run:  ./bin/collatz highestOddStarter 1000 longestPath 10 seed 27
     - name: run basicFFN
       run: ./bin/basicFFN
 

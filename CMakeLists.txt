@@ -9,7 +9,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 # Set C++ standard (opsional)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 20) #wajib jika menggunakan subproject yang make concepts
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -funroll-loops -ffast-math")
@@ -26,8 +26,7 @@ add_subdirectory(number_system)
 add_subdirectory(3D)
 add_subdirectory(image)
 add_subdirectory(discrete)
-
-# temporary exclude these subprojects theres so much error XD
+add_subdirectory(collatz)
 add_subdirectory(NN)
 if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(OpenMP_CXX_FLAGS "-fopenmp")
