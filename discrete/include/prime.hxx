@@ -123,9 +123,9 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
   static int max_thread() noexcept { return Prime::maxThread; }
 
   void clear_cache() noexcept {
-    //to ensure that the heap is freed properly, we use swap() of some temporary vector which will be destroyed after the method is executed
+    // to ensure that the heap is freed properly, we use swap() of some temporary vector which will be destroyed after the method is executed
     std::vector<T>().swap(lastResults);
-    
+
     lastSize  = 0;
     lastLimit = 0;
   }

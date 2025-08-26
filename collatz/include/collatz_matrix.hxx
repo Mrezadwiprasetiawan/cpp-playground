@@ -1,3 +1,22 @@
+/*
+  cpp-playground - C++ experiments and learning playground
+  Copyright (C) 2025 M. Reza Dwi Prasetiawan
+
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 
 #include <cmath>
@@ -15,6 +34,14 @@ requires(std::integral<T> || std::floating_point<T>) struct Vec4 {
   T w, x, y, z;
 };
 
+// helper function
+template <std::integral T>
+T int_pow(T base, T exp) {
+  if (!exp) return 1;
+  if (exp & 1) return base * int_pow(base, exp - 1);
+  return int_pow(base, exp >> 1) * int_pow(base, exp >> 1);
+}
+
 class CollatzMatrix {
   std::vector<std::vector<std::vector<uint64_t>>> matrices;
 
@@ -24,7 +51,7 @@ class CollatzMatrix {
     vector<vector<uint64_t>> matrix;
     for (size_t row = 0; row < longestPath; ++row) {
       vector<uint64_t> rowVector;
-      for (size_t col = 0; col < longestPath; ++col) rowVector.push_back(pow(3, col) * pow(2, row) * oddStarter);
+      for (size_t col = 0; col < longestPath; ++col) rowVector.push_back(int_pow<uint64_t>(3, col) * int_pow<uint64_t>(2, row) * oddStarter);
       matrix.push_back(std::move(rowVector));
     }
     matrices[oddStarter / 3] = matrix;
