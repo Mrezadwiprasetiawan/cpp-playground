@@ -39,7 +39,7 @@ template <std::integral T>
 T int_pow(T base, T exp) {
   if (!exp) return 1;
   if (exp & 1) return base * int_pow(base, exp - 1);
-  return int_pow(base, exp >> 1) * int_pow(base, exp >> 1);
+  return int_pow(base * base, exp >> 1);
 }
 
 class CollatzMatrix {
