@@ -1,4 +1,5 @@
 #include <collatz_path.hxx>
+#include <cstdint>
 #include <iostream>
 #include <string>
 
