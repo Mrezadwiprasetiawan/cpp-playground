@@ -1,38 +1,36 @@
-#include <args_handle.hxx>
-#include <collatz_matrix.hxx>
-#include <exception>
-#include <iomanip>
+#include <collatz_path.hxx>
 #include <iostream>
-#include <stdexcept>
 #include <string>
-#include <unordered_map>
+
+void print_help() {
+  using namespace std;
+  cout << "-s or --seed to set the seed" << endl;
+  cout << "-e or --exp to activate expMode" << endl << "\twhen the next argument passed as integer, it will be setted as 2^seed*odd -1";
+}
 
 int main(int argc, const char **argv) {
   using namespace std;
-  unordered_map<string, string> args;
-  args                       = get_args(argc, argv);
-  uint64_t highestOddStarter = 0, longestPath = 0, seed = 0;
-  if (args.empty() || args.find("help") != args.end() || args.find("h") != args.end()) return 0;
-
-  try {
-    highestOddStarter = stoull(args.at("highestOddStarter"));
-    seed              = stoull(args.at("seed"));
-    longestPath       = stoull(args.at("longestPath"));
-  } catch (const out_of_range &ofer) { cout << ofer.what() << endl; }
-
-  try {
-    CollatzMatrix          colMat(highestOddStarter, longestPath);
-    vector<Vec4<uint64_t>> path = std::move(colMat.find_path(seed));
-
-    if (args.find("debug") != args.end() && args.at("debug") == "true") colMat.printMatrices();
-
-    for (auto val : path)
-      cout << setw(10) << "Matrix index = " << val.w << setw(10) << "row = " << val.x << setw(10) << "col = " << val.y << setw(10) << "value = " << val.z
-           << endl;
-    cout << endl << "Real Path on the original collatz function =";
-    for (auto val : path) cout << 2 * val.z - 1 << " ";
-    cout << endl;
-  } catch (const exception &e) { cout << e.what() << endl; }
-
+  if (argc < 3) print_help();
+  uint64_t seed = 0, odd = 1;
+  bool     expMode = false;
+  for (int i = 1; i < argc; ++i) {
+    if ((string(argv[i]) == "-s" || string(argv[i]) == "--seed") && argc > i + 1) seed = stoull(argv[i + 1]);
+    if ((string(argv[i]) == "-e" || string(argv[i]) == "--exp")) {
+      expMode = true;
+      if (argc > i + 1) odd = stoull(string(argv[i + 1]));
+    }
+  }
+  if (seed == 0) {
+    print_help();
+    return -1;
+  }
+  vector<uint64_t> result;
+  if (expMode) {
+    seed   = int_pow<uint64_t>(2, seed) * odd - 1;
+    result = collatz_get_path(seed);
+  } else result = collatz_get_path(seed);
+  cout << "path for " << seed << " =";
+  for (auto val : result) cout << " " << val;
+  cout << endl;
   return 0;
 }
