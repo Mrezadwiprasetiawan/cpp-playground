@@ -2,6 +2,7 @@
 #include <concepts>
 #include <cstdint>
 #include <iostream>
+#include <algorithm>
 #include <string>
 
 void print_help() {
@@ -31,8 +32,12 @@ v_collatz<I> get_valuation(I value) {
   return {v2, v3, o};
 }
 
+#include <string>
+#include <concepts>
+
 template <std::integral I>
 std::string superscript(I val) {
+<<<<<<< HEAD
   static const char* sup_digits[] = {"⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"};
   if (val == 0) return "⁰";
   std::string res;
@@ -48,6 +53,28 @@ std::string superscript(I val) {
 }
 
 int main(int argc, const char** argv) {
+=======
+  static const char* sup_digits[] = {
+    "⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹"
+  };
+  if (val == 0) return "⁰";
+  std::string res;
+  char buf[64];
+  int idx = 0;
+  while (val > 0) {
+    int digit = val % 10;
+    buf[idx++] = digit;
+    val /= 10;
+  }
+  for (int i = idx - 1; i >= 0; --i) {
+    res += sup_digits[buf[i]];
+  }
+  return res;
+}
+
+
+int main(int argc, const char **argv) {
+>>>>>>> 005f6e8 (update collatz sub project)
   using namespace std;
   uint64_t seed = 0, odd = 1;
   bool     expMode = false, outputExpMode = false;

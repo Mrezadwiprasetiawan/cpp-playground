@@ -23,11 +23,7 @@ std::vector<I> collatz_get_path(I seed) {
       seed >>= 1;
       ++v2;
     }
-    while (!(seed % 3)) {
-      seed /= 3;
-      ++v3;
-    }
-    seed = seed * int_pow<I>(3, v2 + v3) - 1;
+    seed = seed * int_pow<I>(3, v2) - 1;
   }
   return result;
 }
