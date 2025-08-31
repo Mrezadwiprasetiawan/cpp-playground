@@ -165,7 +165,7 @@ jobs:
 
 
     - name: run test collatz
-      run:  ./bin/collatz -s 4 -e 7
+      run:  ./bin/collatz -s 63 -e -o
     - name: run basicFFN
       run: ./bin/basicFFN
 
