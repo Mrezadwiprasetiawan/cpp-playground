@@ -29,13 +29,13 @@ class Big_int {
  private:
   std::vector<uint64_t> values;
   // mutable = non logic state
-  mutable std::string   values_str;
+  mutable std::string   value_str;
   bool                  negative = false;
   const static uint16_t max_thread;
 
   // For positive only
   Big_int(std::vector<uint64_t> values) : values(values) {}
-  std::string uint64_to_string(uint64_t val) {
+  std::string uint64_to_string(uint64_t val) const {
     std::string res;
     if (!val) return "0";
     while (val) {
@@ -51,7 +51,7 @@ class Big_int {
     return res;
   }
 
-  void mul_2_64_add_other(std::string &val, uint64_t other) {
+  void mul_2_64_add_other(std::string &val, uint64_t other) const {
     using namespace std;
     if (val.empty() || val == "0") {
       val = uint64_to_string(other);
@@ -144,7 +144,12 @@ class Big_int {
     }
   }
 
-  std::string to_string() const {}
+  std::string to_string() const {
+    using namespace std;
+    string result, current;
+    for (auto val : values) mul_2_64_add_other(result, val);
+    return result;
+  }
 
 #define FUNC_OP(op) Big_int op(const Big_int &other) const
 
@@ -292,7 +297,7 @@ class Big_int {
   Big_int operator>>(uint64_t k) const { return shift_right(k); }
 };  // END Big_int class
 // static member init
-const std::string two_pow_64 = "18446744073709551616";
+inline const std::string Big_int::two_pow_64 = "18446744073709551616";
 
 inline Big_int operator""_big(unsigned long long i) { return Big_int(i); }
 inline Big_int operator""_big(const char *str, size_t size) { return Big_int(std::string(str)); };

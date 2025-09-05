@@ -25,6 +25,7 @@
 
 template <typename T>
 requires(std::integral<T> or std::is_same_v<T, Big_int>) std::string to_string(T val, int base) {
+  using namespace std;
   string res;
   while (val) {
     res += (val % base) + '0';

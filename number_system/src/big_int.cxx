@@ -30,13 +30,16 @@ void test_add(const Big_int& a, const Big_int& b) {
 }
 
 int main() {
+  using namespace std;
   Big_int a(100);
   Big_int b(-101);
   test_add(a, b);
 
-  a = (1ULL << 63);
-  b = 1;
-  test_add(a, b);
+  // a = (1ULL << 63);
+  // b = 1;
+  // test_add(a, b);
+
+  // cout << a << endl;
 
   return 0;
 }

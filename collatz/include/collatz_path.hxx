@@ -18,12 +18,16 @@ std::vector<I> collatz_get_path(I seed) {
     result.push_back(seed);
     if (seed == 1) return result;
     ++seed;
-    I v2 = 0;
+    I v2 = 0, v3 = 0;
     while (!(seed & 1)) {
       seed >>= 1;
       ++v2;
     }
-    seed = seed * int_pow<I>(3, v2) - 1;
+    while (!(seed % 3)) {
+      seed /= 3;
+      ++v3;
+    }
+    seed = seed * int_pow<I>(3, v2 + v3) - 1;
   }
   return result;
 }

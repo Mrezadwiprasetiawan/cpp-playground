@@ -2,7 +2,6 @@
 #include <concepts>
 #include <cstdint>
 #include <iostream>
-#include <algorithm>
 #include <string>
 
 void print_help() {
@@ -32,33 +31,24 @@ v_collatz<I> get_valuation(I value) {
   return {v2, v3, o};
 }
 
-#include <string>
-#include <concepts>
-
 template <std::integral I>
 std::string superscript(I val) {
-  static const char* sup_digits[] = {
-    "⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹"
-  };
+  static const char* sup_digits[] = {"⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"};
   if (val == 0) return "⁰";
   std::string res;
-  char buf[64];
-  int idx = 0;
+  char        buf[64];
+  int         idx = 0;
   while (val > 0) {
-    int digit = val % 10;
-    buf[idx++] = digit;
-    val /= 10;
+    int digit   = val % 10;
+    buf[idx++]  = digit;
+    val        /= 10;
   }
-  for (int i = idx - 1; i >= 0; --i) {
-    res += sup_digits[buf[i]];
-  }
+  for (int i = idx - 1; i >= 0; --i) { res += sup_digits[buf[i]]; }
   return res;
 }
 
-
-int main(int argc, const char **argv) {
+int main(int argc, const char** argv) {
   using namespace std;
-  if (argc < 3) print_help();
   uint64_t seed = 0, odd = 1;
   bool     expMode = false, outputExpMode = false;
   for (int i = 1; i < argc; ++i) {
@@ -74,10 +64,8 @@ int main(int argc, const char **argv) {
     return -1;
   }
   vector<uint64_t> result;
-  if (expMode) {
-    seed   = int_pow<uint64_t>(2, seed) * odd - 1;
-    result = collatz_get_path(seed);
-  } else result = collatz_get_path(seed);
+  if (expMode) seed = int_pow<uint64_t>(2, seed) * odd - 1;
+  result = collatz_get_path(seed);
   cout << "path for ";
   if (outputExpMode) {
     v_collatz vSeed = get_valuation(seed);
