@@ -85,7 +85,7 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     return from_range_limit(limit);
   }
 
-  std::vector<T> from_range_limit(T limit) noexcept {
+  std::vector<T> from_range_limit(T limit) {
     using namespace std;
     vector<T> primes;
     if (limit < 2) return primes;
@@ -114,7 +114,7 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     return primes;
   }
 
-  bool is_prime(T n) noexcept {
+  bool is_prime(T n) {
     if (n <= 1) return false;
     if (n == 2) return true;
     if (!(n & 1)) return false;
