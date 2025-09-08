@@ -30,6 +30,10 @@ namespace Discrete {
 
 template <typename T>
 requires(std::integral<T> && !std::is_same_v<T, bool>) class Derangement {
+  static constexpr double log_phi = 0.48121182505960347;
+  static constexpr T      magic_number =
+      static_cast<T>(std::log((3.0 * std::sqrt(5.0)) / 5.0) /
+                     log_phi);  // depends on the machine architecture, but this just approximation for 1 operation building recursive caches of the derangement
   static inline std::vector<T> cache = {1, 0};  // !0 = 1, !1 = 0
 
   // Compute cutoff based on k_min ≈ log_phi((3√5 / 5) * n)
@@ -37,7 +41,7 @@ requires(std::integral<T> && !std::is_same_v<T, bool>) class Derangement {
     // We keep the 3/5 * sqrt(5) multiplier exactly
     // and use log base φ to stay faithful to the derivation
     // phi = (1 + sqrt(5)) / 2 ≈ 1.61803
-    return static_cast<T>(std::log((3.0 * n * std::sqrt(5.0)) / 5.0) / std::log((1.0 + std::sqrt(5.0)) / 2.0));
+    return static_cast<T>(n / log_phi + magic_number);
   }
 
   static T pie_calc(T n) {
@@ -89,6 +93,7 @@ requires(std::integral<T> && !std::is_same_v<T, bool>) class Derangement {
     };
 
     dfs(0);
+
     return result;
   }
 };

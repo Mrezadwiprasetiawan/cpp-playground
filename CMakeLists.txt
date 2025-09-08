@@ -21,6 +21,7 @@ add_subdirectory(win32)
 endif()
 
 # Add subprojects
+add_subdirectory(systems)
 add_subdirectory(basic)
 add_subdirectory(number_system)
 add_subdirectory(3D)
@@ -28,6 +29,7 @@ add_subdirectory(image)
 add_subdirectory(discrete)
 add_subdirectory(collatz)
 add_subdirectory(NN)
+
 if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(OpenMP_CXX_FLAGS "-fopenmp")
   set(OpenMP_CXX_LIB_NAMES "libomp")

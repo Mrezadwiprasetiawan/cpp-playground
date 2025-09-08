@@ -22,6 +22,9 @@
 #include <cmath>
 #include <concepts>
 #include <cstdint>
+#include <cstdlib>
+#include <heap.hxx>
+#include <iostream>
 #include <thread>
 #include <type_traits>
 #include <vector>
@@ -46,12 +49,16 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     }
   }
 
-  std::vector<uint64_t> create_sieve(T limit) noexcept {
+  std::vector<uint64_t> create_sieve(T limit) {
+    using namespace std;
     if (limit < 3) return {};
-    const size_t             numOdds   = ((limit - 3) >> 1) + 1;
-    const size_t             arraySize = (numOdds + 63) >> 6;
-    std::vector<uint64_t>    sieve(arraySize, uint64_t(~0));
-    std::vector<std::thread> threads;
+    const size_t numOdds   = ((limit - 3) >> 1) + 1;
+    const size_t arraySize = (numOdds + 63) >> 6;
+    const size_t heapSize  = get_available_heap();
+    if ((arraySize + limit / log(limit) + 1) * 8 > heapSize)
+      throw std::runtime_error("not enough heap to do bitsieve operation, Heap = " + std::to_string(heapSize));
+    vector<uint64_t>    sieve(arraySize, uint64_t(~0));
+    vector<std::thread> threads;
     for (int i = 1; i < maxThread; ++i) threads.emplace_back([this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
     main_sieve(sieve, limit, 0);
     for (auto &t : threads) t.join();
@@ -66,28 +73,21 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
 
  public:
   explicit Prime() noexcept {}
-  std::vector<T> from_size(size_t size) noexcept {
+  std::vector<T> from_size(size_t size) {
+    using namespace std;
     if (size <= lastSize) {
       if (size == lastSize) return this->lastResults;
       return std::vector<T>(this->lastResults.begin(), this->lastResults.begin() + size);
     }
     if (!size) return {};
-    std::vector<T> primes;
-    primes.push_back(2);
-    if (size == 1) return primes;
-    T limit              = estimate_limit_from_size(size);
-    lastLimit            = limit;
-    auto         sieve   = create_sieve(limit);
-    const size_t numOdds = ((limit - 3) >> 1) + 1;
-    for (size_t i = 0; i < numOdds && primes.size() < size; ++i)
-      if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
-    lastResults = primes;
-    lastSize    = size;
-    return primes;
+    T limit  = estimate_limit_from_size(size);
+    lastSize = size;
+    return from_range_limit(limit);
   }
 
   std::vector<T> from_range_limit(T limit) noexcept {
-    std::vector<T> primes;
+    using namespace std;
+    vector<T> primes;
     if (limit < 2) return primes;
     primes.push_back(2);
     if (limit < 3) return primes;
@@ -95,16 +95,21 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
       if (limit == lastLimit) return this->lastResults;
 
       // estimasi end awal
-      size_t end = static_cast<size_t>(limit / std::log(limit)) + 1;
+      size_t end = static_cast<size_t>(limit / log(limit)) + 1;
       if (end > lastResults.size()) end = lastResults.size();
       while (end < lastResults.size() && lastResults[end] <= limit) ++end;
-      return std::vector<T>(this->lastResults.begin(), this->lastResults.begin() + end);
+      return vector<T>(this->lastResults.begin(), this->lastResults.begin() + end);
     }
-    lastLimit            = limit;
-    auto         sieve   = create_sieve(limit);
-    const size_t numOdds = ((limit - 3) >> 1) + 1;
-    for (size_t i = 0; i < numOdds; ++i)
-      if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
+    lastLimit = limit;
+    try {
+      auto         sieve   = create_sieve(limit);
+      const size_t numOdds = ((limit - 3) >> 1) + 1;
+      for (size_t i = 0; i < numOdds; ++i)
+        if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
+    } catch (exception &e) {
+      cout << e.what() << endl;
+      exit(EXIT_FAILURE);
+    }
     lastResults = primes;
     return primes;
   }
