@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <heap.hxx>
 #include <iostream>
+#include <string>
 #include <thread>
 #include <type_traits>
 #include <vector>
@@ -38,11 +39,11 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
   T                 lastSize  = 0;
   inline static int maxThread = std::thread::hardware_concurrency();
 
-  void main_sieve(std::vector<uint64_t> &sieve, T limit, int offset) noexcept {
-    for (T p = 3 + offset * 2; p * p <= limit; p += 2 * maxThread) {
+  void main_sieve(std::vector<uint64_t> &sieve, T limit, int tid) noexcept {
+    for (T p = 3; p * p <= limit; p += 2) {
       const size_t i = (p - 3) >> 1;
       if (!(sieve[i >> 6] & (1ULL << (i & 63)))) continue;
-      for (T j = p * p; j <= limit; j += 2 * p) {
+      for (T j = p * p + 2 * p * tid; j <= limit; j += 2 * p * maxThread) {
         const size_t idx  = (j - 3) >> 1;
         sieve[idx >> 6]  &= ~(1ULL << (idx & 63));
       }
@@ -56,7 +57,7 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     const size_t arraySize = (numOdds + 63) >> 6;
     const size_t heapSize  = get_available_heap();
     if ((arraySize + limit / log(limit) + 1) * 8 > heapSize)
-      throw std::runtime_error("not enough heap to do bitsieve operation, Heap = " + std::to_string(heapSize));
+      throw std::runtime_error("not enough heap to do bitsieve operation, Heap = " + to_string(heapSize));
     vector<uint64_t>    sieve(arraySize, uint64_t(~0));
     vector<std::thread> threads;
     for (int i = 1; i < maxThread; ++i) threads.emplace_back([this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
@@ -77,7 +78,7 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     using namespace std;
     if (size <= lastSize) {
       if (size == lastSize) return this->lastResults;
-      return std::vector<T>(this->lastResults.begin(), this->lastResults.begin() + size);
+      return vector<T>(this->lastResults.begin(), this->lastResults.begin() + size);
     }
     if (!size) return {};
     T limit  = estimate_limit_from_size(size);

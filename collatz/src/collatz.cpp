@@ -5,6 +5,8 @@
 #include <iostream>
 #include <string>
 
+#include "collatz_cube.hxx"
+
 void print_help() {
   using namespace std;
   cout << "-s or --seed to set the seed" << endl;
@@ -51,14 +53,15 @@ std::string superscript(I val) {
 int main(int argc, const char** argv) {
   using namespace std;
   uint64_t seed = 0, odd = 1;
-  bool     expMode = false, outputExpMode = false;
+  bool     expMode = false, outputExpMode = false, debug = false;
   for (int i = 1; i < argc; ++i) {
     if ((string(argv[i]) == "-s" || string(argv[i]) == "--seed") && argc > i + 1) seed = stoull(argv[i + 1]);
     if ((string(argv[i]) == "-e" || string(argv[i]) == "--exp")) {
       expMode = true;
       if (argc > i + 1 && argv[i + 1][0] != '-') odd = stoull(string(argv[i + 1]));
     }
-    if ((string(argv[i]) == "-o" || string(argv[i]) == "--outputExp")) outputExpMode = true;
+    if (string(argv[i]) == "-o" || string(argv[i]) == "--outputExp") outputExpMode = true;
+    if (string(argv[i]) == "-d" || string(argv[i]) == "-debug") debug = false;
   }
   if (seed == 0) {
     print_help();
@@ -79,6 +82,11 @@ int main(int argc, const char** argv) {
     cout << seed << " = ";
     for (auto val : result) cout << " " << val;
   }
+  Collatz_cube<uint64_t> testCube;
+  if (debug)
+    for (size_t i = 0; i < 100; ++i)
+      for (size_t j = 0; j < 100; ++j)
+        for (size_t k = 0; k < 100; ++k) cout << testCube[i][j][k] << endl;
   cout << endl;
   return 0;
 }
