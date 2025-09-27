@@ -25,7 +25,7 @@
 
 template <std::integral I>
 I int_pow(I base, I exp) {
-  if constexpr (I(-1) < 0 && exp < 0) return 0;
+  if constexpr (I(-1) < 0) if (exp < 0) return 0;
 
   if (!exp) return 1;
 
