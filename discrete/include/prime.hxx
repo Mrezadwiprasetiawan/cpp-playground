@@ -102,15 +102,10 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
       return vector<T>(this->lastResults.begin(), this->lastResults.begin() + end);
     }
     lastLimit = limit;
-    try {
-      auto         sieve   = create_sieve(limit);
-      const size_t numOdds = ((limit - 3) >> 1) + 1;
-      for (size_t i = 0; i < numOdds; ++i)
-        if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
-    } catch (exception &e) {
-      cout << e.what() << endl;
-      exit(EXIT_FAILURE);
-    }
+    auto         sieve   = create_sieve(limit); //continue exception to caller if exist
+    const size_t numOdds = ((limit - 3) >> 1) + 1;
+    for (size_t i = 0; i < numOdds; ++i)
+      if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
     lastResults = primes;
     return primes;
   }
