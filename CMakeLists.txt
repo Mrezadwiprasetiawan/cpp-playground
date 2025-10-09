@@ -29,6 +29,7 @@ add_subdirectory(image)
 add_subdirectory(discrete)
 add_subdirectory(collatz)
 add_subdirectory(NN)
+add_subdirectory(microcontroller-sim)
 
 if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(OpenMP_CXX_FLAGS "-fopenmp")

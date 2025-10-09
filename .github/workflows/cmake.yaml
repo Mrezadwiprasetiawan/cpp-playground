@@ -168,6 +168,8 @@ jobs:
       run:  ./bin/collatz -s 63 -e -o
     - name: run basicFFN
       run: ./bin/basicFFN
+    - name: run test microcontroller simulator
+      run: ./bin/test_sim
 
 #    - name: Skip tests (Android)
 #      if: matrix.target == 'android'
