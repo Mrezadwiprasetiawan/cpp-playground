@@ -13,6 +13,7 @@ class Pin {
   uint8_t value;
   friend class Board;
   friend class Device;
+  uint8_t           lastDuty = 0;
   std::atomic<bool> pwmActive{false};
   std::thread       pwmThread;
   std::mutex        pwmLock;
@@ -36,7 +37,10 @@ class Pin {
   }
 
   void startPWM(uint8_t duty) {
-    if (pwmActive) return;
+    if (pwmActive) {
+      if (duty == lastDuty) return;
+      else stopPWM();
+    }
     pwmActive = true;
     pwmThread = std::thread([this, duty]() {
       using namespace std::chrono;
@@ -58,6 +62,7 @@ class Pin {
         }
         std::this_thread::sleep_for(period * (255 - duty) / 255);
       }
+      lastDuty = duty;
     });
   }
 
@@ -99,9 +104,7 @@ class Board {
   std::vector<Pin>                       pins;
   std::function<void(Board&)>            mainLogic = nullptr;
   std::function<void(std::vector<Pin>&)> debugger  = nullptr;
-
-  std::thread mainThread;
-  std::thread debuggerThread;
+  std::thread                            mainThread, debuggerThread;
 
  public:
   Board(uint8_t pinSize) { pins.resize(pinSize); }
@@ -110,7 +113,6 @@ class Board {
   void set_debugger(void (*fn)(std::vector<Pin>&)) { debugger = fn; }
 
   void digitalWrite(uint8_t pinNumber, bool val) { pins[pinNumber].set_value(val); }
-
   void analogWrite(uint8_t pinNumber, uint8_t duty) {
     if (duty == 0) pins[pinNumber].set_value(LOW);
     else if (duty == 255) pins[pinNumber].set_value(HIGH);
@@ -121,7 +123,6 @@ class Board {
     if (mainLogic && !mainThread.joinable()) mainThread = std::thread(mainLogic, std::ref(*this));
     if (debugger && !debuggerThread.joinable()) debuggerThread = std::thread(debugger, std::ref(pins));
   }
-
   void join() {
     if (mainThread.joinable()) mainThread.join();
     for (auto& pin : pins) pin.stopPWM();
