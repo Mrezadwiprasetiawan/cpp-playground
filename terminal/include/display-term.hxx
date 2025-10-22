@@ -19,7 +19,7 @@ class Display {
   int                      width_;
   int                      height_;
   inline static Display*   instance_ = nullptr;
-  inline static std::mutex mtx_m, data_mtx;
+  inline static std::mutex mtx_, data_mtx;
   inline static ANSI&      ansiInstance = ANSI::getInstance();
   std::array<int, 3>       backgroundRGB, foregroundRGB;
   std::vector<char>        data;

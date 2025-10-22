@@ -213,7 +213,7 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     ifs.close();
     if (needSwap)
       for (size_t i = 0; i < count; ++i) lastResults[i] = bswap64(lastResults[i]);
-    cerr << "[load_sieve] Successfully read " << count << " elements from file: " << filename << (needSwap ? " (byte-swapped due to endian mismatch)" : "")
+    cout << "[load_sieve] Successfully read " << count << " elements from file: " << filename << (needSwap ? " (byte-swapped due to endian mismatch)" : "")
          << endl;
     return true;
   }
