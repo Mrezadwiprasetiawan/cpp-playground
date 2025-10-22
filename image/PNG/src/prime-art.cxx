@@ -71,7 +71,7 @@ int main(int argc, const char *argv[]) {
 
   std::vector<png_byte> data(AREA * 3), data2(AREA * 3);
 
-  Prime<uint64_t> prime;
+  auto &prime = Prime<uint64_t>::instance();
 
   /* Solve r untuk setiap i
    *

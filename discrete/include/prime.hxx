@@ -19,10 +19,12 @@
 
 #pragma once
 
+#include <bit.hxx>
 #include <cmath>
 #include <concepts>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <heap.hxx>
 #include <iostream>
 #include <string>
@@ -71,10 +73,18 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     double n = static_cast<double>(size);
     return static_cast<T>(n * (std::log(n) + std::log(std::log(n)))) + 10;
   }
+  explicit Prime() noexcept {}
+  explicit Prime(const Prime &)    = delete;
+  Prime &operator=(const Prime &)  = delete;
+  explicit Prime(const Prime &&)   = delete;
+  Prime &operator=(const Prime &&) = delete;
 
  public:
-  explicit Prime() noexcept {}
-  std::vector<T> from_size(size_t size) {
+  static Prime &instance() {
+    static Prime inst;
+    return inst;
+  }
+  std::vector<T> from_size(size_t size, bool storageHelp = false) {
     using namespace std;
     if (size <= lastSize) {
       if (size == lastSize) return this->lastResults;
@@ -83,10 +93,10 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     if (!size) return {};
     T limit  = estimate_limit_from_size(size);
     lastSize = size;
-    return from_range_limit(limit);
+    return from_range_limit(limit, storageHelp);
   }
 
-  std::vector<T> from_range_limit(T limit) {
+  std::vector<T> from_range_limit(T limit, bool storageHelp = false) {
     using namespace std;
     vector<T> primes;
     if (limit < 2) return primes;
@@ -94,15 +104,14 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     if (limit < 3) return primes;
     if (limit <= lastLimit) {
       if (limit == lastLimit) return this->lastResults;
-
       // estimasi end awal
       size_t end = static_cast<size_t>(limit / log(limit)) + 1;
       if (end > lastResults.size()) end = lastResults.size();
       while (end < lastResults.size() && lastResults[end] <= limit) ++end;
       return vector<T>(this->lastResults.begin(), this->lastResults.begin() + end);
     }
-    lastLimit = limit;
-    auto         sieve   = create_sieve(limit); //continue exception to caller if exist
+    lastLimit            = limit;
+    auto         sieve   = create_sieve(limit);  // pass the exception to caller if exist
     const size_t numOdds = ((limit - 3) >> 1) + 1;
     for (size_t i = 0; i < numOdds; ++i)
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
@@ -126,9 +135,87 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
   void clear_cache() noexcept {
     // to ensure that the heap is freed properly, we use swap() of some temporary vector which will be destroyed after the method is executed
     std::vector<T>().swap(lastResults);
-
     lastSize  = 0;
     lastLimit = 0;
+  }
+
+  bool write_sieve(const std::string &filename) {
+    using namespace std;
+    ofstream ofs(filename, ios::binary | ios::out);
+    if (!ofs.is_open()) {
+      cerr << "[write_sieve] Error: failed to open file '" << filename << "' for writing.\n";
+      return false;
+    }
+    char mark = std::endian::native == std::endian::little ? 1 : 0;
+    ofs.write(&mark, 1);
+    if (!ofs) {
+      cerr << "[write_sieve] Error: failed to write endian mark to file '" << filename << "'.\n";
+      return false;
+    }
+    const size_t count = lastResults.size();
+    const size_t bytes = count * sizeof(T);
+    if (!bytes) return true;  // nothing to write
+    try {
+      ofs.seekp(static_cast<std::streamoff>(1 + bytes - 1));
+      char zero = 0;
+      ofs.write(&zero, 1);
+      ofs.flush();
+    } catch (...) {
+      cerr << "[write_sieve] Exception while preparing file '" << filename << "'.\n";
+      return false;
+    }
+    ofs.seekp(1);
+    ofs.write(reinterpret_cast<const char *>(lastResults.data()), static_cast<std::streamsize>(bytes));
+    if (!ofs) {
+      cerr << "[write_sieve] Error: write failed.\n";
+      return false;
+    }
+    ofs.close();
+    return true;
+  }
+
+  bool load_sieve(const std::string &filename) {
+    using namespace std;
+    ifstream ifs(filename, ios::binary | ios::ate);
+    if (!ifs.is_open()) {
+      cerr << "[load_sieve] Failed to open file: " << filename << endl;
+      return false;
+    }
+
+    streamsize fsize = ifs.tellg();
+    if (fsize < 1) {
+      cerr << "[load_sieve] File too small or tellg failed: " << filename << endl;
+      return false;
+    }
+
+    ifs.seekg(0, ios::beg);
+    char fileEndian = 0;
+    ifs.read(&fileEndian, 1);
+    if (!ifs) {
+      cerr << "[load_sieve] Failed to read endian mark from: " << filename << endl;
+      return false;
+    }
+    char         nativeEndian = std::endian::native == std::endian::little ? 1 : 0;
+    bool         needSwap     = fileEndian != nativeEndian;
+    const size_t total_bytes  = static_cast<size_t>(fsize) - 1;
+    if (total_bytes % sizeof(T) != 0) {
+      cerr << "[load_sieve] Invalid file size (not multiple of sizeof(T)): " << fsize << " bytes" << endl;
+      return false;
+    }
+    const size_t count = total_bytes / sizeof(T);
+    lastResults.resize(count);
+    ifs.seekg(1, ios::beg);
+    ifs.read(reinterpret_cast<char *>(lastResults.data()), static_cast<std::streamsize>(total_bytes));
+    if (!ifs) {
+      cerr << "[load_sieve] Read failed (" << ifs.gcount() << ")\n";
+      return false;
+    }
+    ifs.close();
+    if (needSwap)
+      for (size_t i = 0; i < count; ++i) lastResults[i] = bswap64(lastResults[i]);
+    cerr << "[load_sieve] Successfully read " << count << " elements from file: " << filename << (needSwap ? " (byte-swapped due to endian mismatch)" : "")
+         << endl;
+    return true;
   }
 };
 }  // namespace Discrete

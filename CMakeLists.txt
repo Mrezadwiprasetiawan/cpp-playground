@@ -41,4 +41,6 @@ else()
   add_subdirectory(web-server)
 endif()
 
+add_subdirectory(terminal)
+
 find_package(OpenMP REQUIRED COMPONENTS CXX)
