@@ -18,10 +18,6 @@
   } while (0)
 
 class ANSI {
- private:
-  inline static ANSI*      instance_;
-  inline static std::mutex mtx_;
-
   ANSI() {
 #ifdef _WIN32
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -38,9 +34,8 @@ class ANSI {
   ANSI& operator=(const ANSI&) = delete;
 
   static ANSI& getInstance() {
-    std::lock_guard<std::mutex> lock(mtx_);
-    if (!instance_) instance_ = new ANSI();
-    return *instance_;
+    static ANSI instance;
+    return instance;
   }
 
   void enterAlternateScreen() { ANSI_SAFE(std::cout << "\033[?1049h" << std::flush); }
