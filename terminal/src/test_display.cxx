@@ -10,14 +10,16 @@
 using namespace std;
 
 static bool running = true;
-
-void handle_sigint(int) { running = false; }
+void        handle_sigint(int) { running = false; }
 
 int main() {
   signal(SIGINT, handle_sigint);
   Display& disp = Display::getInstance();
-  int      w    = disp.width();
-  int      h    = disp.height();
+  int      w    = disp.get_width();
+  int      h    = disp.get_height();
+
+  cout << "debug : rendering on scale" << w << ',' << h << endl;
+  std::this_thread::sleep_for(2s);
 
   // vector<vector<char>> textBuffer(h, vector<char>(w, ' '));
   // string               msg   = "HELLO RGB DISPLAY!";
@@ -51,4 +53,4 @@ int main() {
   disp.getANSI().reset();
   disp.getANSI().showCursor();
   return 0;
-}
+};

@@ -1,14 +1,12 @@
 #pragma once
 
-#include <algorithm>  // for std::clamp
+#include <algorithm>
 #include <iostream>
-#include <mutex>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-// Macro untuk aman dari ios_base::failure dan auto-flush
 #define ANSI_SAFE(expr)                                                                             \
   do {                                                                                              \
     try {                                                                                           \
@@ -38,18 +36,34 @@ class ANSI {
     return instance;
   }
 
-  void enterAlternateScreen() { ANSI_SAFE(std::cout << "\033[?1049h" << std::flush); }
-  void exitAlternateScreen() { ANSI_SAFE(std::cout << "\033[?1049l" << std::flush); }
+  // Screen
+  void enterAlternateScreen() { ANSI_SAFE(std::cout << "\033[?1049h"); }
+  void exitAlternateScreen() { ANSI_SAFE(std::cout << "\033[?1049l"); }
+  void clearScreen() { ANSI_SAFE(std::cout << "\033[2J\033[H"); }
+  void scrollUp(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "S"); }
+  void scrollDown(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "T"); }
 
   // Cursor
-  void clearScreen() { ANSI_SAFE(std::cout << "\033[2J\033[H" << std::flush); }
-  void moveCursor(int row, int col) { ANSI_SAFE(std::cout << "\033[" << row << ";" << col << "H" << std::flush); }
-  void hideCursor() { ANSI_SAFE(std::cout << "\033[?25l" << std::flush); }
-  void showCursor() { ANSI_SAFE(std::cout << "\033[?25h" << std::flush); }
+  void moveCursor(int row, int col) { ANSI_SAFE(std::cout << "\033[" << row << ";" << col << "H"); }
+  void cursorUp(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "A"); }
+  void cursorDown(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "B"); }
+  void cursorForward(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "C"); }
+  void cursorBack(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "D"); }
+  void hideCursor() { ANSI_SAFE(std::cout << "\033[?25l"); }
+  void showCursor() { ANSI_SAFE(std::cout << "\033[?25h"); }
+  void saveCursor() { ANSI_SAFE(std::cout << "\033[s"); }
+  void restoreCursor() { ANSI_SAFE(std::cout << "\033[u"); }
+
+  // Line erase
+  void eraseLine() { ANSI_SAFE(std::cout << "\033[2K"); }
+  void eraseToEnd() { ANSI_SAFE(std::cout << "\033[K"); }
 
   // Text styles
   void bold() { ANSI_SAFE(std::cout << "\033[1m"); }
   void underline() { ANSI_SAFE(std::cout << "\033[4m"); }
+  void blink() { ANSI_SAFE(std::cout << "\033[5m"); }
+  void reverse() { ANSI_SAFE(std::cout << "\033[7m"); }
+  void conceal() { ANSI_SAFE(std::cout << "\033[8m"); }
   void reset() { ANSI_SAFE(std::cout << "\033[0m"); }
 
   // Colors (foreground)
@@ -90,4 +104,7 @@ class ANSI {
     b = std::clamp(b, 0, 255);
     ANSI_SAFE(std::cout << "\033[48;2;" << r << ";" << g << ";" << b << "m");
   }
+
+  // Hyperlink (some terminals)
+  void hyperlink(const std::string& url, const std::string& text) { ANSI_SAFE(std::cout << "\033]8;;" << url << "\033\\" << text << "\033]8;;\033\\"); }
 };

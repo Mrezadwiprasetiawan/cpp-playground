@@ -71,7 +71,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y clang ninja-build libomp-dev \
-        libpng-dev libx11-dev libvulkan-dev qt6* #i want to use all qt6 to practice more deeply later
+        libpng-dev libx11-dev libvulkan-dev qt6* opencv-dev#i want to use all qt6 to practice more deeply later
 
     - name: Deps (Windows)
       if: matrix.os == 'windows-latest'
@@ -170,6 +170,9 @@ jobs:
       run: ./bin/basicFFN
     - name: run test microcontroller simulator
       run: ./bin/test_sim
+
+    - name: run test render video on terminal display LOL
+      eun: ./bin/testrendervid terminal/video/test+video2.mp4
 
 #    - name: Skip tests (Android)
 #      if: matrix.target == 'android'
