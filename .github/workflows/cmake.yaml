@@ -71,7 +71,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y clang ninja-build libomp-dev \
-        libpng-dev libx11-dev libvulkan-dev qt6* libopencv-dev#i want to use all qt6 to practice more deeply later
+        libpng-dev libx11-dev libvulkan-dev qt6* libopencv-dev #i want to use all qt6 to practice more deeply later
 
     - name: Deps (Windows)
       if: matrix.os == 'windows-latest'
