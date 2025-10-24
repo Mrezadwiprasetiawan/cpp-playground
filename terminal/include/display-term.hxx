@@ -135,9 +135,9 @@ class Display {
         ansiInstance.fgRGB(fg[0], fg[1], fg[2]);
         cout << data[y][x];
       }
-      cout << '\n';
+      if (!(y == height - 1)) cout << '\n';
     }
-    ansiInstance.reset();
     cout.flush();
+    ansiInstance.reset();
   }
 };

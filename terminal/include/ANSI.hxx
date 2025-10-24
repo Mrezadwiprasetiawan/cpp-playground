@@ -11,7 +11,6 @@
   do {                                                                                              \
     try {                                                                                           \
       expr;                                                                                         \
-      std::cout << std::flush;                                                                      \
     } catch (const std::ios_base::failure& e) { std::cerr << "[ANSI Error] " << e.what() << '\n'; } \
   } while (0)
 
@@ -37,11 +36,11 @@ class ANSI {
   }
 
   // Screen
-  void enterAlternateScreen() { ANSI_SAFE(std::cout << "\033[?1049h"); }
-  void exitAlternateScreen() { ANSI_SAFE(std::cout << "\033[?1049l"); }
-  void clearScreen() { ANSI_SAFE(std::cout << "\033[2J\033[H"); }
-  void scrollUp(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "S"); }
-  void scrollDown(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "T"); }
+  void enterAlternateScreen() { ANSI_SAFE(std::cout << "\033[?1049h" << std::flush); }
+  void exitAlternateScreen() { ANSI_SAFE(std::cout << "\033[?1049l" << std::flush); }
+  void clearScreen() { ANSI_SAFE(std::cout << "\033[2J\033[H" << std::flush); }
+  void scrollUp(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "S" << std::flush); }
+  void scrollDown(int n = 1) { ANSI_SAFE(std::cout << "\033[" << n << "T" << std::flush); }
 
   // Cursor
   void moveCursor(int row, int col) { ANSI_SAFE(std::cout << "\033[" << row << ";" << col << "H"); }
