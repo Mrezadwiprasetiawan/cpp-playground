@@ -21,16 +21,11 @@ int main() {
   cout << "debug : rendering on scale" << w << ',' << h << endl;
   std::this_thread::sleep_for(2s);
 
-  // vector<vector<char>> textBuffer(h, vector<char>(w, ' '));
-  // string               msg   = "HELLO RGB DISPLAY!";
-  // int                  start = (w - (int)msg.size()) / 2;
-  // for (size_t i = 0; i < msg.size(); ++i) textBuffer[h / 2][start + i] = msg[i];
-  // for (int y = 0; y < h; ++y) disp.push_buffer(y, textBuffer[y]);
-
   vector<vector<array<int, 3>>> rgbBuffer(h, vector<array<int, 3>>(w));
 
   float t = 0.0f;
   while (running) {
+#pragma omp parallel for
     for (int y = 0; y < h; ++y) {
       for (int x = 0; x < w; ++x) {
         float xf        = x / float(w - 1);

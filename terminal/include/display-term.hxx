@@ -79,13 +79,11 @@ class Display {
     lock_guard<mutex> lock(data_mtx);
     return foregroundRGB;
   }
-
-#define setter_RGB(name)                        \
-  void set_##name(int r, int g, int b) {        \
-    using namespace std;                        \
-    lock_guard<mutex> lock(data_mtx);           \
-    for (auto& rowrgb : name##RGB)              \
-      for (auto& rgb : rowrgb) rgb = {r, g, b}; \
+#define setter_RGB(name)                                                                                 \
+  void set_##name(int r, int g, int b) {                                                                 \
+    using namespace std;                                                                                 \
+    lock_guard<mutex> lock(data_mtx);                                                                    \
+    _Pragma("omp parallel for") for (auto& rowrgb : name##RGB) for (auto& rgb : rowrgb) rgb = {r, g, b}; \
   }
 
   setter_RGB(background);
@@ -95,6 +93,7 @@ class Display {
   bool push_buffer(int row, const std::vector<char>& buffer) {
     using namespace std;
     lock_guard<mutex> lock(data_mtx);
+#pragma omp parallel for
     for (size_t i = 0; i < buffer.size(); ++i) data[row][i] = buffer[i];
     return true;
   }
@@ -103,6 +102,7 @@ class Display {
     using namespace std;
     lock_guard<mutex> lock(data_mtx);
     size_t            i = 0;
+#pragma omp parallel for
     for (auto c : buffer) data[row][i++] = c;
     return true;
   }
@@ -111,6 +111,7 @@ class Display {
     using namespace std;
     lock_guard<mutex> lock(data_mtx);
     size_t            rows = rgb.size();
+#pragma omp parallel for
     for (size_t y = 0; y < rows; ++y)
       for (size_t x = 0; x < rgb[y].size(); ++x) backgroundRGB[y][x] = rgb[y][x];
     return true;
