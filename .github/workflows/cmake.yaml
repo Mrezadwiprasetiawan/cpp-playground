@@ -172,7 +172,7 @@ jobs:
       run: ./bin/test_sim
 
     - name: run test render video on terminal display LOL
-      eun: ./bin/testrendervid terminal/video/test+video2.mp4
+      run: ./bin/testrendervid terminal/video/test+video2.mp4
 
 #    - name: Skip tests (Android)
 #      if: matrix.target == 'android'
