@@ -29,8 +29,24 @@
 #include <iostream>
 #include <string>
 #include <thread>
-#include <type_traits>
 #include <vector>
+
+#ifdef _WIN32
+#ifndef _HAS_STD_ENDIAN
+namespace std {
+enum class endian {
+  little = 0,
+  big    = 1,
+  native =
+#if defined(_M_PPC)
+      big
+#else
+      little
+#endif
+};
+}  // namespace std
+#endif
+#endif
 
 namespace Discrete {
 template <typename T>
@@ -141,7 +157,7 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
 
   bool write_sieve(const std::string &filename) {
     using namespace std;
-    ofstream ofs(filename, ios::binary | ios::out);
+    ofstream ofs(filename, ios::binary);
     if (!ofs.is_open()) {
       cerr << "[write_sieve] Error: failed to open file '" << filename << "' for writing.\n";
       return false;

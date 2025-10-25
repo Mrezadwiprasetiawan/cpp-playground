@@ -117,7 +117,7 @@ class Display {
     return true;
   }
 
-  std::vector<std::vector<char>> get_frame_buffer() {
+  std::vector<std::vector<char>>& get_frame_buffer() {
     using namespace std;
     lock_guard<mutex> lock(data_mtx);
     return data;
