@@ -107,7 +107,7 @@ class Display {
     return true;
   }
 
-  bool push_buffer_rgb(const std::vector<std::vector<std::array<int, 3>>>& rgb) {
+  bool push_buffer_bg(const std::vector<std::vector<std::array<int, 3>>>& rgb) {
     using namespace std;
     lock_guard<mutex> lock(data_mtx);
     size_t            rows = rgb.size();

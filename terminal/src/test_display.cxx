@@ -37,7 +37,7 @@ int main() {
       }
     }
 
-    disp.push_buffer_rgb(rgbBuffer);
+    disp.push_buffer_bg(rgbBuffer);
     disp.render();
 
     t += 0.05f;
