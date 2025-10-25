@@ -5,6 +5,7 @@
     "vulkan-loader",
     "vulkan-headers",
     "libpng",
-    "zlib"
+    "zlib",
+    "opencv4"
   ]
 }
