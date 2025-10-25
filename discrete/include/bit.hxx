@@ -8,7 +8,7 @@ inline uint64_t bswap64(uint64_t x) {
 }
 inline uint32_t bswap32(uint32_t x) { return (x << 24) | ((x << 8) & 0x00FF0000) | ((x >> 8) & 0x0000FF00) | (x >> 24); }
 inline uint16_t bswap16(uint16_t x) { return (x << 8) | (x >> 8); }
-template <std::integral T>
+template <std::unsigned_integral T>
 inline T byteswap(T x) {
   if constexpr (sizeof(T) == 8) return bswap64(static_cast<uint64_t>(x));
   else if constexpr (sizeof(T) == 4) return bswap32(static_cast<uint32_t>(x));
