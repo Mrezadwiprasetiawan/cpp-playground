@@ -31,21 +31,30 @@
 #include <thread>
 #include <vector>
 
-#ifdef _WIN32
-#ifndef _HAS_STD_ENDIAN
+#if !defined(__cpp_lib_endian)
 namespace std {
 enum class endian {
   little = 0,
   big    = 1,
-  native =
-#if defined(_M_PPC)
-      big
+#if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__)
+  native = (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) ? little : big
+#elif defined(_WIN32)
+  native = little
+#elif defined(__APPLE__)
+  // Apple platforms are little-endian on Intel and ARM64
+  native = little
+#elif defined(__MACH__) || defined(__linux__)
+#ifdef __BIG_ENDIAN__
+  native = big
 #else
-      little
+  native = little
+#endif
+#else
+  // fallback default
+  native = little
 #endif
 };
 }  // namespace std
-#endif
 #endif
 
 namespace Discrete {

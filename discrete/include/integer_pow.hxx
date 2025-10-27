@@ -17,15 +17,14 @@
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #pragma once
 
 #include <concepts>
-#include <cstdint>
 
 template <std::integral I>
 I int_pow(I base, I exp) {
-  if constexpr (I(-1) < 0) if (exp < 0) return 0;
+  if constexpr (I(-1) < 0)
+    if (exp < 0) return 0;
   if (!exp) return 1;
   if (exp & 1) return base * int_pow(base, exp - 1);
   return int_pow(base * base, exp >> 1);
