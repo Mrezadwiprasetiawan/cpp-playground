@@ -5,9 +5,5 @@ set(SRC "src")
 
 
 add_executable(prime-art ${SRC}/prime-art.cxx)
-if(CMAKE_SYSTEM_NAME STREQUAL "Android")
-  target_include_directories(prime-art PRIVATE ${ANDROID_NDK}/sources/third_party/libpng discrete)
-else()
-  find_package(PNG REQUIRED)
-  target_link_libraries(prime-art PRIVATE PNG::PNG discrete)
-endif()
+find_package(PNG REQUIRED)
+target_link_libraries(prime-art PRIVATE PNG::PNG discrete)

@@ -19,13 +19,13 @@
 
 #pragma once
 
-#include <bit.hxx>
+#include "bit.hxx"
 #include <cmath>
 #include <concepts>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
-#include <heap.hxx>
+#include "heap.hxx"
 #include <iostream>
 #include <string>
 #include <thread>
