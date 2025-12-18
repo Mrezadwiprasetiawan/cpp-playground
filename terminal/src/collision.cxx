@@ -1,95 +1,113 @@
+#include <iostream>
 #include <chrono>
 #include <thread>
 #include <cmath>
+#include <csignal>
 #include "display-term.hxx"
 
 struct Body {
-  double x;
-  double v;
-  double m;
+  double pos;
+  double vel;
+  double mass;
   char symbol;
-
-  double prevx;
+  double prevPos;
 };
 
+volatile std::sig_atomic_t stopFlag = 0;
+void handleSigInt(int) { stopFlag = 1; }
+
 int main() {
+  std::signal(SIGINT, handleSigInt);
+
   Display &disp = Display::getInstance();
   int W = disp.get_width();
   int H = disp.get_height();
-
   int mid = H / 2;
 
-  Body small{8, 0, 1, 'o', 8};
-  Body big{35, -10, 10000, 'O', 35};
+  Body small{8.0, 0.0, 1.0, 'o', 8.0};
+  Body big{35.0, -10.0, 1000000.0, 'O', 35.0};
 
   const int wallX = 2;
-  const double dt = 0.05;
+  const double dt = 0.016;
+  const double EPS = 1e-9;
+  const double LARGE_TIME = 1e30;
 
-  long collisionCountSmallWall = 0;
-  long collisionCountSmallBig = 0;
-
+  long totalCollision = 0;
   auto &fb = disp.get_frame_buffer();
 
-  while (true) {
-    small.prevx = small.x;
-    big.prevx = big.x;
+  while (!stopFlag) {
+    // Simpan posisi lama
+    int prevSmallPos = static_cast<int>(std::floor(small.prevPos));
+    int prevBigPos   = static_cast<int>(std::floor(big.prevPos));
 
-    small.x += small.v * dt;
-    big.x += big.v * dt;
+    double remainingTime = dt;
+    while (remainingTime > EPS) {
+      // Waktu tumbukan small-wall
+      double tWall = LARGE_TIME;
+      if (small.vel < 0) tWall = (wallX + 1.0 - small.pos)/small.vel;
 
-    // tumbukan kecil-dinding
-    if (small.x <= wallX) {
-      small.x = wallX;
-      small.v = -small.v;
-      collisionCountSmallWall++;
+      // Waktu tumbukan small-big
+      double dv = big.vel - small.vel;
+      double tBS = LARGE_TIME;
+      if (std::abs(dv) > EPS) {
+        double t = (small.pos - big.pos + 1.0)/dv;
+        if (t > EPS) tBS = t;
+      }
+
+      double tNext = std::min({tWall, tBS, remainingTime});
+
+      small.pos += small.vel * tNext;
+      big.pos   += big.vel * tNext;
+
+      if (std::abs(tNext - tWall) < EPS) {
+        small.vel = -small.vel;
+        totalCollision++;
+      }
+      if (std::abs(tNext - tBS) < EPS) {
+        double u1 = small.vel, u2 = big.vel;
+        double m1 = small.mass, m2 = big.mass;
+        small.vel = (u1*(m1-m2) + 2*m2*u2)/(m1+m2);
+        big.vel   = (u2*(m2-m1) + 2*m1*u1)/(m1+m2);
+        totalCollision++;
+      }
+
+      remainingTime -= tNext;
     }
 
-    // tumbukan big-small
-    if (big.x <= small.x + 1) {
-      double u1 = small.v;
-      double u2 = big.v;
+    // Bersihkan posisi lama setelah update
+    if (prevSmallPos >= 0 && prevSmallPos < W) fb[mid][prevSmallPos] = ' ';
+    if (prevBigPos   >= 0 && prevBigPos   < W) fb[mid][prevBigPos]   = ' ';
 
-      double m1 = small.m;
-      double m2 = big.m;
+    // Perbarui posisi sebelumnya
+    small.prevPos = small.pos;
+    big.prevPos   = big.pos;
 
-      small.v = (u1 * (m1 - m2) + 2 * m2 * u2) / (m1 + m2);
-      big.v = (u2 * (m2 - m1) + 2 * m1 * u1) / (m1 + m2);
+    // Dinding
+    if (wallX >= 0 && wallX < W) fb[mid][wallX] = '|';
 
-      big.x = small.x + 1;
-
-      collisionCountSmallBig++;
-    }
-
-    int pxSmall = (int)small.prevx;
-    int pxBig   = (int)big.prevx;
-
-    if (pxSmall >= 0 && pxSmall < W) fb[mid][pxSmall] = ' ';
-    if (pxBig   >= 0 && pxBig < W) fb[mid][pxBig]   = ' ';
-
-    fb[mid][wallX] = '|';
-
-    int xs = (int)small.x;
-    int xb = (int)big.x;
-
+    // Render benda
+    int xs = static_cast<int>(std::floor(small.pos));
+    int xb = static_cast<int>(std::floor(big.pos));
     if (xs >= 0 && xs < W) fb[mid][xs] = small.symbol;
     if (xb >= 0 && xb < W) fb[mid][xb] = big.symbol;
 
+    // HUD
     std::string hud;
-    hud += "Mass small=" + std::to_string((int)small.m);
-    hud += "  Mass big=" + std::to_string((int)big.m);
-    hud += "  v_small=" + std::to_string(small.v);
-    hud += "  v_big=" + std::to_string(big.v);
-    hud += "  C(small-wall)=" + std::to_string(collisionCountSmallWall);
-    hud += "  C(big-small)=" + std::to_string(collisionCountSmallBig);
+    hud.reserve(100);
+    hud += "Mass small=" + std::to_string(static_cast<int>(small.mass));
+    hud += "  Mass big="   + std::to_string(static_cast<int>(big.mass));
+    hud += "  v_small="    + std::to_string(small.vel);
+    hud += "  v_big="      + std::to_string(big.vel);
+    hud += "  Collisions=" + std::to_string(totalCollision);
 
-    for (int i = 0; i < (int)hud.size() && i < W; i++)
+    for (size_t i = 0; i < hud.size() && i < (size_t)W; ++i)
       fb[0][i] = hud[i];
-
-    for (int i = hud.size(); i < W; i++)
+    for (size_t i = hud.size(); i < (size_t)W; ++i)
       fb[0][i] = ' ';
 
     disp.render();
-
     std::this_thread::sleep_for(std::chrono::milliseconds(16));
   }
+
+  return 0;
 }

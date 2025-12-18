@@ -42,5 +42,6 @@ else()
 endif()
 
 add_subdirectory(terminal)
+add_subdirectory(swb)
 
 find_package(OpenMP REQUIRED COMPONENTS CXX)
