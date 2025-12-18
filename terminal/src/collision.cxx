@@ -3,6 +3,7 @@
 #include <thread>
 #include <cmath>
 #include <csignal>
+#include <string>
 #include "display-term.hxx"
 
 struct Body {
@@ -13,19 +14,40 @@ struct Body {
   double prevPos;
 };
 
-volatile std::sig_atomic_t stopFlag = 0;
+volatile sig_atomic_t stopFlag = 0;
 void handleSigInt(int) { stopFlag = 1; }
 
-int main() {
-  std::signal(SIGINT, handleSigInt);
+int main(int argc, char **argv) {
+  using namespace std;
+  signal(SIGINT, handleSigInt);
 
   Display &disp = Display::getInstance();
   int W = disp.get_width();
   int H = disp.get_height();
   int mid = H / 2;
 
-  Body small{8.0, 0.0, 1.0, 'o', 8.0};
-  Body big{35.0, -10.0, 1000000.0, 'O', 35.0};
+
+  char s_sym = 'o', b_sym  = 'O';
+  double p_small = 8.0 , m_small = 1.0, v_small = 0, p_big = mid, m_big = 10000, v_big = -10;
+
+  if(argc < 9) {
+    cout << "you can use " << argv[0] << "<c_small> <p_small> <m_small> <v_small> <c_cmall> <p_big> <m_big> <v_big> to set manually" << endl;
+    cout << "ENTER to continue...";
+    while(true) if(cin.get() == '\n') break;
+  }
+  else {
+    s_sym   = argv[1][0];
+    p_small = atof(argv[2]);
+    m_small = atof(argv[3]);
+    v_small = atof(argv[4]);
+    b_sym   = argv[5][0];
+    p_big   = atof(argv[6]);
+    m_big   = atof(argv[7]);
+    v_big   = atof(argv[8]);
+  }
+
+  Body small{p_small, v_small, m_small, s_sym, p_small};
+  Body big{p_big, v_big, m_big, b_sym, p_big};
 
   const int wallX = 2;
   const double dt = 0.016;
@@ -37,8 +59,8 @@ int main() {
 
   while (!stopFlag) {
     // Simpan posisi lama
-    int prevSmallPos = static_cast<int>(std::floor(small.prevPos));
-    int prevBigPos   = static_cast<int>(std::floor(big.prevPos));
+    int prevSmallPos = static_cast<int>(floor(small.prevPos));
+    int prevBigPos   = static_cast<int>(floor(big.prevPos));
 
     double remainingTime = dt;
     while (remainingTime > EPS) {
@@ -49,21 +71,21 @@ int main() {
       // Waktu tumbukan small-big
       double dv = big.vel - small.vel;
       double tBS = LARGE_TIME;
-      if (std::abs(dv) > EPS) {
+      if (abs(dv) > EPS) {
         double t = (small.pos - big.pos + 1.0)/dv;
         if (t > EPS) tBS = t;
       }
 
-      double tNext = std::min({tWall, tBS, remainingTime});
+      double tNext = min({tWall, tBS, remainingTime});
 
       small.pos += small.vel * tNext;
       big.pos   += big.vel * tNext;
 
-      if (std::abs(tNext - tWall) < EPS) {
+      if (abs(tNext - tWall) < EPS) {
         small.vel = -small.vel;
         totalCollision++;
       }
-      if (std::abs(tNext - tBS) < EPS) {
+      if (abs(tNext - tBS) < EPS) {
         double u1 = small.vel, u2 = big.vel;
         double m1 = small.mass, m2 = big.mass;
         small.vel = (u1*(m1-m2) + 2*m2*u2)/(m1+m2);
@@ -86,19 +108,19 @@ int main() {
     if (wallX >= 0 && wallX < W) fb[mid][wallX] = '|';
 
     // Render benda
-    int xs = static_cast<int>(std::floor(small.pos));
-    int xb = static_cast<int>(std::floor(big.pos));
+    int xs = static_cast<int>(floor(small.pos));
+    int xb = static_cast<int>(floor(big.pos));
     if (xs >= 0 && xs < W) fb[mid][xs] = small.symbol;
     if (xb >= 0 && xb < W) fb[mid][xb] = big.symbol;
 
     // HUD
-    std::string hud;
+    string hud;
     hud.reserve(100);
-    hud += "Mass small=" + std::to_string(static_cast<int>(small.mass));
-    hud += "  Mass big="   + std::to_string(static_cast<int>(big.mass));
-    hud += "  v_small="    + std::to_string(small.vel);
-    hud += "  v_big="      + std::to_string(big.vel);
-    hud += "  Collisions=" + std::to_string(totalCollision);
+    hud += "Mass small=" + to_string(static_cast<int>(small.mass));
+    hud += "  Mass big="   + to_string(static_cast<int>(big.mass));
+    hud += "  v_small="    + to_string(small.vel);
+    hud += "  v_big="      + to_string(big.vel);
+    hud += "  Collisions=" + to_string(totalCollision);
 
     for (size_t i = 0; i < hud.size() && i < (size_t)W; ++i)
       fb[0][i] = hud[i];
@@ -106,7 +128,7 @@ int main() {
       fb[0][i] = ' ';
 
     disp.render();
-    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    this_thread::sleep_for(chrono::milliseconds(16));
   }
 
   return 0;
