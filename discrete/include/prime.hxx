@@ -33,24 +33,21 @@
 
 #if !defined(__cpp_lib_endian)
 namespace std {
-enum class endian {
+enum class endian : unsigned char {
   little = 0,
   big    = 1,
 #if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__)
-  native = (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) ? little : big
-#elif defined(_WIN32)
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
   native = little
-#elif defined(__APPLE__)
-  // Apple platforms are little-endian on Intel and ARM64
+#else
+  native = big
+#endif
+#elif defined(_WIN32) || defined(__LITTLE_ENDIAN__) || defined(__ARMEL__) || defined(__AARCH64EL__) || defined(__i386__) || defined(__x86_64__) || defined(__APPLE__)
   native = little
-#elif defined(__MACH__) || defined(__linux__)
-#ifdef __BIG_ENDIAN__
+#elif defined(__BIG_ENDIAN__) || defined(__ARMEB__) || defined(__AARCH64EB__)
   native = big
 #else
-  native = little
-#endif
-#else
-  // fallback default
+  /* fallback default */
   native = little
 #endif
 };
