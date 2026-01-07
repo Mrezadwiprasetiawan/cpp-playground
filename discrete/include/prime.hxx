@@ -64,12 +64,31 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
   inline static int maxThread = std::thread::hardware_concurrency();
 
   void main_sieve(std::vector<uint64_t> &sieve, T limit, int tid) noexcept {
+    size_t W = sieve.size();
+    size_t w0 = (W * tid) / maxThread;
+    size_t w1 = (W * (tid + 1)) / maxThread;
+
+    size_t bit0 = w0 * 64;
+    size_t bit1 = w1 * 64;
+
     for (T p = 3; p * p <= limit; p += 2) {
-      const size_t i = (p - 3) >> 1;
-      if (!(sieve[i >> 6] & (1ULL << (i & 63)))) continue;
-      for (T j = p * p + 2 * p * tid; j <= limit; j += 2 * p * maxThread) {
-        const size_t idx  = (j - 3) >> 1;
-        sieve[idx >> 6]  &= ~(1ULL << (idx & 63));
+      size_t pi = (p - 3) >> 1;
+      if (!(sieve[pi >> 6] & (1ULL << (pi & 63))))
+        continue;
+
+      T j = p * p;
+      size_t ji = (j - 3) >> 1;
+
+      if (ji < bit0) {
+        T step = 2 * p;
+        T need = bit0 - ji;
+        T k = (need + step - 1) / step;
+        j += k * step;
+        ji = (j - 3) >> 1;
+      }
+
+      for (; ji < bit1; j += 2 * p, ji = (j - 3) >> 1) {
+        sieve[ji >> 6] &= ~(1ULL << (ji & 63));
       }
     }
   }
