@@ -6,6 +6,7 @@ set(SRC_SOURCES "src")
 add_executable(prime ${SRC_SOURCES}/prime.cxx)
 target_link_libraries(prime PRIVATE discrete)
 add_executable(fibonacci ${SRC_SOURCES}/fibonacci.cxx)
+add_executable(derangement ${SRC_SOURCES}/derangement.cxx)
 
 add_library(discrete INTERFACE)
 target_include_directories(discrete INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)

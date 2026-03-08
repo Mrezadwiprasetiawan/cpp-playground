@@ -1,92 +1,86 @@
-#include <collatz_path.hxx>
-#include <concepts>
+#include <collatz_cube.hxx>
 #include <cstdint>
-#include <integer_pow.hxx>
 #include <iostream>
 #include <string>
+#include <string_view>
 
-#include "collatz_cube.hxx"
+using U64 = uint64_t;
 
-void print_help() {
-  using namespace std;
-  cout << "-s or --seed to set the seed" << endl;
-  cout << "-e or --exp to activate expMode" << endl << "\twhen the next argument passed as integer, it will be setted as 2^seed*odd -1";
+static void print_help(const char *prog) {
+  std::cerr <<
+    "Usage:\n"
+    "  " << prog << " tensor [Z] [Y] [X]      Print tensor values (default Z=Y=X=5)\n"
+    "  " << prog << " path   [FROM] [TO]       Print Collatz paths for seeds FROM..TO (default 1..5)\n"
+    "  " << prog << " all    [Z] [Y] [X]       Both tensor and paths, seeds 1..Z\n"
+    "  " << prog << " -h | --help              Show this help\n"
+    "\n"
+    "Options:\n"
+    "  Z, Y, X     Tensor dimensions (uint64, Z=depth, Y=row, X=col)\n"
+    "  FROM, TO    Seed range inclusive (uint64, FROM >= 1)\n"
+    "\n"
+    "Examples:\n"
+    "  " << prog << " tensor 3 4 5\n"
+    "  " << prog << " path 1 20\n"
+    "  " << prog << " all 6\n";
 }
 
-template <std::integral I>
-struct v_collatz {
-  I v2, v3, o;
-};
-
-template <std::integral I>
-v_collatz<I> get_valuation(I value) {
-  I v2 = 0, v3 = 0, o;
-  ++value;
-  while (!(value & 1)) {
-    value >>= 1;
-    ++v2;
-  }
-  while (!(value % 3)) {
-    value /= 3;
-    ++v3;
-  }
-  o = value;
-  return {v2, v3, o};
-}
-
-template <std::integral I>
-std::string superscript(I val) {
-  static const char* sup_digits[] = {"⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"};
-  if (val == 0) return "⁰";
-  std::string res;
-  char        buf[64];
-  int         idx = 0;
-  while (val > 0) {
-    int digit   = val % 10;
-    buf[idx++]  = digit;
-    val        /= 10;
-  }
-  for (int i = idx - 1; i >= 0; --i) { res += sup_digits[buf[i]]; }
-  return res;
-}
-
-int main(int argc, const char** argv) {
-  using namespace std;
-  uint64_t seed = 0, odd = 1;
-  bool     expMode = false, outputExpMode = false, debug = false;
-  for (int i = 1; i < argc; ++i) {
-    if ((string(argv[i]) == "-s" || string(argv[i]) == "--seed") && argc > i + 1) seed = stoull(argv[i + 1]);
-    if ((string(argv[i]) == "-e" || string(argv[i]) == "--exp")) {
-      expMode = true;
-      if (argc > i + 1 && argv[i + 1][0] != '-') odd = stoull(string(argv[i + 1]));
+static void do_tensor(U64 Z, U64 Y, U64 X) {
+  for (U64 z = 0; z < Z; ++z) {
+    for (U64 y = 0; y < Y; ++y) {
+      for (U64 x = 0; x < X; ++x) {
+        std::cout << CollatzCube<U64, U64>::get_value_from_index(z, y, x);
+        if (x + 1 < X) std::cout << '\t';
+      }
+      std::cout << '\n';
     }
-    if (string(argv[i]) == "-o" || string(argv[i]) == "--outputExp") outputExpMode = true;
-    if (string(argv[i]) == "-d" || string(argv[i]) == "-debug") debug = false;
+    std::cout << '\n';
   }
-  if (seed == 0) {
-    print_help();
-    return -1;
+}
+
+static void do_path(U64 from, U64 to) {
+  for (U64 n = from; n <= to; ++n) {
+    std::cout << "seed = " << n << '\n';
+    for (auto i : CollatzCube<U64, U64>::get_path_index_from_seed(n))
+      std::cout << i.z << ',' << i.y << ',' << i.x << '\n';
+    std::cout << '\n';
   }
-  vector<uint64_t> result;
-  if (expMode) seed = int_pow<uint64_t>(2, seed) * odd - 1;
-  result = collatz_get_path(seed);
-  cout << "path for ";
-  if (outputExpMode) {
-    v_collatz vSeed = get_valuation(seed);
-    cout << "2" << superscript(vSeed.v2) << " * " << "3" << superscript(vSeed.v3) << " * " << vSeed.o << " - 1 " << " = ";
-    for (auto val : result) {
-      v_collatz vVal = get_valuation(val);
-      cout << "2" << superscript(vVal.v2) << " * " << "3" << superscript(vVal.v3) << " * " << vVal.o << " - 1 => ";
-    }
+}
+
+int main(int argc, const char **argv) {
+  using namespace std;
+
+  if (argc < 2 || string_view(argv[1]) == "-h" || string_view(argv[1]) == "--help") {
+    print_help(argv[0]);
+    return argc < 2 ? 1 : 0;
+  }
+
+  string_view mode(argv[1]);
+
+  if (mode == "tensor") {
+    U64 Z = argc > 2 ? stoull(argv[2]) : 5;
+    U64 Y = argc > 3 ? stoull(argv[3]) : 5;
+    U64 X = argc > 4 ? stoull(argv[4]) : 5;
+    do_tensor(Z, Y, X);
+
+  } else if (mode == "path") {
+    U64 from = argc > 2 ? stoull(argv[2]) : 1;
+    U64 to   = argc > 3 ? stoull(argv[3]) : 5;
+    if (from < 1) { cerr << "Error: FROM must be >= 1\n"; return 1; }
+    if (from > to) { cerr << "Error: FROM must be <= TO\n"; return 1; }
+    do_path(from, to);
+
+  } else if (mode == "all") {
+    U64 Z = argc > 2 ? stoull(argv[2]) : 5;
+    U64 Y = argc > 3 ? stoull(argv[3]) : 5;
+    U64 X = argc > 4 ? stoull(argv[4]) : 5;
+    do_tensor(Z, Y, X);
+    do_path(1, Z);
+
   } else {
-    cout << seed << " = ";
-    for (auto val : result) cout << " " << val;
+    cerr << "Error: unknown mode '" << mode << "'\n\n";
+    print_help(argv[0]);
+    return 1;
   }
-  Collatz_cube<uint64_t> testCube;
-  if (debug)
-    for (size_t i = 0; i < 100; ++i)
-      for (size_t j = 0; j < 100; ++j)
-        for (size_t k = 0; k < 100; ++k) cout << testCube[i][j][k] << endl;
-  cout << endl;
+
   return 0;
 }

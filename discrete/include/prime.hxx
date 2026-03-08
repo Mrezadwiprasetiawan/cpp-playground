@@ -67,18 +67,14 @@ requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>)
     size_t W = sieve.size();
     size_t w0 = (W * tid) / maxThread;
     size_t w1 = (W * (tid + 1)) / maxThread;
-
     size_t bit0 = w0 * 64;
     size_t bit1 = w1 * 64;
-
     for (T p = 3; p * p <= limit; p += 2) {
       size_t pi = (p - 3) >> 1;
       if (!(sieve[pi >> 6] & (1ULL << (pi & 63))))
         continue;
-
       T j = p * p;
       size_t ji = (j - 3) >> 1;
-
       if (ji < bit0) {
         T step = 2 * p;
         T need = bit0 - ji;
