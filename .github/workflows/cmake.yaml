@@ -86,6 +86,16 @@ jobs:
 
 
    # ───────── Host‑specific deps ─────────
+    # ───────── Cache apt (Linux) ─────────
+    - name: Cache apt packages (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt/archives
+        key: apt-${{ runner.os }}-${{ hashFiles('.github/workflows/cmake.yaml') }}
+        restore-keys: |
+          apt-${{ runner.os }}-
+
     - name: Setup deps (Linux native & Android)
       if: matrix.os == 'ubuntu-latest'
       run: |
