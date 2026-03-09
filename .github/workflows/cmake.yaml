@@ -104,6 +104,7 @@ jobs:
         sudo apt-get install -y -o dir::cache::archives="$HOME/apt-cache" \
         clang ninja-build libomp-dev \
         libpng-dev libx11-dev libvulkan-dev qt6* libopencv-dev #i want to use all qt6 to practice more deeply later
+        sudo chown -R "$USER" ~/apt-cache
 
     # ───────── Cache Qt (Windows) ─────────
     - name: Cache Qt (Windows)
