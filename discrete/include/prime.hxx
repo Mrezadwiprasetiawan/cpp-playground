@@ -31,23 +31,35 @@
 #include <thread>
 #include <vector>
 
+/* Include <bit> duluan agar __cpp_lib_endian terdefinisi oleh stdlib jika
+ * compiler sudah support C++20 — tanpa ini macro tidak pernah di-set meski
+ * compiler support, sehingga polyfill dan stdlib definition bentrok.        */
+#if defined(__has_include) && __has_include(<bit>)
+#  include <bit>
+#endif
+
 #if !defined(__cpp_lib_endian)
 namespace std {
 enum class endian : unsigned char {
   little = 0,
   big    = 1,
+/* Prioritaskan macro compiler built-in karena paling akurat */
 #if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__)
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#  if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
   native = little
-#else
+#  else
   native = big
-#endif
-#elif defined(_WIN32) || defined(__LITTLE_ENDIAN__) || defined(__ARMEL__) || defined(__AARCH64EL__) || defined(__i386__) || defined(__x86_64__) || defined(__APPLE__)
+#  endif
+/* Fallback per-platform — hanya platform yang benar-benar diketahui */
+#elif defined(__LITTLE_ENDIAN__) || defined(__ARMEL__)  || defined(__AARCH64EL__) || \
+      defined(__i386__)          || defined(__x86_64__) || defined(_M_IX86)        || \
+      defined(_M_X64)            || defined(_M_ARM64)
   native = little
-#elif defined(__BIG_ENDIAN__) || defined(__ARMEB__) || defined(__AARCH64EB__)
+#elif defined(__BIG_ENDIAN__) || defined(__ARMEB__) || defined(__AARCH64EB__) || \
+      defined(__MIPSEB__)      || defined(__s390__)  || defined(__s390x__)
   native = big
 #else
-  /* fallback default */
+#  warning "std::endian polyfill: unknown endianness, defaulting to little — verify for this platform"
   native = little
 #endif
 };
@@ -56,7 +68,7 @@ enum class endian : unsigned char {
 
 namespace Discrete {
 template <typename T>
-requires(std::integral<T> || std::floating_point<T> && !std::is_same_v<bool, T>) class Prime {
+requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T>) class Prime {
  private:
   std::vector<T>    lastResults;
   T                 lastLimit = 0;
