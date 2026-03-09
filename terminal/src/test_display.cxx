@@ -2,7 +2,6 @@
   cpp-playground - C++ experiments and learning playground
   Copyright (C) 2025 M. Reza Dwi Prasetiawan
 
-
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +15,6 @@
   You should have received a copy of the GNU General Public License
   along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
-
 
 #include <array>
 #include <chrono>
@@ -35,25 +33,37 @@ void        handle_sigint(int) { running = false; }
 int main() {
   signal(SIGINT, handle_sigint);
   Display& disp = Display::getInstance();
-  int      w    = disp.get_width();
-  int      h    = disp.get_height();
 
-  cout << "debug : rendering on scale" << w << ',' << h << endl;
-  std::this_thread::sleep_for(2s);
+  int w = disp.get_width();
+  int h = disp.get_height();
 
+  printf("debug : rendering on scale %d,%d\n", w, h);
+  this_thread::sleep_for(2s);
+
+  /* rgbBuffer dialokasikan ulang saat resize */
   vector<vector<array<int, 3>>> rgbBuffer(h, vector<array<int, 3>>(w));
 
   float t = 0.0f;
   while (running) {
-#pragma omp parallel for
+    /* Deteksi resize: ambil dimensi terbaru dari Display.
+       Display::render() sudah menangani resize internal buffer-nya
+       via SIGWINCH handler; kita tinggal sinkronkan w/h lokal. */
+    int new_w = disp.get_width();
+    int new_h = disp.get_height();
+    if (new_w != w || new_h != h) {
+      w = new_w;
+      h = new_h;
+      rgbBuffer.assign(h, vector<array<int, 3>>(w));
+    }
+
+#pragma omp parallel for schedule(static)
     for (int y = 0; y < h; ++y) {
+      const float yf = y / float(h - 1 > 0 ? h - 1 : 1);
       for (int x = 0; x < w; ++x) {
-        float xf        = x / float(w - 1);
-        float yf        = y / float(h - 1);
-        int   r         = int((sin(t + xf * 3.1415f) * 0.5f + 0.5f) * 255);
-        int   g         = int((sin(t + yf * 3.1415f + 2.0f) * 0.5f + 0.5f) * 255);
-        int   b         = int((sin(t + xf * 3.1415f + 4.0f) * 0.5f + 0.5f) * 255);
-        rgbBuffer[y][x] = {r, g, b};
+        const float xf      = x / float(w - 1 > 0 ? w - 1 : 1);
+        rgbBuffer[y][x][0]  = int((sinf(t + xf * 3.1415f)         * 0.5f + 0.5f) * 255);
+        rgbBuffer[y][x][1]  = int((sinf(t + yf * 3.1415f + 2.0f)  * 0.5f + 0.5f) * 255);
+        rgbBuffer[y][x][2]  = int((sinf(t + xf * 3.1415f + 4.0f)  * 0.5f + 0.5f) * 255);
       }
     }
 
@@ -61,11 +71,10 @@ int main() {
     disp.render();
 
     t += 0.05f;
-    if (t > 2 * 3.1415926f) t -= 2 * 3.1415926f;
+    if (t > 2.0f * 3.1415926f) t -= 2.0f * 3.1415926f;
+
     this_thread::sleep_for(chrono::milliseconds(16));
   }
 
-  disp.getANSI().reset();
-  disp.getANSI().showCursor();
   return 0;
-};
+}
