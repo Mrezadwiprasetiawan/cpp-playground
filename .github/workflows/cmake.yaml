@@ -91,7 +91,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       uses: actions/cache@v4
       with:
-        path: /var/cache/apt/archives
+        path: ~/apt-cache
         key: apt-${{ runner.os }}-${{ hashFiles('.github/workflows/cmake.yaml') }}
         restore-keys: |
           apt-${{ runner.os }}-
@@ -100,7 +100,8 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang ninja-build libomp-dev \
+        sudo apt-get install -y -o dir::cache::archives="$HOME/apt-cache" \
+        clang ninja-build libomp-dev \
         libpng-dev libx11-dev libvulkan-dev qt6* libopencv-dev #i want to use all qt6 to practice more deeply later
 
     - name: Deps (Windows)
