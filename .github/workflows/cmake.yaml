@@ -99,10 +99,21 @@ jobs:
     - name: Setup deps (Linux native & Android)
       if: matrix.os == 'ubuntu-latest'
       run: |
+        mkdir -p ~/apt-cache/partial
         sudo apt-get update
         sudo apt-get install -y -o dir::cache::archives="$HOME/apt-cache" \
         clang ninja-build libomp-dev \
         libpng-dev libx11-dev libvulkan-dev qt6* libopencv-dev #i want to use all qt6 to practice more deeply later
+
+    # ───────── Cache Qt (Windows) ─────────
+    - name: Cache Qt (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/cache@v4
+      with:
+        path: ~\Qt
+        key: qt-windows-6.6.1-${{ runner.os }}
+        restore-keys: |
+          qt-windows-6.6.1-
 
     - name: Deps (Windows)
       if: matrix.os == 'windows-latest'
@@ -113,10 +124,12 @@ jobs:
 
         # Buat direktori target untuk Qt
         $QtDir = "$env:USERPROFILE\Qt"
-        mkdir $QtDir
 
-        # Install Qt 6.6.1 (atau versi lain sesuai kebutuhan)
-        aqt install-qt windows desktop 6.6.1 win64_msvc2019_64 -O $QtDir
+        # Install Qt hanya kalau belum ada di cache
+        if (-not (Test-Path "$QtDir\6.6.1\msvc2019_64\bin\qmake.exe")) {
+          mkdir -Force $QtDir
+          aqt install-qt windows desktop 6.6.1 win64_msvc2019_64 -O $QtDir
+        }
 
         # Simpan lokasi Qt ke ENV agar bisa dipakai nanti
         echo "QT_ROOT=$QtDir\6.6.1\msvc2019_64" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
