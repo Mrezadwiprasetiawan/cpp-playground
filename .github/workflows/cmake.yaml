@@ -170,7 +170,7 @@ jobs:
 
 
     - name: run test collatz
-      run:  ./bin/collatz -s 63 -e -o
+      run:  ./bin/collatz tensor 10 10 10 && ./bin/collatz path 1 100
     - name: run basicFFN
       run: ./bin/basicFFN
     - name: run test microcontroller simulator
