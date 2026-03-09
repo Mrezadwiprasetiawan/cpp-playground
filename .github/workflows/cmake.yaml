@@ -114,25 +114,28 @@ jobs:
     - name: Configure (Linux native)
       if: matrix.os == 'ubuntu-latest' && matrix.target == 'native'
       run: |
-        cmake -S . -B build -G Ninja \
+        cmake --fresh -S . -B build -G Ninja \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++ \
           -DCMAKE_PREFIX_PATH="$VULKAN_SDK" \
-          -DVULKAN_SDK="$VULKAN_SDK" \
+          -DVULKAN_SDK="$VULKAN_SDK"
 
     # ───────── Configure (Windows native) ─────────
     - name: Configure (Windows native)
       if: matrix.os == 'windows-latest' && matrix.target == 'native'
       shell: pwsh
       run: |
-        cmake -S . -B build -G Ninja `
+        # Redirect stderr cmake ke stdout — PowerShell menelan stderr native command secara diam-diam
+        $ErrorActionPreference = 'Continue'
+        cmake --fresh -S . -B build -G Ninja `
           -DCMAKE_BUILD_TYPE=Release `
           -DCMAKE_C_COMPILER="clang.exe" `
           -DCMAKE_CXX_COMPILER="clang++.exe" `
           -DCMAKE_PREFIX_PATH="$Env:VULKAN_SDK" `
           -DVULKAN_SDK="$Env:VULKAN_SDK" `
-          -DCMAKE_TOOLCHAIN_FILE="$Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+          -DCMAKE_TOOLCHAIN_FILE="$Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" 2>&1
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 
 #    # ───────── Configure (Android) ─────────
