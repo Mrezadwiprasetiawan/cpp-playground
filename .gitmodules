@@ -3,4 +3,4 @@
 	url = https://github.com/Mrezadwiprasetiawan/collatz
 [submodule "matplotplusplus"]
 	path = matplotplusplus
-	url = ./matplotplusplus
+	url = https://github.com/alandefreitas/matplotplusplus
