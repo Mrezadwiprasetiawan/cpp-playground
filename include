@@ -1,0 +1,252 @@
+#pragma once
+// ═══════════════════════════════════════════════════════════════════
+//  ArrowPlotWidget.hpp  —  Qt6 QOpenGLWidget  (3D, orbit camera)
+//
+//  Controls:
+//    Left-drag   → orbit (rotate)
+//    Right-drag  → pan
+//    Scroll      → zoom
+//    Double-click→ reset camera
+// ═══════════════════════════════════════════════════════════════════
+
+#include <QOpenGLWidget>
+#include <QOpenGLFunctions>
+#include <QOpenGLBuffer>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLShaderProgram>
+#include <QMatrix4x4>
+#include <QWheelEvent>
+#include <QMouseEvent>
+#include <cmath>
+
+#include "arrowplot.hpp"
+
+class ArrowPlotWidget : public QOpenGLWidget, protected QOpenGLFunctions {
+    Q_OBJECT
+
+public:
+    explicit ArrowPlotWidget(QWidget* parent = nullptr)
+        : QOpenGLWidget(parent) {}
+
+    ~ArrowPlotWidget() override {
+        makeCurrent();
+        for (auto* vao : {&vaoSphere_, &vaoShaft_, &vaoHead_}) vao->destroy();
+        for (auto* vbo : {&vboSphere_, &vboShaft_, &vboHead_}) vbo->destroy();
+        doneCurrent();
+    }
+
+    ap::ArrowPlot&    plot()    { return plot_; }
+    ap::Config&       config()  { return cfg_;  }
+    ap::ColourScheme& colours() { return col_;  }
+
+    void refresh() {
+        if (!isValid()) return;
+        makeCurrent();
+        uploadMesh();
+        doneCurrent();
+        update();
+    }
+
+protected:
+    // ── GL lifecycle ─────────────────────────────────────────────
+
+    void initializeGL() override {
+        initializeOpenGLFunctions();
+        glClearColor(0.05f, 0.05f, 0.10f, 1.f);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_MULTISAMPLE);
+
+        buildShader();
+        buildVAOs();
+        uploadMesh();
+    }
+
+    void resizeGL(int w, int h) override {
+        glViewport(0, 0, w, h);
+        aspect_ = (h > 0) ? (float)w / h : 1.f;
+        update();
+    }
+
+    void paintGL() override {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        shader_.bind();
+        shader_.setUniformValue("uMVP", mvp());
+
+        auto draw = [&](QOpenGLVertexArrayObject& vao, GLsizei count) {
+            if (count == 0) return;
+            vao.bind();
+            glDrawArrays(GL_TRIANGLES, 0, count);
+            vao.release();
+        };
+
+        draw(vaoShaft_,  shaftCount_);
+        draw(vaoHead_,   headCount_);
+        draw(vaoSphere_, sphereCount_);
+
+        shader_.release();
+    }
+
+    // ── mouse / wheel ────────────────────────────────────────────
+
+    void mousePressEvent(QMouseEvent* e) override {
+        lastMouse_ = e->pos();
+        if      (e->button() == Qt::LeftButton)  orbiting_ = true;
+        else if (e->button() == Qt::RightButton) panning_  = true;
+    }
+
+    void mouseReleaseEvent(QMouseEvent* e) override {
+        if (e->button() == Qt::LeftButton)  orbiting_ = false;
+        if (e->button() == Qt::RightButton) panning_  = false;
+    }
+
+    void mouseMoveEvent(QMouseEvent* e) override {
+        QPointF d = e->pos() - lastMouse_;
+        lastMouse_ = e->pos();
+
+        if (orbiting_) {
+            yaw_   += (float)d.x() * 0.4f;
+            pitch_ += (float)d.y() * 0.4f;
+            pitch_  = std::clamp(pitch_, -89.f, 89.f);
+        }
+        if (panning_) {
+            panX_ -= (float)d.x() * 0.002f * dist_;
+            panY_ += (float)d.y() * 0.002f * dist_;
+        }
+        update();
+    }
+
+    void wheelEvent(QWheelEvent* e) override {
+        float delta = e->angleDelta().y() / 120.f;
+        dist_ *= std::pow(0.85f, delta);
+        dist_  = std::clamp(dist_, 0.5f, 20.f);
+        update();
+    }
+
+    void mouseDoubleClickEvent(QMouseEvent*) override {
+        yaw_=30.f; pitch_=20.f; dist_=4.f; panX_=0; panY_=0;
+        update();
+    }
+
+private:
+    ap::ArrowPlot    plot_;
+    ap::Config       cfg_;
+    ap::ColourScheme col_;
+
+    QOpenGLShaderProgram     shader_;
+    QOpenGLVertexArrayObject vaoSphere_, vaoShaft_, vaoHead_;
+    QOpenGLBuffer            vboSphere_{QOpenGLBuffer::VertexBuffer};
+    QOpenGLBuffer            vboShaft_ {QOpenGLBuffer::VertexBuffer};
+    QOpenGLBuffer            vboHead_  {QOpenGLBuffer::VertexBuffer};
+
+    GLsizei sphereCount_=0, shaftCount_=0, headCount_=0;
+
+    // camera
+    float yaw_   =  30.f;
+    float pitch_ =  20.f;
+    float dist_  =   4.f;
+    float panX_  =   0.f;
+    float panY_  =   0.f;
+    float aspect_=   1.f;
+
+    bool orbiting_=false, panning_=false;
+    QPointF lastMouse_;
+
+    // ── GLSL ─────────────────────────────────────────────────────
+
+    static constexpr const char* kVert = R"glsl(
+        #version 330 core
+        layout(location = 0) in vec3 aPos;
+        layout(location = 1) in vec4 aColor;
+
+        uniform mat4 uMVP;
+
+        out vec4 vColor;
+
+        void main() {
+            gl_Position = uMVP * vec4(aPos, 1.0);
+            vColor = aColor;
+        }
+    )glsl";
+
+    // Simple per-fragment "fake lighting" using depth gradient
+    static constexpr const char* kFrag = R"glsl(
+        #version 330 core
+        in  vec4 vColor;
+        out vec4 fragColor;
+
+        void main() {
+            // subtle depth-based shading so 3D shape reads better
+            float depth = gl_FragCoord.z;
+            float shade = mix(1.0, 0.55, depth);
+            fragColor = vec4(vColor.rgb * shade, vColor.a);
+        }
+    )glsl";
+
+    // ── helpers ──────────────────────────────────────────────────
+
+    QMatrix4x4 mvp() const {
+        QMatrix4x4 view, proj;
+
+        // orbit camera position
+        float yR = qDegreesToRadians(yaw_);
+        float pR = qDegreesToRadians(pitch_);
+        float cx = dist_ * std::cos(pR) * std::sin(yR);
+        float cy = dist_ * std::sin(pR);
+        float cz = dist_ * std::cos(pR) * std::cos(yR);
+
+        view.lookAt(
+            {cx + panX_, cy + panY_, cz},  // eye
+            {panX_,      panY_,      0},   // target
+            {0, 1, 0}                       // up
+        );
+
+        proj.perspective(45.f, aspect_, 0.01f, 100.f);
+
+        return proj * view;
+    }
+
+    void buildShader() {
+        shader_.addShaderFromSourceCode(QOpenGLShader::Vertex,   kVert);
+        shader_.addShaderFromSourceCode(QOpenGLShader::Fragment, kFrag);
+        shader_.link();
+    }
+
+    void setupVAO(QOpenGLVertexArrayObject& vao, QOpenGLBuffer& vbo) {
+        vao.create(); vao.bind();
+        vbo.create(); vbo.bind();
+        vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+
+        constexpr int stride = 7 * sizeof(float); // x y z r g b a
+        shader_.enableAttributeArray(0);
+        shader_.setAttributeBuffer(0, GL_FLOAT, 0,               3, stride); // pos
+        shader_.enableAttributeArray(1);
+        shader_.setAttributeBuffer(1, GL_FLOAT, 3*sizeof(float), 4, stride); // color
+
+        vao.release();
+    }
+
+    void buildVAOs() {
+        shader_.bind();
+        setupVAO(vaoSphere_, vboSphere_);
+        setupVAO(vaoShaft_,  vboShaft_);
+        setupVAO(vaoHead_,   vboHead_);
+        shader_.release();
+    }
+
+    void upload(QOpenGLVertexArrayObject& vao, QOpenGLBuffer& vbo,
+                const std::vector<float>& data, GLsizei& count) {
+        count = (GLsizei)(data.size() / 7);
+        vao.bind(); vbo.bind();
+        vbo.allocate(data.data(), (int)(data.size() * sizeof(float)));
+        vao.release();
+    }
+
+    void uploadMesh() {
+        if (plot_.size() < 2) return;
+        ap::Mesh mesh = plot_.build(cfg_, col_);
+        upload(vaoSphere_, vboSphere_, mesh.sphereVerts, sphereCount_);
+        upload(vaoShaft_,  vboShaft_,  mesh.shaftVerts,  shaftCount_);
+        upload(vaoHead_,   vboHead_,   mesh.headVerts,   headCount_);
+    }
+};

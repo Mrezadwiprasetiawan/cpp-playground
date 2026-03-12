@@ -22,7 +22,6 @@ add_subdirectory(win32)
 endif()
 
 # Add subprojects
-add_subdirectory(matplotplusplus)
 add_subdirectory(systems)
 add_subdirectory(basic)
 add_subdirectory(number_system)

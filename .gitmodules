@@ -1,6 +1,3 @@
 [submodule "collatz"]
 	path = collatz
 	url = https://github.com/Mrezadwiprasetiawan/collatz
-[submodule "matplotplusplus"]
-	path = matplotplusplus
-	url = ./matplotplusplus
