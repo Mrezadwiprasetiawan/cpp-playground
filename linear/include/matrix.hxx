@@ -38,12 +38,27 @@ class Mat {
   T vals[N * N];
 
  public:
-  Mat() : vals() {}
+  explicit Mat() : vals() {}
 
   // copy constructor so that we can copy the matrix dirrectly
   Mat(const Mat &other) = default;
   // copy with assigment operator so that we can copy the matrix without explicitly loopi through the data
   Mat &operator=(const Mat &other) = default;
+
+  // converting copy constructor, agar Mat<T,N> bisa dicopy dari Mat<U,N> dengan tipe elemen berbeda
+  template <typename U>
+  Mat(const Mat<U, N> &other) {
+    for (int i = 0; i < N; ++i)
+      for (int j = 0; j < N; ++j) vals[i * N + j] = static_cast<T>(other[i][j]);
+  }
+
+  // converting copy assignment, sama seperti di atas tapi untuk operator=
+  template <typename U>
+  Mat &operator=(const Mat<U, N> &other) {
+    for (int i = 0; i < N; ++i)
+      for (int j = 0; j < N; ++j) vals[i * N + j] = static_cast<T>(other[i][j]);
+    return *this;
+  }
 
   Mat(T (&v)[N * N]) { set_elements(v); }
   Mat(const std::initializer_list<T> &v) { set_elements(v); }
@@ -83,11 +98,44 @@ class Mat {
 
   void set_element(size_t i, T val) { vals[i] = val; }
 
+  // operasi in-place, method ini langsung memodifikasi object saat ini (void, tanpa return)
+  // dipakai sebagai basis untuk operator biasa (yang mengembalikan objek baru hasil copy)
+  // dan operator penugasan (+=, -=, dst) supaya tidak ada copy yang sia-sia
+
+  template <typename U>
+  void add(const Mat<U, N> &m) {
+    for (int i = 0; i < N * N; ++i) vals[i] += static_cast<T>(m[i / N][i % N]);
+  }
+
+  template <typename U>
+  void sub(const Mat<U, N> &m) {
+    for (int i = 0; i < N * N; ++i) vals[i] -= static_cast<T>(m[i / N][i % N]);
+  }
+
+  template <typename U>
+  void mul(const Mat<U, N> &m) {
+    T vals_res[N * N]{};
+    // k ini faktor untuk ngurusin perkaliannya
+    // sedangkan row dan col untuk indeks hasil akhirnya
+    for (int row = 0; row < N; ++row)
+      for (int col = 0; col < N; ++col)
+        for (int k = 0; k < N; ++k) vals_res[row * N + col] += vals[row * N + k] * static_cast<T>(m[k][col]);
+
+    for (int i = 0; i < N * N; ++i) vals[i] = vals_res[i];
+  }
+
+  template <typename U>
+  requires(std::integral<U> || std::floating_point<U>) void mul(U c) {
+    for (int i = 0; i < N * N; ++i) vals[i] *= c;
+  }
+
+  // operator biasa, hasilnya selalu object baru (copy dulu baru dipanggil in-place-nya)
+
   template <typename U>
   requires(std::integral<T> || std::floating_point<T>) Mat operator*(U c) const {
-    T vals_cp[N * N];
-    for (int i = 0; i < N * N; ++i) vals_cp[i] = vals[i] * c;
-    return Mat(vals_cp);
+    Mat res(*this);
+    res.mul(c);
+    return res;
   }
 
   Vec<T, N> operator[](int row) const {
@@ -107,45 +155,50 @@ class Mat {
 
   template <typename U>
   Mat operator*(const Mat<U, N> &m) const {
-    T vals_res[N * N]{};
-    // k ini faktor untuk ngurusin perkaliannya
-    // sedangkan row dan col untuk indeks hasil akhirnya
-    for (int row = 0; row < N; ++row)
-      for (int col = 0; col < N; ++col)
-        for (int k = 0; k < N; ++k) vals_res[row * N + col] += vals[row * N + k] * static_cast<T>(m[k][col]);
-
-    return Mat(vals_res);
+    Mat res(*this);
+    res.mul(m);
+    return res;
   }
 
   template <typename U>
   Mat operator+(const Mat<U, N> &m) const {
-    T vals_res[N * N]{};
-    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] + static_cast<T>(m[i / N][i % N]);
-    return Mat(vals_res);
+    Mat res(*this);
+    res.add(m);
+    return res;
   }
 
   template <typename U>
   Mat operator-(const Mat<U, N> &m) const {
-    T vals_res[N * N]{};
-    for (int i = 0; i < N * N; ++i) vals_res[i] = vals[i] - static_cast<T>(m[i / N][i % N]);
-    return Mat(vals_res);
+    Mat res(*this);
+    res.sub(m);
+    return res;
   }
 
-  // overload juga penugasannya agar lebih mudah
-#define OV_ASSIGNMENT_OP(op)                \
-  template <typename U>                     \
-  Mat &operator op##=(const Mat<U, N> &m) { \
-    return *this = *this op m;              \
+  // operator penugasan, langsung pakai method in-place di atas, tanpa copy dulu
+
+  template <typename U>
+  Mat &operator+=(const Mat<U, N> &m) {
+    add(m);
+    return *this;
   }
 
-  /* nambah ; sebenernya ga perlu tapi karena vim indentnya bakal ga sejajar
-   * lagi jadi ditambahin ;
-   */
-  OV_ASSIGNMENT_OP(*);
-  OV_ASSIGNMENT_OP(/);
-  OV_ASSIGNMENT_OP(+);
-  OV_ASSIGNMENT_OP(-);
-#undef OV_ASSIGNMENT_OP
+  template <typename U>
+  Mat &operator-=(const Mat<U, N> &m) {
+    sub(m);
+    return *this;
+  }
+
+  template <typename U>
+  Mat &operator*=(const Mat<U, N> &m) {
+    mul(m);
+    return *this;
+  }
+
+  template <typename U>
+  requires(std::integral<U> || std::floating_point<U>) Mat &operator*=(U c) {
+    mul(c);
+    return *this;
+  }
 
   // eliminasi gauss
   T determinant() const {
@@ -175,51 +228,117 @@ class Mat {
     return det;
   }
 
-  Mat transpose() const {
-    // tukar baris menjadi kolom dan kolom menjadi baris
+  // submatrix (N-1)x(N-1) hasil menghapus baris `row` dan kolom `col`, dipakai buat cofactor
+  Mat<T, N - 1> minor(int row, int col) const {
+    Mat<T, N - 1> res;
+    int           ri = 0;
+    for (int i = 0; i < N; ++i) {
+      if (i == row) continue;
+      int ci = 0;
+      for (int j = 0; j < N; ++j) {
+        if (j == col) continue;
+        res.set_element(ri * (N - 1) + ci, vals[i * N + j]);
+        ++ci;
+      }
+      ++ri;
+    }
+    return res;
+  }
+
+  // cofactor elemen di baris `row` kolom `col`, yaitu determinant minor dikali tanda (-1)^(row+col)
+  T cofactor(int row, int col) const {
+    T sign = ((row + col) % 2 == 0) ? T(1) : T(-1);
+    return sign * minor(row, col).determinant();
+  }
+
+  // in-place, langsung ubah baris jadi kolom dan kolom jadi baris pada object ini
+  void transpose() {
     T tmpvals[N * N];
     for (int i = 0; i < N; ++i)
       for (int j = 0; j < N; ++j) tmpvals[i * N + j] = vals[j * N + i];
-    return Mat(tmpvals);
+    for (int i = 0; i < N * N; ++i) vals[i] = tmpvals[i];
   }
 
-  Mat inverse() const {
-    T res[N][N], tmp[N][N];
-    for (int i = 0; i < N; ++i)
-      for (int j = 0; j < N; ++j) {
-        tmp[i][j] = vals[i * N + j];
-        res[i][j] = (i == j ? 1 : 0);
-      }
+  // copy dulu baru transpose, dipakai kalau object aslinya ga boleh ikut berubah
+  Mat transposed() const {
+    Mat res(*this);
+    res.transpose();
+    return res;
+  }
 
-    for (int i = 0; i < N; ++i) {
-      int pivot = i;
-      for (int j = i + 1; j < N; ++j)
-        if (std::abs(tmp[j][i]) > std::abs(tmp[pivot][i])) pivot = j;
-      if (tmp[pivot][i] == 0) throw std::runtime_error("Singular matrix");
+  // in-place, langsung ubah object ini jadi inverse-nya.
+  // N == 2 atau 3 pakai adjugate/cofactor (closed-form, lebih cepat buat ukuran segini),
+  // selain itu pakai eliminasi gauss-jordan yang lebih scalable buat N lebih besar.
+  void inverse() {
+    if constexpr (N == 2 || N == 3) {
+      T det = determinant();
+      if (det == 0) throw std::runtime_error("Singular matrix");
+      adjugate();
+      for (int i = 0; i < N * N; ++i) vals[i] /= det;
+    } else {
+      T res[N][N], tmp[N][N];
+      for (int i = 0; i < N; ++i)
+        for (int j = 0; j < N; ++j) {
+          tmp[i][j] = vals[i * N + j];
+          res[i][j] = (i == j ? 1 : 0);
+        }
 
-      for (int k = 0; k < N; ++k) {
-        std::swap(tmp[i][k], tmp[pivot][k]);
-        std::swap(res[i][k], res[pivot][k]);
-      }
+      for (int i = 0; i < N; ++i) {
+        int pivot = i;
+        for (int j = i + 1; j < N; ++j)
+          if (std::abs(tmp[j][i]) > std::abs(tmp[pivot][i])) pivot = j;
+        if (tmp[pivot][i] == 0) throw std::runtime_error("Singular matrix");
 
-      T diag = tmp[i][i];
-      for (int k = 0; k < N; ++k) {
-        tmp[i][k] /= diag;
-        res[i][k] /= diag;
-      }
-
-      for (int j = 0; j < N; ++j) {
-        if (j == i) continue;
-        T factor = tmp[j][i];
         for (int k = 0; k < N; ++k) {
-          tmp[j][k] -= factor * tmp[i][k];
-          res[j][k] -= factor * res[i][k];
+          std::swap(tmp[i][k], tmp[pivot][k]);
+          std::swap(res[i][k], res[pivot][k]);
+        }
+
+        T diag = tmp[i][i];
+        for (int k = 0; k < N; ++k) {
+          tmp[i][k] /= diag;
+          res[i][k] /= diag;
+        }
+
+        for (int j = 0; j < N; ++j) {
+          if (j == i) continue;
+          T factor = tmp[j][i];
+          for (int k = 0; k < N; ++k) {
+            tmp[j][k] -= factor * tmp[i][k];
+            res[j][k] -= factor * res[i][k];
+          }
         }
       }
-    }
 
-    return Mat(res);
+      for (int i = 0; i < N; ++i)
+        for (int j = 0; j < N; ++j) vals[i * N + j] = res[i][j];
+    }
   }
+
+  // copy dulu baru inverse, dipakai kalau object aslinya ga boleh ikut berubah
+  Mat inverted() const {
+    Mat res(*this);
+    res.inverse();
+    return res;
+  }
+
+  // in-place, ubah object ini jadi adjugate-nya (transpose dari matriks cofactor)
+  void adjugate() {
+    T res[N * N];
+    for (int i = 0; i < N; ++i)
+      for (int j = 0; j < N; ++j)
+        // ditranspose langsung disini, jadi ambil cofactor(j, i) bukan cofactor(i, j)
+        res[i * N + j] = cofactor(j, i);
+    for (int i = 0; i < N * N; ++i) vals[i] = res[i];
+  }
+
+  // copy dulu baru adjugate, dipakai kalau object aslinya ga boleh ikut berubah
+  Mat adjugated() const {
+    Mat res(*this);
+    res.adjugate();
+    return res;
+  }
+
   T *data() { return vals; }
 };
 

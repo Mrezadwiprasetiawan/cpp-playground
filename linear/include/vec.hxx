@@ -44,31 +44,98 @@ requires(std::integral<T> || std::floating_point<T>) class Vec {
     for (int i = 0; i < N; ++i) val[i] = arr[i];
   }
 
-#define VEC_BASE_OPERATOR(op)                                             \
-  template <typename U>                                                   \
-  Vec operator op(const Vec<U, N> &vn) const {                            \
-    Vec<T, N> res;                                                        \
-    for (int i = 0; i < N; ++i) res[i] = val[i] op static_cast<T>(vn[i]); \
-    return res;                                                           \
+  // converting copy constructor, agar Vec<T,N> bisa dicopy dari Vec<U,N> dengan tipe elemen berbeda
+  template <typename U>
+  Vec(const Vec<U, N> &other) {
+    for (int i = 0; i < N; ++i) val[i] = static_cast<T>(other[i]);
   }
 
-  VEC_BASE_OPERATOR(+)
-  VEC_BASE_OPERATOR(-)
-  VEC_BASE_OPERATOR(*)
-  VEC_BASE_OPERATOR(/)
-#undef VEC_BASE_OPERATOR
-
-#define VEC_OV_ASSIGNMENT(op)                \
-  template <typename U>                      \
-  Vec &operator op##=(const Vec<U, N> &vn) { \
-    return *this = *this op vn;              \
+  // converting copy assignment, sama seperti di atas tapi untuk operator=
+  template <typename U>
+  Vec &operator=(const Vec<U, N> &other) {
+    for (int i = 0; i < N; ++i) val[i] = static_cast<T>(other[i]);
+    return *this;
   }
 
-  VEC_OV_ASSIGNMENT(+);
-  VEC_OV_ASSIGNMENT(-);
-  VEC_OV_ASSIGNMENT(*);
-  VEC_OV_ASSIGNMENT(/);
-#undef VEC_OV_ASSIGNMENT
+  // operasi in-place, method ini langsung memodifikasi object saat ini (void, tanpa return)
+  // dipakai sebagai basis untuk operator biasa (yang mengembalikan objek baru hasil copy)
+  // dan operator penugasan (+=, -=, dst) supaya tidak ada copy yang sia-sia
+
+  template <typename U>
+  void add(const Vec<U, N> &vn) {
+    for (int i = 0; i < N; ++i) val[i] += static_cast<T>(vn[i]);
+  }
+
+  template <typename U>
+  void sub(const Vec<U, N> &vn) {
+    for (int i = 0; i < N; ++i) val[i] -= static_cast<T>(vn[i]);
+  }
+
+  template <typename U>
+  void mul(const Vec<U, N> &vn) {
+    for (int i = 0; i < N; ++i) val[i] *= static_cast<T>(vn[i]);
+  }
+
+  template <typename U>
+  void div(const Vec<U, N> &vn) {
+    for (int i = 0; i < N; ++i) val[i] /= static_cast<T>(vn[i]);
+  }
+
+  // operator biasa, hasilnya selalu object baru (copy dulu baru dipanggil in-place-nya)
+
+  template <typename U>
+  Vec operator+(const Vec<U, N> &vn) const {
+    Vec res(*this);
+    res.add(vn);
+    return res;
+  }
+
+  template <typename U>
+  Vec operator-(const Vec<U, N> &vn) const {
+    Vec res(*this);
+    res.sub(vn);
+    return res;
+  }
+
+  template <typename U>
+  Vec operator*(const Vec<U, N> &vn) const {
+    Vec res(*this);
+    res.mul(vn);
+    return res;
+  }
+
+  template <typename U>
+  Vec operator/(const Vec<U, N> &vn) const {
+    Vec res(*this);
+    res.div(vn);
+    return res;
+  }
+
+  // operator penugasan, langsung pakai method in-place di atas, tanpa copy dulu
+
+  template <typename U>
+  Vec &operator+=(const Vec<U, N> &vn) {
+    add(vn);
+    return *this;
+  }
+
+  template <typename U>
+  Vec &operator-=(const Vec<U, N> &vn) {
+    sub(vn);
+    return *this;
+  }
+
+  template <typename U>
+  Vec &operator*=(const Vec<U, N> &vn) {
+    mul(vn);
+    return *this;
+  }
+
+  template <typename U>
+  Vec &operator/=(const Vec<U, N> &vn) {
+    div(vn);
+    return *this;
+  }
 
   // di dalam class Vec
   auto w() const requires(N >= 4) { return val[3]; }

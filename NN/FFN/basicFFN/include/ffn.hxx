@@ -25,8 +25,6 @@
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
-#include <iomanip>
-#include <ios>
 #include <iostream>
 #include <random>
 // #include <thread>
@@ -45,11 +43,12 @@ class BasicFFN {
   ACTIVATION_TYPE    act_t;
   LOSS_TYPE          loss_t;
   FP               **wIn, **wHid1, **wHid2;
+  FP               **gwIn, **gwHid1, **gwHid2;  // akumulator gradient bobot, dipakai buat training batch
   FP                *bIn, *bHid1, *bHid2;
+  FP                *gbIn, *gbHid1, *gbHid2;  // akumulator gradient bias, dipakai buat training batch
   FP                *toHid1, *toHid2, *out;
   FP                *dOut, *dHid2, *dHid1;
   FP                 lastLoss         = -1;
-  bool               debug            = false;
   std::string        weights_filename = "";
   inline static FP   epsilon          = 1e-6;  // untuk mencegah dead neuron ketika menggunakan ReLU
   bool               xavier           = false;
@@ -58,6 +57,9 @@ class BasicFFN {
   std::mt19937       gen;
   // FP = Floating Point @param FP1 current eta/learning rate @param FP2 grad
   FP (*adaptive_eta_func)(FP, FP);
+
+  using ActFn  = FP (*)(FP);
+  using LossFn = FP (*)(FP, FP);
 
   // setiap layer punya distribusi yang berbeda
   template <size_t inSize, size_t outSize>
@@ -107,6 +109,43 @@ class BasicFFN {
   static FP tanh(FP x) { return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x)); }
   static FP tanh_deriv(FP y) { return 1 - y * y; }
 
+  // pemetaan enum ke pointer fungsi aktivasi/loss, dipakai bareng oleh forward maupun backward (single & batch)
+  ActFn act_func_of(ACTIVATION_TYPE t) {
+    switch (t) {
+      case ACTIVATION_TYPE::RELU: return ReLU;
+      case ACTIVATION_TYPE::SIGMOID: return sigmoid;
+      case ACTIVATION_TYPE::TANH: return tanh;
+    }
+    return ReLU;
+  }
+
+  ActFn act_deriv_of(ACTIVATION_TYPE t) {
+    switch (t) {
+      case ACTIVATION_TYPE::RELU: return ReLU_deriv;
+      case ACTIVATION_TYPE::SIGMOID: return sigmoid_deriv;
+      case ACTIVATION_TYPE::TANH: return tanh_deriv;
+    }
+    return ReLU_deriv;
+  }
+
+  LossFn loss_func_of(LOSS_TYPE t) {
+    switch (t) {
+      case LOSS_TYPE::MAE: return MAE;
+      case LOSS_TYPE::MSE: return MSE;
+      case LOSS_TYPE::CROSS_ENTROPY: return cross_entropy_loss;
+    }
+    return MSE;
+  }
+
+  LossFn loss_deriv_of(LOSS_TYPE t) {
+    switch (t) {
+      case LOSS_TYPE::MAE: return MAE_deriv;
+      case LOSS_TYPE::MSE: return MSE_deriv;
+      case LOSS_TYPE::CROSS_ENTROPY: return cross_entropy_loss_deriv;
+    }
+    return MSE_deriv;
+  }
+
   /* Agar lebih mudah dibaca, layer layernya diabstraksi jadi fungsi independen.
   Untuk performa sih lebih baik di unwrap karena nambah overhead untuk
   pemanggilan fungsi kalau diabstraksi semua. Lebih bagus lagi kalau di taruh di
@@ -124,7 +163,7 @@ class BasicFFN {
     }
   }
 
-  /* fungsi untuk backward per layer
+  /* fungsi untuk backward per layer, langsung update bobot & bias (dipakai versi single-sample)
   @param inSize parameter template untuk ukuran layer masuk (dari belakang)
   @param outSize parameter template untuk ukuran layer keluar (dari belakang)
   @param actFuncDeriv pointer ke turunan fungsi aktivasi
@@ -146,6 +185,52 @@ class BasicFFN {
     }
   }
 
+  /* fungsi untuk backward per layer versi batch: TIDAK langsung update bobot & bias,
+  cuma akumulasi gradiennya ke gw/gb. Bobot yang dipakai buat propagasi delta ke layer
+  sebelumnya juga masih bobot lama (belum diupdate), karena update baru dilakukan sekali
+  di akhir batch lewat apply_gradients().
+  @param inSize parameter template untuk ukuran layer masuk (dari belakang)
+  @param outSize parameter template untuk ukuran layer keluar (dari belakang)
+  @param actFuncDeriv pointer ke turunan fungsi aktivasi
+   */
+  template <size_t inSize, size_t outSize>
+  void backward_layer_accum(FP **w, FP **gw, FP *gb, FP *dataIn, FP *deltaIn, FP *(*deltaOut), FP (*actFuncDeriv)(FP)) {
+    for (size_t i = 0; i < inSize; ++i) {
+      for (size_t j = 0; j < outSize; ++j) gw[j][i] += deltaIn[i] * dataIn[j];
+      gb[i] += deltaIn[i];
+    }
+
+    if (!deltaOut) return;
+    for (size_t i = 0; i < outSize; ++i) {
+      for (size_t j = 0; j < inSize; ++j) (*deltaOut)[i] += w[i][j] * deltaIn[j];
+      if (actFuncDeriv) (*deltaOut)[i] *= actFuncDeriv(dataIn[i]);
+    }
+  }
+
+  // apply rata-rata gradient hasil akumulasi satu batch ke bobot & bias, lalu reset akumulatornya ke 0
+  void apply_gradients(size_t batchSize) {
+    auto apply_w = [&](FP **w, FP **gw, size_t rows, size_t cols) {
+      for (size_t i = 0; i < rows; ++i)
+        for (size_t j = 0; j < cols; ++j) {
+          w[i][j]  -= eta * gw[i][j] / batchSize;
+          gw[i][j]  = 0;
+        }
+    };
+    auto apply_b = [&](FP *b, FP *gb, size_t size) {
+      for (size_t i = 0; i < size; ++i) {
+        b[i]  -= eta * gb[i] / batchSize;
+        gb[i]  = 0;
+      }
+    };
+
+    apply_w(wIn, gwIn, inputSize, hidden1Size);
+    apply_w(wHid1, gwHid1, hidden1Size, hidden2Size);
+    apply_w(wHid2, gwHid2, hidden2Size, outputSize);
+    apply_b(bIn, gbIn, hidden1Size);
+    apply_b(bHid1, gbHid1, hidden2Size);
+    apply_b(bHid2, gbHid2, outputSize);
+  }
+
   void write_matrix(std::ofstream &ofs, FP **mat, size_t rows, size_t cols) {
     for (size_t i = 0; i < rows; ++i) ofs.write(reinterpret_cast<char *>(mat[i]), sizeof(FP) * cols);
   }
@@ -160,9 +245,15 @@ class BasicFFN {
     wIn    = allocate_2d(inputSize, hidden1Size);
     wHid1  = allocate_2d(hidden1Size, hidden2Size);
     wHid2  = allocate_2d(hidden2Size, outputSize);
+    gwIn   = allocate_2d(inputSize, hidden1Size);
+    gwHid1 = allocate_2d(hidden1Size, hidden2Size);
+    gwHid2 = allocate_2d(hidden2Size, outputSize);
     bIn    = new FP[hidden1Size];
     bHid1  = new FP[hidden2Size];
     bHid2  = new FP[outputSize];
+    gbIn   = new FP[hidden1Size]{};
+    gbHid1 = new FP[hidden2Size]{};
+    gbHid2 = new FP[outputSize]{};
     toHid1 = new FP[hidden1Size];
     toHid2 = new FP[hidden2Size];
     out    = new FP[outputSize]{};
@@ -175,9 +266,15 @@ class BasicFFN {
     wIn    = allocate_2d(inputSize, hidden1Size);
     wHid1  = allocate_2d(hidden1Size, hidden2Size);
     wHid2  = allocate_2d(hidden2Size, outputSize);
+    gwIn   = allocate_2d(inputSize, hidden1Size);
+    gwHid1 = allocate_2d(hidden1Size, hidden2Size);
+    gwHid2 = allocate_2d(hidden2Size, outputSize);
     bIn    = new FP[hidden1Size];
     bHid1  = new FP[hidden2Size];
     bHid2  = new FP[outputSize];
+    gbIn   = new FP[hidden1Size]{};
+    gbHid1 = new FP[hidden2Size]{};
+    gbHid2 = new FP[outputSize]{};
     toHid1 = new FP[hidden1Size];
     toHid2 = new FP[hidden2Size];
     out    = new FP[outputSize]{};
@@ -192,7 +289,7 @@ class BasicFFN {
   void set_learning_rate(FP eta) { this->eta = eta; }
   void set_adaptive_learning_rate_func(FP (*adaptive_eta_func)(FP, FP)) { this->adaptive_eta_func = adaptive_eta_func; }
 
-  /* return output in array
+  /* return output in array, versi data tunggal
   @note array will be lost after class is destroyed
   */
   FP *forward(FP *data) {
@@ -201,15 +298,7 @@ class BasicFFN {
     std::fill(toHid2, toHid2 + hidden2Size, 0);
     std::fill(out, out + outputSize, 0);
 
-    // lambda switch for mathing activation function
-    auto actFuncFromType = [](ACTIVATION_TYPE act_t) {
-      switch (act_t) {
-        case ACTIVATION_TYPE::RELU: return ReLU;
-        case ACTIVATION_TYPE::SIGMOID: return sigmoid;
-        case ACTIVATION_TYPE::TANH: return tanh;
-      }
-    };
-    auto actFunc = actFuncFromType(act_t);
+    auto actFunc = act_func_of(act_t);
 
     // input data to the input layer
     forward_layer<inputSize, hidden1Size>(wIn, bIn, data, toHid1, 0);
@@ -218,6 +307,19 @@ class BasicFFN {
     forward_layer<hidden2Size, outputSize>(wHid2, bHid2, toHid2, out, actFunc);
 
     return out;
+  }
+
+  /* versi batch, forward tiap baris di dataBatch lalu hasilnya disalin ke outBatch
+  @param dataBatch array of pointer, ukuran [batchSize][inputSize]
+  @param outBatch array of pointer yang sudah dialokasikan pemanggil, ukuran [batchSize][outputSize]
+  @note dipakai kalau outputnya perlu disimpan semua sekaligus (forward tunggal reuse buffer internal
+  yang sama, jadi hasilnya ketimpa tiap panggilan)
+  */
+  void forward(FP **dataBatch, FP **outBatch, size_t batchSize) {
+    for (size_t s = 0; s < batchSize; ++s) {
+      FP *res = forward(dataBatch[s]);
+      std::copy(res, res + outputSize, outBatch[s]);
+    }
   }
 
   // Loss function section
@@ -238,6 +340,7 @@ class BasicFFN {
 
   /* using w = wcurr - eta * dL/dw
    using b = bcurr - eta * dL/db;
+   versi data tunggal, langsung update bobot & bias tiap dipanggil
    */
   void backward(FP *inputData, FP *targetData) {
     forward(inputData);
@@ -246,33 +349,9 @@ class BasicFFN {
     std::fill(dHid2, dHid2 + hidden2Size, 0);
     std::fill(dHid1, dHid1 + hidden1Size, 0);
 
-    // lambda switch for mathing activation function derivative
-    auto actFuncDerivFromType = [](ACTIVATION_TYPE act_t) {
-      switch (act_t) {
-        case ACTIVATION_TYPE::RELU: return ReLU_deriv;
-        case ACTIVATION_TYPE::SIGMOID: return sigmoid_deriv;
-        case ACTIVATION_TYPE::TANH: return tanh_deriv;
-      }
-    };
-    auto actFuncDeriv = actFuncDerivFromType(act_t);
-
-    auto lossDerivFuncFromType = [](LOSS_TYPE loss_t) {
-      switch (loss_t) {
-        case LOSS_TYPE::MAE: return MAE_deriv;
-        case LOSS_TYPE::MSE: return MSE_deriv;
-        case LOSS_TYPE::CROSS_ENTROPY: return cross_entropy_loss_deriv;
-      }
-    };
-    auto lossDerivFunc    = lossDerivFuncFromType(loss_t);
-    auto lossFuncFromType = [](LOSS_TYPE loss_t) {
-      switch (loss_t) {
-        case LOSS_TYPE::MAE: return MAE;
-        case LOSS_TYPE::MSE: return MSE;
-        case LOSS_TYPE::CROSS_ENTROPY: return cross_entropy_loss;
-      }
-    };
-
-    auto lossFunc = lossFuncFromType(loss_t);
+    auto actFuncDeriv  = act_deriv_of(act_t);
+    auto lossDerivFunc = loss_deriv_of(loss_t);
+    auto lossFunc      = loss_func_of(loss_t);
 
     // calculate dOut first for update through backward_layer template function
     lastLoss = 0;
@@ -284,38 +363,41 @@ class BasicFFN {
     backward_layer<outputSize, hidden2Size>(wHid2, bHid2, toHid2, dOut, &dHid2, actFuncDeriv, eta);
     backward_layer<hidden2Size, hidden1Size>(wHid1, bHid1, toHid1, dHid2, &dHid1, actFuncDeriv, eta);
     backward_layer<hidden1Size, inputSize>(wIn, bIn, inputData, dHid1, 0, 0, eta);
-    if (debug) {
-      std::cout << "==== Weight ====" << std::endl;
-#define debugWeight(in, out, wname)                                 \
-  for (int i = 0; i < in; ++i) {                                    \
-    for (int j = 0; j < out; ++j) std::cout << wname[i][j] << "\t"; \
-    std::cout << std::endl;                                         \
-  }                                                                 \
-  std::cout << std::endl;
+  }
 
-      std::cout << std::fixed << std::setprecision(12);
-      debugWeight(inputSize, hidden1Size, wIn);
-      debugWeight(hidden1Size, hidden2Size, wHid1);
-      debugWeight(hidden2Size, outputSize, wHid2);
+  /* versi batch, gradient dari semua sample diakumulasi dulu (pakai bobot yang sama, belum diupdate),
+  baru di-apply sekali di akhir sebagai rata-rata. Ini beda dari backward tunggal yang update bobot
+  langsung tiap sample.
+  @param inputBatch array of pointer, ukuran [batchSize][inputSize]
+  @param targetBatch array of pointer, ukuran [batchSize][outputSize]
+  */
+  void backward(FP **inputBatch, FP **targetBatch, size_t batchSize) {
+    auto actFuncDeriv  = act_deriv_of(act_t);
+    auto lossDerivFunc = loss_deriv_of(loss_t);
+    auto lossFunc      = loss_func_of(loss_t);
 
-      std::cout << "==== Bias ====" << std::endl;
-#define debugBias(bname, size)                                     \
-  for (size_t i = 0; i < size; ++i) std::cout << bname[i] << "\t"; \
-  std::cout << std::endl;
+    lastLoss = 0;
+    for (size_t s = 0; s < batchSize; ++s) {
+      forward(inputBatch[s]);
 
-      debugBias(bIn, hidden1Size);
-      debugBias(bHid1, hidden2Size);
-      debugBias(bHid2, outputSize);
+      std::fill(dOut, dOut + outputSize, 0);
+      std::fill(dHid2, dHid2 + hidden2Size, 0);
+      std::fill(dHid1, dHid1 + hidden1Size, 0);
 
-      debugBias(dHid1, hidden1Size);
-      debugBias(dHid2, hidden2Size);
-      debugBias(dOut, outputSize)
+      for (size_t i = 0; i < outputSize; ++i) {
+        lastLoss += lossFunc(out[i], targetBatch[s][i]) / (outputSize * batchSize);
+        dOut[i]   = lossDerivFunc(out[i], targetBatch[s][i]) * actFuncDeriv(out[i]);
+      }
+
+      backward_layer_accum<outputSize, hidden2Size>(wHid2, gwHid2, gbHid2, toHid2, dOut, &dHid2, actFuncDeriv);
+      backward_layer_accum<hidden2Size, hidden1Size>(wHid1, gwHid1, gbHid1, toHid1, dHid2, &dHid1, actFuncDeriv);
+      backward_layer_accum<hidden1Size, inputSize>(wIn, gwIn, gbIn, inputBatch[s], dHid1, 0, 0);
     }
+
+    apply_gradients(batchSize);
   }
 
   FP get_loss() { return lastLoss; }
-
-  void set_debug_mode(bool debug) { this->debug = debug; }
 
   void set_weights_filename(const std::string &filename) {
     weights_filename = filename;
@@ -359,9 +441,15 @@ class BasicFFN {
     deallocate_2d(wIn, inputSize);
     deallocate_2d(wHid1, hidden1Size);
     deallocate_2d(wHid2, hidden2Size);
+    deallocate_2d(gwIn, inputSize);
+    deallocate_2d(gwHid1, hidden1Size);
+    deallocate_2d(gwHid2, hidden2Size);
     delete[] bIn;
     delete[] bHid1;
     delete[] bHid2;
+    delete[] gbIn;
+    delete[] gbHid1;
+    delete[] gbHid2;
     delete[] toHid1;
     delete[] toHid2;
     delete[] out;
