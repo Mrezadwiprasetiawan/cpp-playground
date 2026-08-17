@@ -23,6 +23,8 @@
 #include <cmath>
 #include <concepts>
 #include <initializer_list>
+#include <iostream>
+#include <string>
 
 namespace Linear {
 
@@ -57,7 +59,7 @@ requires(std::integral<T> || std::floating_point<T>) class Vec {
     return *this;
   }
 
-  // operasi in-place, method ini langsung memodifikasi object saat ini (void, tanpa return)
+  // ==== operasi in-place, method ini langsung memodifikasi object saat ini (void, tanpa return) ====
   // dipakai sebagai basis untuk operator biasa (yang mengembalikan objek baru hasil copy)
   // dan operator penugasan (+=, -=, dst) supaya tidak ada copy yang sia-sia
 
@@ -81,7 +83,7 @@ requires(std::integral<T> || std::floating_point<T>) class Vec {
     for (int i = 0; i < N; ++i) val[i] /= static_cast<T>(vn[i]);
   }
 
-  // operator biasa, hasilnya selalu object baru (copy dulu baru dipanggil in-place-nya)
+  // ==== operator biasa, hasilnya selalu object baru (copy dulu baru dipanggil in-place-nya) ====
 
   template <typename U>
   Vec operator+(const Vec<U, N> &vn) const {
@@ -111,7 +113,7 @@ requires(std::integral<T> || std::floating_point<T>) class Vec {
     return res;
   }
 
-  // operator penugasan, langsung pakai method in-place di atas, tanpa copy dulu
+  // ==== operator penugasan, langsung pakai method in-place di atas, tanpa copy dulu ====
 
   template <typename U>
   Vec &operator+=(const Vec<U, N> &vn) {
@@ -147,6 +149,12 @@ requires(std::integral<T> || std::floating_point<T>) class Vec {
   T       &operator[](std::size_t i) { return val[i]; }
   const T &operator[](std::size_t i) const { return val[i]; }
   T       *data() { return val; }
+
+  void debug(const std::string &name) {
+    std::cout << name << " = [\t";
+    for (int i = 0; i < N; ++i) std::cout << val[i] << "\t";
+    std::cout << "]\n";
+  }
 };
 
 template <typename T, int N>

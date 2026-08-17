@@ -21,86 +21,117 @@
 
 #include <cmath>
 #include <concepts>
+#include <cstddef>
 #include <vector>
 
-namespace NN {
+#include "matrix.hxx"
+#include "vec.hxx"
 
-template <std::floating_point FP>
-struct WeightBias {
-  std::vector<FP> w;
-  FP              b;
-};
+namespace NN {
 
 enum class ACTIVATION_TYPE { sigmoid, ReLU, tanh, NONE };
 enum class LOSS_TYPE { MAE, MSE, cross_entropy };
 enum class COMPUTE_MODE { CPU, GPU };
 
-template <std::floating_point FP>
+template <std::floating_point FP, size_t InSize, size_t OutSize>
 struct Layer {
-  size_t          size;
-  ACTIVATION_TYPE act_func_t;
+  Linear::Mat<FP, OutSize, InSize> w;
+  Linear::Vec<FP, OutSize>         b;
+  Linear::Vec<FP, InSize>          inputs;
+  Linear::Vec<FP, OutSize>         outputs;
+  ACTIVATION_TYPE                  act_func_t = ACTIVATION_TYPE::NONE;
 };
 
-// Rectified Linear Unit Activation function
 template <std::floating_point FP>
 inline FP ReLU(FP x, FP epsilon) {
   return x > 0 ? x : epsilon;
 }
-// ReLU derivative function
+
 template <std::floating_point FP>
 inline FP ReLU_deriv(FP y, FP epsilon) {
   return y > 0 ? 1 : epsilon;
 }
-// Sigmoid activation function
+
 template <std::floating_point FP>
 inline FP sigmoid(FP x) {
   return 1 / (1 + std::exp(-x));
 }
-// Sigmoid Derivative function
+
 template <std::floating_point FP>
 inline FP Sigmoid_deriv(FP y) {
   return y * (1 - y);
 }
-// Tanh activation function
+
 template <std::floating_point FP>
 inline FP tanh(FP x) {
   return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x));
 }
-// Tanh derivative function
+
 template <std::floating_point FP>
 inline FP tanh_deriv(FP y) {
   return 1 - y * y;
 }
-// Mean Absolute Error Loss Function
+
 template <std::floating_point FP>
 inline FP MAE(FP ypred, FP y) {
   return std::abs(ypred - y);
 }
-// Mean Absolute Error derivative function
+
 template <std::floating_point FP>
 inline FP MAE_deriv(FP ypred, FP y) {
   FP semi_loss = ypred - y;
   return semi_loss > 0 ? 1 : semi_loss == 0 ? 0 : -1;
 }
-// Mean Squared Error Loss Function
+
 template <std::floating_point FP>
 inline FP MSE(FP ypred, FP y) {
   FP semi_loss = ypred - y;
   return 0.5 * semi_loss * semi_loss;
 }
-// Mean Squared Error derivative function
+
 template <std::floating_point FP>
 inline FP MSE_deriv(FP ypred, FP y) {
   return ypred - y;
 }
-// Cross Entropy Loss Function
+
 template <std::floating_point FP>
 inline FP cross_entropy(FP ypred, FP y, FP epsilon) {
   return -y * std::log(ypred + epsilon) - (1 - y) * std::log(1 - ypred + epsilon);
 }
-// Cross Entropy dericative function
+
 template <std::floating_point FP>
 inline FP cross_entropy_deriv(FP ypred, FP y, FP epsilon) {
   return (ypred - y) / ((ypred + epsilon) * (1 - ypred + epsilon));
 }
+
+template <std::floating_point FP, int N>
+inline Linear::Vec<FP, N> apply_activation(const Linear::Vec<FP, N> &v, ACTIVATION_TYPE t, FP epsilon = static_cast<FP>(1e-6)) {
+  Linear::Vec<FP, N> res = v;
+  for (size_t i = 0; i < N; ++i) {
+    switch (t) {
+      case ACTIVATION_TYPE::sigmoid: res[i] = sigmoid(v[i]); break;
+      case ACTIVATION_TYPE::ReLU: res[i] = ReLU(v[i], epsilon); break;
+      case ACTIVATION_TYPE::tanh: res[i] = tanh(v[i]); break;
+      case ACTIVATION_TYPE::NONE: break;
+    }
+  }
+  return res;
+}
+
+template <std::floating_point FP, int N>
+inline Linear::Vec<FP, N> softmax(const Linear::Vec<FP, N> &v) {
+  FP maxVal = v[0];
+  for (int i = 1; i < N; ++i)
+    if (v[i] > maxVal) maxVal = v[i];
+
+  Linear::Vec<FP, N> res;
+  FP                 sum = 0;
+  for (int i = 0; i < N; ++i) {
+    res[i]  = std::exp(v[i] - maxVal);
+    sum    += res[i];
+  }
+  for (int i = 0; i < N; ++i) res[i] /= sum;
+  return res;
+}
+
 }  // namespace NN

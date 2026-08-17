@@ -31,14 +31,13 @@ jobs:
     # - github_token WAJIB ditambahkan. Action ini fetch release terbaru dari
     #   jakoch/rasterizers (untuk lavapipe) lewat GitHub API. Tanpa token, limit
     #   API cuma 60 req/jam dan gampang habis -> instalasi gagal random.
-    # - vulkan_version di-pin ke versi tertentu. Kalau suatu saat versi ini
-    #   dihapus dari server LunarG, install akan gagal (pernah terjadi untuk
-    #   versi lain). Kalau mau lebih tahan lama, hapus baris vulkan_version
-    #   supaya action otomatis pakai versi latest.
+    # - vulkan_version SENGAJA tidak di-pin (dihapus). Sebelumnya pakai
+    #   1.3.280.0, tapi versi itu sudah di-remove dari server LunarG
+    #   (SDK lama dihapus setelah ~2 tahun) sehingga build gagal.
+    #   Sekarang action otomatis pakai versi latest dari LunarG.
     - name: Install Vulkan SDK
       uses: jakoch/install-vulkan-sdk-action@v1
       with:
-        vulkan_version: 1.3.280.0
         cache: true
         install_lavapipe: true
         github_token: ${{ secrets.GITHUB_TOKEN }}

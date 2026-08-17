@@ -24,6 +24,7 @@
 #include <concepts>
 #include <cstdlib>
 #include <initializer_list>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -31,105 +32,135 @@
 
 namespace Linear {
 
-// example usage Mat<double,4> Matrix 4 * 4 with double element type
-template <std::floating_point T, int N>
+// example usage Mat<double,4> Matrix 4×4 (Cols default-nya sama dengan Rows)
+// atau Mat<double,4,3> buat matriks non-persegi 4 baris 3 kolom
+template <std::floating_point T, int Rows, int Cols = Rows>
 class Mat {
  private:
-  T vals[N * N];
+  T vals[Rows * Cols];
 
  public:
   explicit Mat() : vals() {}
+
+  // Cramer's Rule, dipanggil dari augmented matrix [A | b] (Rows persamaan,
+  // Rows variabel, kolom terakhir hasil). Reuse determinant() yang udah
+  // eliminasi gauss + pivoting. Cuma valid kalau Cols == Rows+1 (satu kolom
+  // ekstra buat b), makanya static dan gak butuh instance Mat<T,Rows,Rows>.
+  static Vec<T, Rows> solve(const Mat &aug) requires(Cols == Rows + 1) {
+    Mat<T, Rows, Rows> A;
+    Vec<T, Rows>       b;
+    for (int i = 0; i < Rows; ++i) {
+      for (int j = 0; j < Rows; ++j) A.set_element(i * Rows + j, aug[i][j]);
+      b[i] = aug[i][Rows];
+    }
+
+    T detA = A.determinant();
+    if (detA == 0) throw std::runtime_error("Singular matrix, sistem tidak punya solusi unik");
+
+    Vec<T, Rows> x;
+    // loop per kolom -- Acol selalu di-copy fresh dari A asli, bukan dari
+    // hasil modifikasi kolom sebelumnya, biar gak rapuh kalau urutannya kebalik
+    for (int col = 0; col < Rows; ++col) {
+      Mat<T, Rows, Rows> Acol(A);
+      for (int row = 0; row < Rows; ++row) Acol.set_element(row * Rows + col, b[row]);
+      x[col] = Acol.determinant() / detA;
+    }
+    return x;
+  }
 
   // copy constructor so that we can copy the matrix dirrectly
   Mat(const Mat &other) = default;
   // copy with assigment operator so that we can copy the matrix without explicitly loopi through the data
   Mat &operator=(const Mat &other) = default;
 
-  // converting copy constructor, agar Mat<T,N> bisa dicopy dari Mat<U,N> dengan tipe elemen berbeda
+  // converting copy constructor, agar Mat<T,Rows,Cols> bisa dicopy dari Mat<U,Rows,Cols> dengan tipe elemen berbeda
   template <typename U>
-  Mat(const Mat<U, N> &other) {
-    for (int i = 0; i < N; ++i)
-      for (int j = 0; j < N; ++j) vals[i * N + j] = static_cast<T>(other[i][j]);
+  Mat(const Mat<U, Rows, Cols> &other) {
+    for (int i = 0; i < Rows; ++i)
+      for (int j = 0; j < Cols; ++j) vals[i * Cols + j] = static_cast<T>(other[i][j]);
   }
 
   // converting copy assignment, sama seperti di atas tapi untuk operator=
   template <typename U>
-  Mat &operator=(const Mat<U, N> &other) {
-    for (int i = 0; i < N; ++i)
-      for (int j = 0; j < N; ++j) vals[i * N + j] = static_cast<T>(other[i][j]);
+  Mat &operator=(const Mat<U, Rows, Cols> &other) {
+    for (int i = 0; i < Rows; ++i)
+      for (int j = 0; j < Cols; ++j) vals[i * Cols + j] = static_cast<T>(other[i][j]);
     return *this;
   }
 
-  Mat(T (&v)[N * N]) { set_elements(v); }
+  Mat(T (&v)[Rows * Cols]) { set_elements(v); }
   Mat(const std::initializer_list<T> &v) { set_elements(v); }
-  Mat(T (&v)[N][N]) {
-    for (int i = 0; i < N; ++i)
-      for (int j = 0; j < N; ++j) vals[N * i + j] = v[i][j];
+  Mat(T (&v)[Rows][Cols]) {
+    for (int i = 0; i < Rows; ++i)
+      for (int j = 0; j < Cols; ++j) vals[Cols * i + j] = v[i][j];
   }
 
-  void to_array(T (&arr)[N * N]) const {
-    for (int i = 0; i < N * N; ++i) arr[i] = vals[i];
+  void to_array(T (&arr)[Rows * Cols]) const {
+    for (int i = 0; i < Rows * Cols; ++i) arr[i] = vals[i];
   }
 
-  std::vector<T> to_vector() const { return std::vector<T>(vals, vals + N * N); }
+  std::vector<T> to_vector() const { return std::vector<T>(vals, vals + Rows * Cols); }
 
-  void set_elements(T (&v)[N * N]) {
-    for (int i = 0; i < N * N; ++i) vals[i] = v[i];
+  void set_elements(T (&v)[Rows * Cols]) {
+    for (int i = 0; i < Rows * Cols; ++i) vals[i] = v[i];
   }
 
   void set_elements(const std::vector<T> &v) {
-    assert(v.size() == N * N);
-    for (int i = 0; i < N * N; ++i) vals[i] = v[i];
+    assert(v.size() == Rows * Cols);
+    for (int i = 0; i < Rows * Cols; ++i) vals[i] = v[i];
   }
 
   void set_elements(const std::initializer_list<T> &v) {
-    assert(v.size() == N * N);
+    assert(v.size() == Rows * Cols);
     auto it = v.begin();
     // tricky menambah i bersamaan dengan menambah iterator it
-    for (int i = 0; i < N * N; ++i, ++it) vals[i] = *it;
+    for (int i = 0; i < Rows * Cols; ++i, ++it) vals[i] = *it;
   }
 
-  void set_identity() {
-    for (int row = 0; row < N; ++row)
-      for (int col = 0; col < N; ++col)
-        if (row == col) vals[row * N + col] = 1.0;
-        else vals[row * N + col] = 0;
+  // cuma valid buat matriks persegi
+  void set_identity() requires(Rows == Cols) {
+    for (int row = 0; row < Rows; ++row)
+      for (int col = 0; col < Cols; ++col)
+        if (row == col) vals[row * Cols + col] = 1.0;
+        else vals[row * Cols + col] = 0;
   }
 
   void set_element(size_t i, T val) { vals[i] = val; }
 
-  // operasi in-place, method ini langsung memodifikasi object saat ini (void, tanpa return)
+  // ==== operasi in-place, method ini langsung memodifikasi object saat ini (void, tanpa return) ====
   // dipakai sebagai basis untuk operator biasa (yang mengembalikan objek baru hasil copy)
   // dan operator penugasan (+=, -=, dst) supaya tidak ada copy yang sia-sia
 
   template <typename U>
-  void add(const Mat<U, N> &m) {
-    for (int i = 0; i < N * N; ++i) vals[i] += static_cast<T>(m[i / N][i % N]);
+  void add(const Mat<U, Rows, Cols> &m) {
+    for (int i = 0; i < Rows * Cols; ++i) vals[i] += static_cast<T>(m[i / Cols][i % Cols]);
   }
 
   template <typename U>
-  void sub(const Mat<U, N> &m) {
-    for (int i = 0; i < N * N; ++i) vals[i] -= static_cast<T>(m[i / N][i % N]);
+  void sub(const Mat<U, Rows, Cols> &m) {
+    for (int i = 0; i < Rows * Cols; ++i) vals[i] -= static_cast<T>(m[i / Cols][i % Cols]);
   }
 
+  // perkalian matriks in-place cuma valid kalau persegi, karena hasil A(Rows×Cols) * B(Cols×Cols2)
+  // bentuknya Rows×Cols2 -- beda dari bentuk asli kecuali Rows==Cols dan Cols2==Cols
   template <typename U>
-  void mul(const Mat<U, N> &m) {
-    T vals_res[N * N]{};
+  requires(Rows == Cols) void mul(const Mat<U, Cols, Cols> &m) {
+    T vals_res[Rows * Cols]{};
     // k ini faktor untuk ngurusin perkaliannya
     // sedangkan row dan col untuk indeks hasil akhirnya
-    for (int row = 0; row < N; ++row)
-      for (int col = 0; col < N; ++col)
-        for (int k = 0; k < N; ++k) vals_res[row * N + col] += vals[row * N + k] * static_cast<T>(m[k][col]);
+    for (int row = 0; row < Rows; ++row)
+      for (int col = 0; col < Cols; ++col)
+        for (int k = 0; k < Cols; ++k) vals_res[row * Cols + col] += vals[row * Cols + k] * static_cast<T>(m[k][col]);
 
-    for (int i = 0; i < N * N; ++i) vals[i] = vals_res[i];
+    for (int i = 0; i < Rows * Cols; ++i) vals[i] = vals_res[i];
   }
 
   template <typename U>
   requires(std::integral<U> || std::floating_point<U>) void mul(U c) {
-    for (int i = 0; i < N * N; ++i) vals[i] *= c;
+    for (int i = 0; i < Rows * Cols; ++i) vals[i] *= c;
   }
 
-  // operator biasa, hasilnya selalu object baru (copy dulu baru dipanggil in-place-nya)
+  // ==== operator biasa, hasilnya selalu object baru (copy dulu baru dipanggil in-place-nya) ====
 
   template <typename U>
   requires(std::integral<T> || std::floating_point<T>) Mat operator*(U c) const {
@@ -138,58 +169,62 @@ class Mat {
     return res;
   }
 
-  Vec<T, N> operator[](int row) const {
-    assert(row >= 0 && row < N);
-    Vec<T, N> res;
-    for (int col = 0; col < N; ++col) res[col] = vals[row * N + col];
+  Vec<T, Cols> operator[](int row) const {
+    assert(row >= 0 && row < Rows);
+    Vec<T, Cols> res;
+    for (int col = 0; col < Cols; ++col) res[col] = vals[row * Cols + col];
     return res;
   }
 
   template <typename U>  // all of the number type are accept, but doesnt need to check the value is number or not since the vec class already handle it
-  Vec<T, N> operator*(const Vec<U, N> &vn) const {
-    Vec<T, N> res;
-    for (int row = 0; row < N; ++row)
-      for (int col = 0; col < N; ++col) res[row] += vals[row * N + col] * static_cast<T>(vn[col]);
+  Vec<T, Rows> operator*(const Vec<U, Cols> &vn) const {
+    Vec<T, Rows> res;
+    for (int row = 0; row < Rows; ++row)
+      for (int col = 0; col < Cols; ++col) res[row] += vals[row * Cols + col] * static_cast<T>(vn[col]);
     return res;
   }
 
-  template <typename U>
-  Mat operator*(const Mat<U, N> &m) const {
-    Mat res(*this);
-    res.mul(m);
-    return res;
+  // perkalian matriks general, A(Rows×Cols) * B(Cols×Cols2) -> hasilnya Rows×Cols2, bisa beda bentuk dari A
+  template <typename U, int Cols2>
+  Mat<T, Rows, Cols2> operator*(const Mat<U, Cols, Cols2> &m) const {
+    T vals_res[Rows * Cols2]{};
+    for (int row = 0; row < Rows; ++row)
+      for (int col = 0; col < Cols2; ++col)
+        for (int k = 0; k < Cols; ++k) vals_res[row * Cols2 + col] += vals[row * Cols + k] * static_cast<T>(m[k][col]);
+
+    return Mat<T, Rows, Cols2>(vals_res);
   }
 
   template <typename U>
-  Mat operator+(const Mat<U, N> &m) const {
+  Mat operator+(const Mat<U, Rows, Cols> &m) const {
     Mat res(*this);
     res.add(m);
     return res;
   }
 
   template <typename U>
-  Mat operator-(const Mat<U, N> &m) const {
+  Mat operator-(const Mat<U, Rows, Cols> &m) const {
     Mat res(*this);
     res.sub(m);
     return res;
   }
 
-  // operator penugasan, langsung pakai method in-place di atas, tanpa copy dulu
+  // ==== operator penugasan, langsung pakai method in-place di atas, tanpa copy dulu ====
 
   template <typename U>
-  Mat &operator+=(const Mat<U, N> &m) {
+  Mat &operator+=(const Mat<U, Rows, Cols> &m) {
     add(m);
     return *this;
   }
 
   template <typename U>
-  Mat &operator-=(const Mat<U, N> &m) {
+  Mat &operator-=(const Mat<U, Rows, Cols> &m) {
     sub(m);
     return *this;
   }
 
   template <typename U>
-  Mat &operator*=(const Mat<U, N> &m) {
+  requires(Rows == Cols) Mat &operator*=(const Mat<U, Cols, Cols> &m) {
     mul(m);
     return *this;
   }
@@ -200,44 +235,16 @@ class Mat {
     return *this;
   }
 
-  // eliminasi gauss
-  T determinant() const {
-    T det = 1;
-    T tmpvals[N * N];
-    to_array(tmpvals);
-    for (int i = 0; i < N; ++i) {
-      // cari baris dengan elemen terbesar di kolom i (pivoting)
-      int maxRow = i;
-      for (int j = i + 1; j < N; ++j)
-        if (std::abs(tmpvals[j * N + i]) > std::abs(tmpvals[maxRow * N + i])) maxRow = j;
-      // tukar baris i dengan baris maxRow jika perlu
-      if (i != maxRow) {
-        for (int k = 0; k < N; ++k) std::swap(tmpvals[i * N + k], tmpvals[maxRow * N + k]);
-        det = -det;  // Perubahan tanda jika ada pertukaran baris
-      }
-      // jika elemen diagonalnya 0, matriks tidak invertible, det = 0
-      if (tmpvals[i * N + i] == 0) return 0;
-      // eliminasi Gauss untuk baris di bawahnya
-      for (int j = i + 1; j < N; ++j) {
-        T factor = tmpvals[j * N + i] / tmpvals[i * N + i];
-        for (int k = i; k < N; ++k) tmpvals[j * N + k] -= factor * tmpvals[i * N + k];
-      }
-      // Kalikan elemen diagonal untuk determinan
-      det *= tmpvals[i * N + i];
-    }
-    return det;
-  }
-
-  // submatrix (N-1)x(N-1) hasil menghapus baris `row` dan kolom `col`, dipakai buat cofactor
-  Mat<T, N - 1> minor(int row, int col) const {
-    Mat<T, N - 1> res;
-    int           ri = 0;
-    for (int i = 0; i < N; ++i) {
+  // submatrix (Rows-1)×(Cols-1) hasil menghapus baris `row` dan kolom `col`, cuma valid buat matriks persegi
+  Mat<T, Rows - 1, Cols - 1> minor(int row, int col) const requires(Rows == Cols) {
+    Mat<T, Rows - 1, Cols - 1> res;
+    int                        ri = 0;
+    for (int i = 0; i < Rows; ++i) {
       if (i == row) continue;
       int ci = 0;
-      for (int j = 0; j < N; ++j) {
+      for (int j = 0; j < Cols; ++j) {
         if (j == col) continue;
-        res.set_element(ri * (N - 1) + ci, vals[i * N + j]);
+        res.set_element(ri * (Cols - 1) + ci, vals[i * Cols + j]);
         ++ci;
       }
       ++ri;
@@ -245,101 +252,140 @@ class Mat {
     return res;
   }
 
-  // cofactor elemen di baris `row` kolom `col`, yaitu determinant minor dikali tanda (-1)^(row+col)
-  T cofactor(int row, int col) const {
+  // cofactor elemen di baris `row` kolom `col`, cuma valid buat matriks persegi
+  T cofactor(int row, int col) const requires(Rows == Cols) {
     T sign = ((row + col) % 2 == 0) ? T(1) : T(-1);
     return sign * minor(row, col).determinant();
   }
 
-  // in-place, langsung ubah baris jadi kolom dan kolom jadi baris pada object ini
-  void transpose() {
-    T tmpvals[N * N];
-    for (int i = 0; i < N; ++i)
-      for (int j = 0; j < N; ++j) tmpvals[i * N + j] = vals[j * N + i];
-    for (int i = 0; i < N * N; ++i) vals[i] = tmpvals[i];
+  // in-place, langsung ubah baris jadi kolom dan kolom jadi baris pada object ini, cuma valid buat matriks persegi
+  void transpose() requires(Rows == Cols) {
+    T tmpvals[Rows * Cols];
+    for (int i = 0; i < Rows; ++i)
+      for (int j = 0; j < Cols; ++j) tmpvals[i * Cols + j] = vals[j * Cols + i];
+    for (int i = 0; i < Rows * Cols; ++i) vals[i] = tmpvals[i];
   }
 
-  // copy dulu baru transpose, dipakai kalau object aslinya ga boleh ikut berubah
-  Mat transposed() const {
-    Mat res(*this);
-    res.transpose();
-    return res;
+  // general, valid buat ukuran apapun (termasuk non-persegi), makanya bentuknya berubah jadi Cols×Rows
+  Mat<T, Cols, Rows> transposed() const {
+    T tmpvals[Rows * Cols];
+    for (int i = 0; i < Cols; ++i)
+      for (int j = 0; j < Rows; ++j) tmpvals[i * Rows + j] = vals[j * Cols + i];
+    return Mat<T, Cols, Rows>(tmpvals);
   }
 
-  // in-place, langsung ubah object ini jadi inverse-nya.
-  // N == 2 atau 3 pakai adjugate/cofactor (closed-form, lebih cepat buat ukuran segini),
-  // selain itu pakai eliminasi gauss-jordan yang lebih scalable buat N lebih besar.
-  void inverse() {
-    if constexpr (N == 2 || N == 3) {
+  // eliminasi gauss, cuma valid buat matriks persegi
+  T determinant() const requires(Rows == Cols) {
+    T det = 1;
+    T tmpvals[Rows * Cols];
+    to_array(tmpvals);
+    for (int i = 0; i < Rows; ++i) {
+      // cari baris dengan elemen terbesar di kolom i (pivoting)
+      int maxRow = i;
+      for (int j = i + 1; j < Rows; ++j)
+        if (std::abs(tmpvals[j * Cols + i]) > std::abs(tmpvals[maxRow * Cols + i])) maxRow = j;
+      // tukar baris i dengan baris maxRow jika perlu
+      if (i != maxRow) {
+        for (int k = 0; k < Cols; ++k) std::swap(tmpvals[i * Cols + k], tmpvals[maxRow * Cols + k]);
+        det = -det;  // Perubahan tanda jika ada pertukaran baris
+      }
+      // jika elemen diagonalnya 0, matriks tidak invertible, det = 0
+      if (tmpvals[i * Cols + i] == 0) return 0;
+      // eliminasi Gauss untuk baris di bawahnya
+      for (int j = i + 1; j < Rows; ++j) {
+        T factor = tmpvals[j * Cols + i] / tmpvals[i * Cols + i];
+        for (int k = i; k < Cols; ++k) tmpvals[j * Cols + k] -= factor * tmpvals[i * Cols + k];
+      }
+      // Kalikan elemen diagonal untuk determinan
+      det *= tmpvals[i * Cols + i];
+    }
+    return det;
+  }
+
+  // in-place, ubah object ini jadi inverse-nya. N==2/3 pakai adjugate (lebih cepat buat ukuran segini),
+  // selain itu pakai eliminasi gauss-jordan yang lebih scalable buat N lebih besar. Cuma valid buat matriks persegi.
+  void inverse() requires(Rows == Cols) {
+    if constexpr (Rows == 2 || Rows == 3) {
       T det = determinant();
       if (det == 0) throw std::runtime_error("Singular matrix");
       adjugate();
-      for (int i = 0; i < N * N; ++i) vals[i] /= det;
+      for (int i = 0; i < Rows * Cols; ++i) vals[i] /= det;
     } else {
-      T res[N][N], tmp[N][N];
-      for (int i = 0; i < N; ++i)
-        for (int j = 0; j < N; ++j) {
-          tmp[i][j] = vals[i * N + j];
+      T res[Rows][Cols], tmp[Rows][Cols];
+      for (int i = 0; i < Rows; ++i)
+        for (int j = 0; j < Cols; ++j) {
+          tmp[i][j] = vals[i * Cols + j];
           res[i][j] = (i == j ? 1 : 0);
         }
 
-      for (int i = 0; i < N; ++i) {
+      for (int i = 0; i < Rows; ++i) {
         int pivot = i;
-        for (int j = i + 1; j < N; ++j)
+        for (int j = i + 1; j < Rows; ++j)
           if (std::abs(tmp[j][i]) > std::abs(tmp[pivot][i])) pivot = j;
         if (tmp[pivot][i] == 0) throw std::runtime_error("Singular matrix");
 
-        for (int k = 0; k < N; ++k) {
+        for (int k = 0; k < Cols; ++k) {
           std::swap(tmp[i][k], tmp[pivot][k]);
           std::swap(res[i][k], res[pivot][k]);
         }
 
         T diag = tmp[i][i];
-        for (int k = 0; k < N; ++k) {
+        for (int k = 0; k < Cols; ++k) {
           tmp[i][k] /= diag;
           res[i][k] /= diag;
         }
 
-        for (int j = 0; j < N; ++j) {
+        for (int j = 0; j < Rows; ++j) {
           if (j == i) continue;
           T factor = tmp[j][i];
-          for (int k = 0; k < N; ++k) {
+          for (int k = 0; k < Cols; ++k) {
             tmp[j][k] -= factor * tmp[i][k];
             res[j][k] -= factor * res[i][k];
           }
         }
       }
 
-      for (int i = 0; i < N; ++i)
-        for (int j = 0; j < N; ++j) vals[i * N + j] = res[i][j];
+      for (int i = 0; i < Rows; ++i)
+        for (int j = 0; j < Cols; ++j) vals[i * Cols + j] = res[i][j];
     }
   }
 
   // copy dulu baru inverse, dipakai kalau object aslinya ga boleh ikut berubah
-  Mat inverted() const {
+  Mat inverted() const requires(Rows == Cols) {
     Mat res(*this);
     res.inverse();
     return res;
   }
 
-  // in-place, ubah object ini jadi adjugate-nya (transpose dari matriks cofactor)
-  void adjugate() {
-    T res[N * N];
-    for (int i = 0; i < N; ++i)
-      for (int j = 0; j < N; ++j)
+  // in-place, ubah object ini jadi adjugate-nya (transpose dari matriks cofactor), cuma valid buat matriks persegi
+  void adjugate() requires(Rows == Cols) {
+    T res[Rows * Cols];
+    for (int i = 0; i < Rows; ++i)
+      for (int j = 0; j < Cols; ++j)
         // ditranspose langsung disini, jadi ambil cofactor(j, i) bukan cofactor(i, j)
-        res[i * N + j] = cofactor(j, i);
-    for (int i = 0; i < N * N; ++i) vals[i] = res[i];
+        res[i * Cols + j] = cofactor(j, i);
+    for (int i = 0; i < Rows * Cols; ++i) vals[i] = res[i];
   }
 
   // copy dulu baru adjugate, dipakai kalau object aslinya ga boleh ikut berubah
-  Mat adjugated() const {
+  Mat adjugated() const requires(Rows == Cols) {
     Mat res(*this);
     res.adjugate();
     return res;
   }
 
   T *data() { return vals; }
+
+  void debug(const std::string &name) {
+    std::cout << name << " = \n";
+    int index = 0;
+    for (int y = 0; y < Rows; ++y) {
+      std::cout << "[\t";
+      for (int x = 0; x < Cols; ++x, ++index) std::cout << vals[index] << "\t";
+      std::cout << "]";
+      std::cout << "\n";
+    }
+  }
 };
 
 // usage Mat3<double> or Mat3<float>
@@ -354,8 +400,8 @@ using Mat3d = Mat<double, 3>;
 using Mat4d = Mat<double, 4>;
 
 // agar komutatif
-template <typename T, int N>
-Mat<T, N> operator*(const T fp, const Mat<T, N> &m) {
+template <typename T, int Rows, int Cols>
+Mat<T, Rows, Cols> operator*(const T fp, const Mat<T, Rows, Cols> &m) {
   return m * fp;
 }
 
@@ -449,6 +495,7 @@ Mat<T, 3> EULER_ROTATION_MATRIX(const Vec3<T> &rad, const EULER_ROTATION_TYPE &r
   // rotasi di sumbu z
   Mat<T, 3> Rz{cos_z, -sin_z, 0, sin_z, cos_z, 0, 0, 0, 1};
   switch (rt) {
+    default: throw std::invalid_argument("UNKNOWN EULER ROTATION MATRIX TYPE");
     case ZYX: return Rx * Ry * Rz;
     case ZXY: return Ry * Rx * Rz;
     case YZX: return Rx * Rz * Ry;
