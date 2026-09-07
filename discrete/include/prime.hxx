@@ -31,42 +31,21 @@
 #include <thread>
 #include <vector>
 
-/* Include <bit> duluan agar __cpp_lib_endian terdefinisi oleh stdlib jika
- * compiler sudah support C++20 — tanpa ini macro tidak pernah di-set meski
- * compiler support, sehingga polyfill dan stdlib definition bentrok.        */
 #if defined(__has_include) && __has_include(<bit>)
 #  include <bit>
 #endif
 
-#if !defined(__cpp_lib_endian)
-namespace std {
-enum class endian : unsigned char {
-  little = 0,
-  big    = 1,
-/* Prioritaskan macro compiler built-in karena paling akurat */
-#if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__)
-#  if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-  native = little
-#  else
-  native = big
-#  endif
-/* Fallback per-platform — hanya platform yang benar-benar diketahui */
-#elif defined(__LITTLE_ENDIAN__) || defined(__ARMEL__)  || defined(__AARCH64EL__) || \
-      defined(__i386__)          || defined(__x86_64__) || defined(_M_IX86)        || \
-      defined(_M_X64)            || defined(_M_ARM64)
-  native = little
-#elif defined(__BIG_ENDIAN__) || defined(__ARMEB__) || defined(__AARCH64EB__) || \
-      defined(__MIPSEB__)      || defined(__s390__)  || defined(__s390x__)
-  native = big
-#else
-#  warning "std::endian polyfill: unknown endianness, defaulting to little — verify for this platform"
-  native = little
-#endif
-};
-}  // namespace std
-#endif
-
 namespace Discrete {
+
+inline bool native_is_little_endian() noexcept {
+#if defined(__cpp_lib_endian)
+  return std::endian::native == std::endian::little;
+#else
+  const std::uint16_t probe = 1;
+  return *reinterpret_cast<const unsigned char *>(&probe) == 1;
+#endif
+}
+
 template <typename T>
 requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T>) class Prime {
  private:
@@ -75,23 +54,44 @@ requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T
   T                 lastSize  = 0;
   inline static int maxThread = std::thread::hardware_concurrency();
 
-  void main_sieve(std::vector<uint64_t> &sieve, T limit, int tid) noexcept {
+  void base_sieve(std::vector<uint64_t> &sieve, T sqrtLimit) noexcept {
+    if (sqrtLimit < 3) return;
+    size_t bit1 = ((sqrtLimit - 3) >> 1) + 1;
+    for (T p = 3; p * p <= sqrtLimit; p += 2) {
+      size_t pi = (p - 3) >> 1;
+      if (pi >= bit1) break;
+      if (!(sieve[pi >> 6] & (1ULL << (pi & 63))))
+        continue;
+      for (T j = p * p;; j += 2 * p) {
+        size_t ji = (j - 3) >> 1;
+        if (ji >= bit1) break;
+        sieve[ji >> 6] &= ~(1ULL << (ji & 63));
+      }
+    }
+  }
+
+  std::vector<T> extract_base_primes(const std::vector<uint64_t> &sieve, T sqrtLimit) noexcept {
+    std::vector<T> result;
+    if (sqrtLimit < 3) return result;
+    size_t bit1 = ((sqrtLimit - 3) >> 1) + 1;
+    for (size_t i = 0; i < bit1; ++i)
+      if (sieve[i >> 6] & (1ULL << (i & 63))) result.push_back(static_cast<T>(3 + 2 * i));
+    return result;
+  }
+
+  void thread_sieve(std::vector<uint64_t> &sieve, const std::vector<T> &basePrimes, int tid) noexcept {
     size_t W = sieve.size();
     size_t w0 = (W * tid) / maxThread;
     size_t w1 = (W * (tid + 1)) / maxThread;
     size_t bit0 = w0 * 64;
     size_t bit1 = w1 * 64;
-    for (T p = 3; p * p <= limit; p += 2) {
-      size_t pi = (p - 3) >> 1;
-      if (!(sieve[pi >> 6] & (1ULL << (pi & 63))))
-        continue;
+    for (T p : basePrimes) {
       T j = p * p;
       size_t ji = (j - 3) >> 1;
       if (ji < bit0) {
-        T step = 2 * p;
-        T need = bit0 - ji;
-        T k = (need + step - 1) / step;
-        j += k * step;
+        size_t need = bit0 - ji;
+        T      k    = static_cast<T>((need + p - 1) / p);
+        j += k * (2 * p);
         ji = (j - 3) >> 1;
       }
 
@@ -109,10 +109,18 @@ requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T
     const size_t heapSize  = get_available_heap();
     if ((arraySize + limit / log(limit) + 1) * 8 > heapSize)
       throw std::runtime_error("not enough heap to do bitsieve operation, Heap = " + to_string(heapSize));
-    vector<uint64_t>    sieve(arraySize, uint64_t(~0));
+    vector<uint64_t> sieve(arraySize, uint64_t(~0));
+
+    T sqrtLimit = static_cast<T>(std::sqrt(static_cast<double>(limit)));
+    while (sqrtLimit > 0 && sqrtLimit * sqrtLimit > limit) --sqrtLimit;
+    while ((sqrtLimit + 1) * (sqrtLimit + 1) <= limit) ++sqrtLimit;
+
+    base_sieve(sieve, sqrtLimit);
+    auto basePrimes = extract_base_primes(sieve, sqrtLimit);
+
     vector<std::thread> threads;
-    for (int i = 1; i < maxThread; ++i) threads.emplace_back([this, &sieve, limit, i]() { main_sieve(sieve, limit, i); });
-    main_sieve(sieve, limit, 0);
+    for (int i = 1; i < maxThread; ++i) threads.emplace_back([this, &sieve, &basePrimes, i]() { thread_sieve(sieve, basePrimes, i); });
+    thread_sieve(sieve, basePrimes, 0);
     for (auto &t : threads) t.join();
     return sieve;
   }
@@ -153,14 +161,13 @@ requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T
     if (limit < 3) return primes;
     if (limit <= lastLimit) {
       if (limit == lastLimit) return this->lastResults;
-      // estimasi end awal
       size_t end = static_cast<size_t>(limit / log(limit)) + 1;
       if (end > lastResults.size()) end = lastResults.size();
       while (end < lastResults.size() && lastResults[end] <= limit) ++end;
       return vector<T>(this->lastResults.begin(), this->lastResults.begin() + end);
     }
     lastLimit            = limit;
-    auto         sieve   = create_sieve(limit);  // pass the exception to caller if exist
+    auto         sieve   = create_sieve(limit);
     const size_t numOdds = ((limit - 3) >> 1) + 1;
     for (size_t i = 0; i < numOdds; ++i)
       if (sieve[i >> 6] & (1ULL << (i & 63))) primes.emplace_back(3 + 2 * i);
@@ -182,7 +189,6 @@ requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T
   static int max_thread() noexcept { return Prime::maxThread; }
 
   void clear_cache() noexcept {
-    // to ensure that the heap is freed properly, we use swap() of some temporary vector which will be destroyed after the method is executed
     std::vector<T>().swap(lastResults);
     lastSize  = 0;
     lastLimit = 0;
@@ -195,7 +201,7 @@ requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T
       cerr << "[write_sieve] Error: failed to open file '" << filename << "' for writing.\n";
       return false;
     }
-    char mark = std::endian::native == std::endian::little ? 1 : 0;
+    char mark = native_is_little_endian() ? 1 : 0;
     ofs.write(&mark, 1);
     if (!ofs) {
       cerr << "[write_sieve] Error: failed to write endian mark to file '" << filename << "'.\n";
@@ -203,7 +209,7 @@ requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T
     }
     const size_t count = lastResults.size();
     const size_t bytes = count * sizeof(T);
-    if (!bytes) return true;  // nothing to write
+    if (!bytes) return true;
     try {
       ofs.seekp(static_cast<std::streamoff>(1 + bytes - 1));
       char zero = 0;
@@ -244,7 +250,7 @@ requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T
       cerr << "[load_sieve] Failed to read endian mark from: " << filename << endl;
       return false;
     }
-    char         nativeEndian = std::endian::native == std::endian::little ? 1 : 0;
+    char         nativeEndian = native_is_little_endian() ? 1 : 0;
     bool         needSwap     = fileEndian != nativeEndian;
     const size_t total_bytes  = static_cast<size_t>(fsize) - 1;
     if (total_bytes % sizeof(T) != 0) {
@@ -267,4 +273,4 @@ requires((std::integral<T> || std::floating_point<T>) && !std::is_same_v<bool, T
     return true;
   }
 };
-}  // namespace Discrete
+}+++
